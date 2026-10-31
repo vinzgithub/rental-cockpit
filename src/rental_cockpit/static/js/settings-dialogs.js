@@ -34,13 +34,42 @@ function wire(dialog, action) {
   form.querySelector("input")?.focus();
 }
 
-export async function copyText(app, text) {
-  try {
-    await navigator.clipboard.writeText(text);
-    app.toast(app.i18n.t("mfa.copied"));
-  } catch (_) {
-    app.toast(app.i18n.t("mfa.copyFallback"), true);
+/**
+ * Copy to the clipboard. The asynchronous clipboard only exists on HTTPS or
+ * localhost; on plain HTTP (a local network address) the text is copied with
+ * the older command, and if that fails too it is selected for Ctrl+C.
+ * ``from`` is the button pressed; ``select`` the element to select as a last resort.
+ */
+export async function copyText(app, text, { from = null, select = null } = {}) {
+  const { t } = app.i18n;
+  if (navigator.clipboard && window.isSecureContext) {
+    try {
+      await navigator.clipboard.writeText(text);
+      app.toast(t("mfa.copied"));
+      return;
+    } catch (_) { /* fall back below */ }
   }
+  // Inside a modal dialog the rest of the page is inert: work inside the dialog.
+  const host = from?.closest("dialog") || document.body;
+  const area = document.createElement("textarea");
+  area.className = "copy-buffer";
+  area.value = text;
+  area.setAttribute("readonly", "");
+  area.setAttribute("aria-hidden", "true");
+  area.tabIndex = -1;
+  host.appendChild(area);
+  area.select();
+  let copied = false;
+  try { copied = document.execCommand("copy"); } catch (_) { copied = false; }
+  area.remove();
+  from?.focus({ preventScroll: true });
+  if (copied) {
+    app.toast(t("mfa.copied"));
+    return;
+  }
+  const target = select || from?.closest(".codebox")?.querySelector("code");
+  if (target) window.getSelection()?.selectAllChildren(target);
+  app.toast(t(target ? "mfa.copySelected" : "mfa.copyFallback"), true);
 }
 
 function download(name, text) {
@@ -82,7 +111,7 @@ function showCodes(app, dialog, codes, onDone) {
   dialog.dataset.locked = "1"; // a click outside must not lose codes shown only once
   const finish = dialog.querySelector("[data-finish]");
   dialog.querySelector("[data-stored]").addEventListener("change", (event) => { finish.disabled = !event.target.checked; });
-  dialog.querySelector("[data-copy-codes]").addEventListener("click", () => copyText(app, text));
+  dialog.querySelector("[data-copy-codes]").addEventListener("click", (event) => copyText(app, text, { from: event.currentTarget, select: dialog.querySelector("ul.codes") }));
   dialog.querySelector("[data-download-codes]").addEventListener("click", () => download("rental-cockpit-recovery-codes.txt", text));
   dialog.addEventListener("cancel", (event) => { if (finish.disabled) event.preventDefault(); });
   finish.addEventListener("click", () => { dialog.close(); onDone(); });
@@ -138,7 +167,7 @@ export function openMfaEnable(app) {
         </div>
       </div>`);
     dialog.querySelector(".dfoot").innerHTML = markup(html`<button type="button" class="btn ghost" data-close>${t("common.cancel")}</button><button type="button" class="btn primary" data-submit>${raw(icon("shieldCheck"))}${t("mfa.activate")}</button>`);
-    dialog.querySelector("[data-copy-secret]").addEventListener("click", () => copyText(app, setup.secret.replaceAll(" ", "")));
+    dialog.querySelector("[data-copy-secret]").addEventListener("click", (event) => copyText(app, setup.secret.replaceAll(" ", ""), { from: event.currentTarget }));
     wire(dialog, async (codeData) => {
       const result = await app.api.request("POST", "/api/account/mfa/enable", { body: { code: codeData.get("code") } });
       showCodes(app, dialog, result.recovery_codes, async () => {
@@ -201,7 +230,7 @@ export function openCreateKey(app) {
       <div class="tip">${raw(icon("alert"))}<div>${t("key.once")}</div></div>
       <div class="field"><span class="help">${t("key.secretLine")}</span><div class="codebox"><code>${line}</code><button type="button" class="iconbtn" data-copy-line aria-label="${t("mfa.copy")}">${raw(icon("copy"))}</button></div></div>`);
     dialog.querySelector(".dfoot").innerHTML = markup(html`<button type="button" class="btn primary" data-close>${raw(icon("check"))}${t("common.done")}</button>`);
-    dialog.querySelector("[data-copy-line]").addEventListener("click", () => copyText(app, line));
+    dialog.querySelector("[data-copy-line]").addEventListener("click", (event) => copyText(app, line, { from: event.currentTarget }));
     dialog.addEventListener("close", () => app.loadAccount());
   });
 }

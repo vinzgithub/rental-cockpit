@@ -6,24 +6,24 @@
 // of the signed-in account on each request.
 
 import { Api } from "./api.js";
-import { openAddMenu, openExplain, openPropertyDialog } from "./dialogs.js";
+import { openAddMenu, openAlerts, openConfirm, openExplain, openPropertyDialog } from "./dialogs.js";
 import { esc, html, markup, opId, raw } from "./dom.js";
 import { makeI18n } from "./i18n.js";
 import { icon } from "./icons.js";
 import { langSwitch, renderAuth } from "./views/auth.js";
 import { openCreateKey, openMfaCodes, openMfaDisable, openMfaEnable, openPasswordDialog, openRevokeKey, copyText } from "./settings-dialogs.js";
+import { datasetSwitch } from "./views/dataset.js";
 import { renderSettings } from "./views/settings.js";
 import { renderSynthese } from "./views/synthese.js";
-import { renderNoAccess, renderOnboarding, renderPlaceholder, renderWelcome } from "./views/welcome.js";
+import { renderNoAccess, renderOnboarding, renderWelcome } from "./views/welcome.js";
 
+// A screen enters the menu only once it works: no « coming soon » page.
+// Séjours, Dépenses, Prestataires and Documents join this list as they are delivered.
 const SCREENS = [
   ["synthese", "chart"],
-  ["sejours", "calendar"],
-  ["depenses", "wallet"],
-  ["prestataires", "users"],
-  ["documents", "file"],
   ["reglages", "sliders"],
 ];
+const READY = new Set(SCREENS.map(([key]) => key));
 const STORE_KEY = "rental-cockpit.view";
 
 // Per-browser conveniences only (screen, reading, language). Never data.
@@ -90,7 +90,7 @@ export class App {
     if (dataset === "demo" && !this.session.demo.exists) dataset = "real";
     this.api.dataset = dataset;
     this.state.mode = prefs.mode || "activity";
-    this.state.screen = prefs.screen || "synthese";
+    this.state.screen = READY.has(prefs.screen) ? prefs.screen : "synthese";
     if (!this.state.periodKey) this.state.periodKey = this._defaultPeriodKey();
     await this.load();
     if (this.state.screen === "reglages") await this.loadAccount();
@@ -209,6 +209,8 @@ export class App {
       properties: overview?.properties || [],
       canWrite: this.canWrite,
       periodOptions: this.session?.authenticated ? this.periodOptions() : [],
+      dataset: this.api.dataset,
+      ready: READY,
     };
   }
 
@@ -221,6 +223,7 @@ export class App {
     switch (action) {
       case "nav":
       case "go":
+        if (!READY.has(value)) break;
         this.state.screen = value;
         writePrefs({ screen: value });
         this._render();
@@ -246,7 +249,16 @@ export class App {
         openRevokeKey(this, { id: value, name: target.dataset.name || "" });
         break;
       case "copy":
-        copyText(this, target.dataset.copy || "");
+        copyText(this, target.dataset.copy || "", { from: target });
+        break;
+      case "alerts":
+        openAlerts(this);
+        break;
+      case "dataset":
+        await this._chooseDataset(value);
+        break;
+      case "demo-reset":
+        this._resetDemo();
         break;
       case "auth-back":
         this.auth = { error: "", busy: false, mfa: false, username: this.auth.username };
@@ -366,10 +378,45 @@ export class App {
     writePrefs({ dataset });
     this.state.overview = null;
     this.state.propertyId = "all";
-    this.state.screen = "synthese";
+    if (!READY.has(this.state.screen)) this.state.screen = "synthese";
     this.session = await this.api.request("GET", "/api/session");
     this.state.periodKey = this._defaultPeriodKey();
     await this.load();
+  }
+
+  /** « Mes données / Démonstration » from the menu, the account window or Réglages. */
+  async _chooseDataset(dataset) {
+    this.dialogHost.querySelectorAll("dialog").forEach((d) => d.close());
+    if (dataset === this.api.dataset) return;
+    try {
+      if (dataset === "demo" && !this.session.demo.exists) {
+        if (!this.canWrite) {
+          this.toast(this.i18n.t("dataset.demoMissing"), true);
+          return;
+        }
+        await this._start("demo");
+      } else {
+        await this._switchDataset(dataset);
+      }
+      this.toast(this.i18n.t(dataset === "demo" ? "dataset.nowDemo" : "dataset.nowReal"));
+    } catch (err) {
+      this.toast(err.message, true);
+    }
+  }
+
+  _resetDemo() {
+    const { t } = this.i18n;
+    openConfirm(this, {
+      title: t("demo.resetTitle"),
+      text: t("demo.resetText"),
+      confirm: t("demo.resetConfirm"),
+      run: async () => {
+        await this.api.request("POST", "/api/demo/reset", { body: { lang: this.i18n.lang } });
+        this.toast(t("demo.resetDone"));
+        if (this.isDemo) await this._switchDataset("demo");
+        else this.session = await this.api.request("GET", "/api/session");
+      },
+    });
   }
 
   async _logout() {
@@ -391,6 +438,7 @@ export class App {
         <button type="button" class="iconbtn" data-close aria-label="${t("common.close")}">${raw(icon("close"))}</button></div>
       <div class="dbody">
         <div class="userbox"><div class="who"><span class="avatar" aria-hidden="true">${initials(user.name)}</span><span><b>${user.name}</b><small>${t(`auth.role.${user.role}`)}</small></span></div></div>
+        <div class="field"><span class="help">${t("dataset.label")}</span>${datasetSwitch(this.viewModel())}</div>
         <div class="field"><span class="help">${t("lang.label")}</span>${langSwitch(this.viewModel())}</div>
       </div>
       <div class="dfoot"><button type="button" class="btn ghost" data-action="open-settings">${raw(icon("sliders"))}${t("nav.reglages")}</button><button type="button" class="btn ghost" data-action="logout">${raw(icon("logout"))}${t("auth.signout")}</button></div>`);
@@ -429,7 +477,7 @@ export class App {
           ${hideNav ? "" : html`<ul class="navlist">${SCREENS.map(([key, ic]) => html`<li><button type="button" class="navbtn" data-action="nav" data-value="${key}" ${current(key)}>${raw(icon(ic))}<span>${t(`nav.${key}`)}</span></button></li>`)}</ul>`}
           <div class="spacer"></div>
           <div class="stack-foot">
-            ${demo ? html`<span class="demo-pill"><span class="dot"></span>${t("demo.pill")}</span>` : ""}
+            ${hideNav ? "" : datasetSwitch(this.viewModel(), { compact: true })}
             <div class="userbox">
               <div class="who">${avatar}<span><b>${user.name}</b><small>${t(`auth.role.${user.role}`)}</small></span></div>
               <button type="button" class="linkbtn" data-action="logout">${raw(icon("logout"))}${t("auth.signout")}</button>
@@ -444,7 +492,7 @@ export class App {
         <header class="mobilebar">
           ${brand}
           ${demo ? html`<span class="demo-mini">${t("demo.short").split("\n")[0]}<br>${t("demo.short").split("\n")[1]}</span>` : html`<span class="push"></span>`}
-          ${hideNav ? "" : html`<button type="button" class="iconbtn" data-action="go" data-value="synthese" aria-label="${t("common.alerts")}${alerts ? ` (${alerts})` : ""}">${raw(icon("bell"))}${alerts ? html`<span class="badge">${alerts}</span>` : ""}</button>`}
+          ${hideNav ? "" : html`<button type="button" class="iconbtn" data-action="alerts" aria-haspopup="dialog" aria-label="${t("common.alerts")}${alerts ? ` (${alerts})` : ""}">${raw(icon("bell"))}${alerts ? html`<span class="badge">${alerts}</span>` : ""}</button>`}
           <button type="button" class="iconbtn" data-action="account" aria-label="${t("auth.account")} : ${user.name}">${avatar}</button>
         </header>
         <main class="main" id="rc-main">${content}</main>
@@ -466,8 +514,6 @@ export class App {
       body = html`<div class="error-box">${raw(icon("alert"))}<span>${t("error.load")} ${this.state.error}</span></div><div><button type="button" class="btn ghost" data-action="retry">${t("common.retry")}</button></div>`;
     } else if (this.state.screen === "reglages") {
       body = renderSettings(this.viewModel());
-    } else if (this.state.screen !== "synthese") {
-      body = renderPlaceholder(this.viewModel(), this.state.screen);
     } else if (!this.state.overview.properties.length) {
       body = this.canWrite ? renderOnboarding(this.viewModel()) : renderNoAccess(this.viewModel());
     } else {

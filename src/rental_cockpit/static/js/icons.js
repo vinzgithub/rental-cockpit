@@ -48,6 +48,11 @@ const PATHS = {
 };
 
 const FILLED = {
+  repeat: '<path d="M4 10.5V9a3 3 0 0 1 3-3h12"/><path d="m16 3 3 3-3 3"/><path d="M20 13.5V15a3 3 0 0 1-3 3H5"/><path d="m8 21-3-3 3-3"/>',
+  pencil: '<path d="M4 20h4L18.6 9.4a2.1 2.1 0 0 0-3-3L5 17v3z"/><path d="m14.5 7.5 3 3"/>',
+  ban: '<circle cx="12" cy="12" r="8.5"/><path d="m6 6 12 12"/>',
+  receipt: '<path d="M6 3.5h12v17l-2.4-1.6-2.4 1.6-1.2-.8-1.2.8-2.4-1.6L6 20.5z"/><path d="M9 8h6M9 11.5h6M9 15h3.5"/>',
+  filter: '<path d="M4 5.5h16l-6 7.2v5.6l-4 1.7v-7.3z"/>',
   dots: '<circle cx="5.5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18.5" cy="12" r="1.6"/>',
   play: '<path d="M8 5.2v13.6a.8.8 0 0 0 1.2.7l10.6-6.8a.8.8 0 0 0 0-1.4L9.2 4.5A.8.8 0 0 0 8 5.2z"/>',
 };

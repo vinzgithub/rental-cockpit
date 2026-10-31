@@ -150,6 +150,19 @@ const CHECK_TARGET = {
   allocations_incomplete: "prestataires",
 };
 
+/** One « À vérifier » item. It only leads somewhere when that screen exists. */
+export function checkItem(v, item) {
+  const [ic, tone] = CHECK_ICONS[item.kind] || ["info", "amber"];
+  const target = CHECK_TARGET[item.kind];
+  const body = html`
+    <span class="bubble ${tone}">${raw(icon(ic))}</span>
+    <span><b>${item.title}</b><p>${item.hint}</p></span>`;
+  if (target && v.ready.has(target)) {
+    return html`<button type="button" class="check" data-action="go" data-value="${target}">${body}<span class="chev">${raw(icon("chevronRight"))}</span></button>`;
+  }
+  return html`<div class="check static">${body}</div>`;
+}
+
 function checksCard(v) {
   const { i18n, overview } = v;
   const items = overview.to_check || [];
@@ -160,15 +173,7 @@ function checksCard(v) {
         <h2 id="rc-check">${i18n.t("check.title")}</h2>
       </div>
       <div class="rows">
-        ${items.length ? items.map((item) => {
-          const [ic, tone] = CHECK_ICONS[item.kind] || ["info", "amber"];
-          return html`
-            <button type="button" class="check" data-action="go" data-value="${CHECK_TARGET[item.kind] || "synthese"}">
-              <span class="bubble ${tone}">${raw(icon(ic))}</span>
-              <span><b>${item.title}</b><p>${item.hint}</p></span>
-              <span class="chev">${raw(icon("chevronRight"))}</span>
-            </button>`;
-        }) : html`<div class="empty">${raw(icon("checkCircle"))}<span>${i18n.t("check.empty")}</span></div>`}
+        ${items.length ? items.map((item) => checkItem(v, item)) : html`<div class="empty">${raw(icon("checkCircle"))}<span>${i18n.t("check.empty")}</span></div>`}
       </div>
     </section>`;
 }
@@ -190,19 +195,21 @@ function staysCard(v) {
   const { t } = i18n;
   const stays = overview.upcoming_stays || [];
   const next = stays[0];
+  const linked = v.ready.has("sejours");
   return html`
     <section class="card" aria-labelledby="rc-stays">
       <div class="card-head">
         <span class="ico">${raw(icon("calendar"))}</span>
         <h2 id="rc-stays"><span class="desktop-only">${t("stays.title")}</span><span class="mobile-only">${t("stays.next")}</span></h2>
-        <button type="button" class="btn ghost small end desktop-only" data-action="go" data-value="sejours">${t("stays.all")}${raw(icon("chevronRight"))}</button>
-        <button type="button" class="linkbtn end mobile-only" data-action="go" data-value="sejours">${t("stays.allShort")}</button>
+        ${linked ? html`
+          <button type="button" class="btn ghost small end desktop-only" data-action="go" data-value="sejours">${t("stays.all")}${raw(icon("chevronRight"))}</button>
+          <button type="button" class="linkbtn end mobile-only" data-action="go" data-value="sejours">${t("stays.allShort")}</button>` : ""}
       </div>
       ${stays.length ? html`
         <table class="table stays-table">
           <thead><tr>
             <th scope="col">${t("stays.arrival")}</th><th scope="col">${t("stays.departure")}</th><th scope="col">${t("stays.property")}</th>
-            <th scope="col">${t("stays.status")}</th><th scope="col">${t("stays.guests")}</th><th scope="col"><span class="sr-only">${t("stays.actions")}</span></th>
+            <th scope="col">${t("stays.status")}</th><th scope="col">${t("stays.guests")}</th>${linked ? html`<th scope="col"><span class="sr-only">${t("stays.actions")}</span></th>` : ""}
           </tr></thead>
           <tbody>
             ${stays.map((s) => html`<tr>
@@ -211,7 +218,7 @@ function staysCard(v) {
               <td><span class="propcell">${raw(propertyIcon(s.property_kind))}<span>${s.property}</span></span></td>
               <td>${statusPill(v, s)}</td>
               <td>${guests(v, s.guests)}</td>
-              <td><button type="button" class="iconbtn" data-action="go" data-value="sejours" aria-label="${t("stays.actionsFor", { date: i18n.dateLong(s.start) })}">${raw(icon("dots"))}</button></td>
+              ${linked ? html`<td><button type="button" class="iconbtn" data-action="go" data-value="sejours" aria-label="${t("stays.actionsFor", { date: i18n.dateLong(s.start) })}">${raw(icon("dots"))}</button></td>` : ""}
             </tr>`)}
           </tbody>
         </table>
@@ -223,7 +230,6 @@ function staysCard(v) {
               <div class="when num">${i18n.dateShort(next.start)} → ${i18n.dateShort(next.end)}</div>
               <div class="facts"><span>${raw(icon("users"))}${guests(v, next.guests)}</span><span>${raw(icon("moon"))}${i18n.plural(next.nights, "stays.night", "stays.nights")}</span></div>
             </div>
-            <span class="chev">${raw(icon("chevronRight"))}</span>
           </div>
         </div>` : html`<div class="empty">${raw(icon("calendar"))}<span>${t("stays.empty")}</span></div>`}
     </section>`;
@@ -247,7 +253,6 @@ export function renderSynthese(v) {
     ${kpis(v)}
     ${v.canWrite ? html`<div class="quick mobile-only">
       <button type="button" class="btn primary" data-action="add-menu">${raw(icon("plus"))}${t("quick.add")}</button>
-      <button type="button" class="btn outline-accent" data-action="go" data-value="documents">${raw(icon("upload"))}${t("quick.import")}</button>
     </div>` : ""}
     <div class="mobile-only">${staysCard(v)}</div>
     <div class="grid-2">
