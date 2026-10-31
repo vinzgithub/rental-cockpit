@@ -1,0 +1,16 @@
+name: Idea / Suggestion
+description: Suggest an improvement. / Proposer une amélioration.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: Need / Besoin
+      description: What are you trying to do? / Que cherchez-vous à faire ?
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Fictional example / Exemple fictif
+      description: Use invented amounts and names only. / Uniquement des montants et des noms inventés.

@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rental-cockpit"
+version = "0.1.0"
+description = "Self-hosted rental management: stays, expenses, documents and results that explain themselves."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "Vincent Fournet" }]
+keywords = ["rental", "holiday-let", "property-management", "self-hosted", "bookkeeping"]
+dependencies = [
+    "fastapi>=0.115,<0.116",
+    "uvicorn>=0.32,<0.33",
+    "itsdangerous>=2.2,<3",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "httpx>=0.27", "ruff>=0.8"]
+
+[project.urls]
+Homepage = "https://github.com/vinzgithub/rental-cockpit"
+Issues = "https://github.com/vinzgithub/rental-cockpit/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+rental_cockpit = ["static/*", "static/js/*.js", "static/js/views/*.js", "static/fonts/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-p no:cacheprovider"
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.ruff]
+line-length = 150
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "B"]

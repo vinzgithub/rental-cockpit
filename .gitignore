@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.venv/
+build/
+dist/
+*.egg-info/
+# Never commit real data, documents, backups or keys
+data/
+*.db
+*.db-wal
+*.db-shm
+.secret_key
+*.rcbackup
