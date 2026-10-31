@@ -19,7 +19,7 @@
 ---
 
 > [!IMPORTANT]
-> **Préversion 0.1.0, en cours de développement.** L'écran **Synthèse** fonctionne de bout en bout (comptes, démonstration, indicateurs expliqués, création d'un bien). Les écrans Séjours, Dépenses, Prestataires, Documents et Réglages arrivent ensuite, dans le même style. Ce n'est pas encore une version stable : n'y confiez pas votre seule copie de données réelles.
+> **Préversion 0.1.0, en cours de développement.** L'écran **Synthèse** fonctionne de bout en bout (comptes, démonstration, indicateurs expliqués, création d'un bien), ainsi que la partie compte des **Réglages** (mot de passe, double authentification, clés pour Home Assistant). Les écrans Séjours, Dépenses, Prestataires et Documents arrivent ensuite, dans le même style. Ce n'est pas encore une version stable : n'y confiez pas votre seule copie de données réelles.
 
 ## Pour qui ?
 
@@ -38,6 +38,8 @@ Rental Cockpit est une application web autonome que vous installez chez vous (un
 | **Évolutions calculées** | Les pourcentages comparent la période à la précédente avec les mêmes règles. |
 | **À vérifier** | Ce qui empêche un résultat d'être définitif : paiements inconnus, séjours sans montant, versements non reçus, sommes restant à affecter. |
 | **Mes biens** | Recettes, dépenses et solde par bien ; création d'un bien en quelques secondes. |
+| **Double authentification** | Facultative : code à six chiffres d'une application d'authentification (TOTP), dix codes de secours à usage unique, activation guidée en trois étapes. |
+| **Lien avec Home Assistant** | Facultatif : clé en lecture seule et résumé JSON (recettes, solde, occupation ce soir, prochaine arrivée, à vérifier) pour vos capteurs, cartes et automatisations. [Guide](docs/fr/home-assistant.md) |
 | **Ordinateur, tablette, téléphone** | Barre latérale, onglets en haut ou barre en bas selon la largeur. |
 
 <table>
@@ -45,6 +47,10 @@ Rental Cockpit est une application web autonome que vous installez chez vous (un
 <td width="50%"><img src="docs/images/fr/explain.png" alt="Explication d'un indicateur : formule, période, exclusions et lignes utilisées"></td>
 <td width="25%"><img src="docs/images/fr/overview-phone.png" alt="Synthèse sur téléphone"></td>
 <td width="25%"><img src="docs/images/fr/first-account.png" alt="Création du premier compte administrateur"></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/images/fr/settings-desktop.png" alt="Réglages : compte, double authentification activée, clé pour Home Assistant"></td>
+<td width="50%" colspan="2"><img src="docs/images/fr/mfa-setup.png" alt="Activation de la double authentification avec un code QR"></td>
 </tr>
 </table>
 
@@ -63,15 +69,15 @@ Détails : [docs/fr/calculs.md](docs/fr/calculs.md).
 
 ## Installation
 
-**Avec Docker Compose** (recommandé) :
+**Avec Docker** (recommandé) : une image prête à l'emploi est publiée pour x86-64 et ARM64 (Raspberry Pi 4 compris).
 
 ```bash
-git clone https://github.com/vinzgithub/rental-cockpit.git
-cd rental-cockpit
-docker compose up -d --build
+mkdir rental-cockpit && cd rental-cockpit
+curl -fsSLO https://raw.githubusercontent.com/vinzgithub/rental-cockpit/main/docker-compose.yml
+docker compose up -d
 ```
 
-Ouvrez ensuite `http://<adresse-de-la-machine>:8080` et créez le compte administrateur.
+Ouvrez ensuite `http://<adresse-de-la-machine>:8080` et créez le compte administrateur. Mise à jour : `docker compose pull && docker compose up -d`.
 
 **Sans Docker** (Python 3.11 ou plus récent) :
 
@@ -85,7 +91,9 @@ Toutes les options, la mise à jour et la sauvegarde manuelle : [docs/fr/install
 ## Confidentialité et sécurité
 
 - Les données restent dans un seul dossier (`/data`) : une base SQLite et, plus tard, les PDF privés. Aucune télémétrie, aucun appel sortant.
-- Mots de passe hachés (scrypt), session signée `HttpOnly` et `SameSite=Strict`, jeton anti-CSRF sur chaque modification, verrouillage après cinq échecs de connexion, politique de sécurité du contenu stricte (aucun script ni style externe ou en ligne).
+- Mots de passe hachés (scrypt), double authentification facultative (TOTP et codes de secours), session signée `HttpOnly` et `SameSite=Strict`, jeton anti-CSRF sur chaque modification, verrouillage après cinq échecs de connexion, politique de sécurité du contenu stricte (aucun script ni style externe ou en ligne).
+- Le conteneur tourne sans privilège, avec un système de fichiers en lecture seule.
+- Les clés pour Home Assistant ne font que lire, ne sont affichées qu'une fois et se révoquent à tout moment.
 - Les droits sont vérifiés sur le serveur à chaque requête : un lecteur ne voit que les biens qui lui sont accordés, et l'accès aux PDF est une permission distincte.
 - Gardez l'application sur votre réseau local ou derrière un proxy HTTPS ; ne l'ouvrez pas directement sur Internet.
 
@@ -95,11 +103,12 @@ Voir [SECURITY.md](SECURITY.md) et [docs/fr/securite.md](docs/fr/securite.md).
 
 | Document | Contenu |
 |---|---|
-| [Installation](docs/fr/installation.md) | Docker, Python, variables, mise à jour, sauvegarde du dossier de données |
+| [Installation](docs/fr/installation.md) | Image Docker, Python, variables, mise à jour, sauvegarde, dépannage du compte |
 | [Guide de démarrage](docs/fr/guide.md) | Les dix premières minutes, avec la démonstration |
 | [Règles de calcul](docs/fr/calculs.md) | Les trois lectures, chaque indicateur, glossaire |
 | [Architecture et adaptations](docs/fr/architecture-et-adaptations.md) | Ce qui est repris du projet d'origine, ce qui change avec une application autonome |
-| [Sécurité](docs/fr/securite.md) | Comptes, droits, données, exposition réseau |
+| [Sécurité](docs/fr/securite.md) | Comptes, double authentification, droits, clés d'API, données, exposition réseau |
+| [Home Assistant](docs/fr/home-assistant.md) | Lien facultatif : capteurs, automatisations, carte, référence de l'API |
 | [Feuille de route](docs/fr/feuille-de-route.md) | Écrans et lots à venir |
 
 ## Licence

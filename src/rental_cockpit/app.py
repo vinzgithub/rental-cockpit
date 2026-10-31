@@ -16,9 +16,9 @@ token on changes, rights resolved on the server for the requested dataset.
 from __future__ import annotations
 
 import logging
-from datetime import date, datetime, timezone
-from pathlib import Path
-from typing import Any, Callable
+import time
+from collections.abc import Callable
+from typing import Any
 
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
@@ -27,137 +27,45 @@ from starlette.concurrency import run_in_threadpool
 from starlette.middleware.sessions import SessionMiddleware
 
 from . import __version__
-from .access import Access, access_for
+from .account_routes import register_account_routes
 from .config import Config, secret_key
-from .database import Database, Registry
 from .engine import indicators
 from .engine.demo import build_demo
 from .engine.errors import RCError, render
 from .engine.ledger import Ledger
 from .engine.schema import category_label
+from .ha_api import register_ha_routes
 from .security import (
     DUMMY_HASH,
     MIN_PASSWORD_LENGTH,
     USERNAME_RE,
-    LoginThrottle,
     csrf_token,
-    csrf_valid,
     hash_password,
-    totp_match,
     verify_password,
+)
+from .web import (
+    MFA_PENDING_SECONDS,
+    STATIC,
+    Services,
+    access,
+    check_second_factor,
+    client_key,
+    content_security_policy,
+    current_user,
+    dataset_of,
+    error_response,
+    lang_of,
+    login_session,
+    period_from,
+    public_property,
+    public_user,
+    read_json,
+    require_csrf,
+    scope,
+    utc_now,
 )
 
 _LOGGER = logging.getLogger("rental_cockpit")
-STATIC = Path(__file__).parent / "static"
-DATASETS = ("real", "demo")
-MAX_JSON_BYTES = 1024 * 1024
-STATUS = {"forbidden": 403, "forbidden_property": 403, "forbidden_documents": 403, "login_required": 401,
-          "csrf_failed": 403, "not_found": 404, "login_locked": 429, "stale_revision": 409}
-
-CSP = ("default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; "
-       "connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'")
-
-
-def utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
-
-
-class Services:
-    """What the request handlers share: configuration, database, registries."""
-
-    def __init__(self, config: Config) -> None:
-        self.config = config
-        self.db = Database(config.db_path)
-        self.registries = {
-            "real": Registry(self.db, "real"),
-            "demo": Registry(self.db, "demo", factory=lambda: build_demo(self.today())),
-        }
-        self.registries["real"].load(create=True, now=utc_now())
-        self.registries["demo"].load(create=False, now=utc_now())
-        self.throttle = LoginThrottle()
-
-    @staticmethod
-    def today() -> date:
-        """Today in the time zone of the process (``TZ``), never a hard-coded one."""
-        return date.today()
-
-
-# --------------------------------------------------------------------------- request helpers
-
-def lang_of(request: Request, payload: dict[str, Any] | None = None) -> str:
-    value = (payload or {}).get("lang") or request.query_params.get("lang") or ""
-    if not value:
-        value = request.headers.get("accept-language", "")
-    return "fr" if str(value).lower().startswith("fr") else "en"
-
-
-def error_response(err: RCError, lang: str) -> JSONResponse:
-    return JSONResponse({"code": err.code, "message": err.message(lang)}, status_code=STATUS.get(err.code, 400))
-
-
-async def read_json(request: Request) -> dict[str, Any]:
-    if int(request.headers.get("content-length") or 0) > MAX_JSON_BYTES:
-        raise RCError("upload_too_large", limit="1 Mio")
-    try:
-        payload = await request.json()
-    except ValueError as exc:
-        raise RCError("choice_invalid", field="body") from exc
-    if not isinstance(payload, dict):
-        raise RCError("choice_invalid", field="body")
-    return payload
-
-
-def require_csrf(request: Request) -> None:
-    if not csrf_valid(request.session, request.headers.get("x-csrf-token")):
-        raise RCError("csrf_failed")
-
-
-def current_user(services: Services, request: Request):
-    """The signed-in account, or a 401. A changed password ends other sessions."""
-    uid = request.session.get("uid")
-    user = services.db.user_by_id(int(uid)) if uid else None
-    if user is None or request.session.get("sv") != user["session_version"]:
-        request.session.pop("uid", None)
-        raise RCError("login_required")
-    return user
-
-
-def dataset_of(value: Any) -> str:
-    return value if value in DATASETS else "real"
-
-
-def access(services: Services, user: Any, dataset: str) -> Access:
-    registry = services.registries[dataset]
-    grants = services.db.grants_for(int(user["id"])) if user["role"] != "admin" else {}
-    return access_for(user, grants, registry.snapshot(), dataset)
-
-
-def period_from(params: Any) -> tuple[date, date]:
-    try:
-        start, end = date.fromisoformat(str(params.get("start"))), date.fromisoformat(str(params.get("end")))
-    except ValueError as exc:
-        raise RCError("date_format") from exc
-    if end <= start or (end - start).days > 3700:
-        raise RCError("date_range")
-    return start, end
-
-
-def scope(acc: Access, property_id: str | None) -> set[str]:
-    """Properties asked for, restricted to what the caller may see (SEC 02)."""
-    if property_id in (None, "", "all"):
-        return set(acc.property_ids)
-    acc.require_property(property_id)
-    return {property_id}
-
-
-def public_property(prop: dict[str, Any]) -> dict[str, Any]:
-    keys = ("id", "name", "kind", "capacity", "bedrooms", "currency", "timezone", "activity_start", "unavailable", "archived", "note", "updated_at")
-    return {key: prop.get(key) for key in keys}
-
-
-def public_user(user: Any) -> dict[str, Any]:
-    return {"id": user["id"], "username": user["username"], "name": user["display_name"] or user["username"],
-            "role": user["role"], "is_admin": user["role"] == "admin", "mfa": bool(user["totp_secret"])}
 
 
 # --------------------------------------------------------------------------- application
@@ -170,13 +78,16 @@ def create_app(config: Config | None = None) -> FastAPI:
     app.add_middleware(SessionMiddleware, secret_key=secret_key(config.data_dir), session_cookie="rental_cockpit_session",
                        max_age=config.session_max_age, same_site="strict", https_only=config.cookie_secure)
 
+    csp = content_security_policy(config.frame_ancestors)
+
     @app.middleware("http")
     async def security_headers(request: Request, call_next: Callable):
         response: Response = await call_next(request)
-        response.headers.setdefault("Content-Security-Policy", CSP)
+        response.headers.setdefault("Content-Security-Policy", csp)
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("Referrer-Policy", "no-referrer")
-        response.headers.setdefault("X-Frame-Options", "DENY")
+        if not config.frame_ancestors:
+            response.headers.setdefault("X-Frame-Options", "DENY")
         response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()")
         if request.url.path.startswith("/api/"):
             response.headers.setdefault("Cache-Control", "no-store")
@@ -241,15 +152,15 @@ def create_app(config: Config | None = None) -> FastAPI:
         if user_id is None:
             raise RCError("setup_done")
         user = services.db.user_by_id(user_id)
-        request.session.clear()
-        request.session.update(uid=user_id, sv=user["session_version"])
+        login_session(request, user)
         _LOGGER.info("Administrator account created")
         return {"ok": True, "csrf": csrf_token(request.session)}
 
     @app.post("/api/auth/login")
     async def login(request: Request) -> dict[str, Any]:
+        """Step 1: user name and password. With two-factor sign-in, step 2 asks for a code."""
         require_csrf(request)
-        key = request.client.host if request.client else "unknown"
+        key = client_key(request)
         if services.throttle.locked(key):
             raise RCError("login_locked")
         payload = await read_json(request)
@@ -260,17 +171,34 @@ def create_app(config: Config | None = None) -> FastAPI:
             services.throttle.failure(key)
             raise RCError("login_failed")
         if user["totp_secret"]:
-            code = str(payload.get("code") or "")
-            if not code:
-                return {"ok": False, "mfa_required": True}
-            step = totp_match(user["totp_secret"], code, int(user["totp_last_step"]))
-            if step is None:
-                services.throttle.failure(key)
-                raise RCError("totp_invalid")
-            services.db.set_totp_step(int(user["id"]), step)
+            # The password is right; the session only remembers that for a few minutes,
+            # and nothing is readable until the code is checked.
+            request.session.clear()
+            request.session.update(mfa_uid=int(user["id"]), mfa_sv=int(user["session_version"]), mfa_at=time.time())
+            return {"ok": False, "mfa_required": True, "csrf": csrf_token(request.session)}
         services.throttle.success(key)
-        request.session.clear()
-        request.session.update(uid=int(user["id"]), sv=user["session_version"])
+        login_session(request, user)
+        return {"ok": True, "csrf": csrf_token(request.session)}
+
+    @app.post("/api/auth/mfa")
+    async def login_code(request: Request) -> dict[str, Any]:
+        """Step 2: the authenticator code, or one single-use recovery code."""
+        require_csrf(request)
+        key = client_key(request)
+        if services.throttle.locked(key):
+            raise RCError("login_locked")
+        uid, started = request.session.get("mfa_uid"), float(request.session.get("mfa_at") or 0)
+        user = services.db.user_by_id(int(uid)) if uid else None
+        if user is None or not user["totp_secret"] or time.time() - started > MFA_PENDING_SECONDS \
+                or request.session.get("mfa_sv") != user["session_version"]:
+            request.session.clear()
+            raise RCError("mfa_expired")
+        payload = await read_json(request)
+        if not check_second_factor(services, user, str(payload.get("code") or "")):
+            services.throttle.failure(key)
+            raise RCError("totp_invalid")
+        services.throttle.success(key)
+        login_session(request, user)
         return {"ok": True, "csrf": csrf_token(request.session)}
 
     @app.post("/api/auth/logout")
@@ -376,6 +304,9 @@ def create_app(config: Config | None = None) -> FastAPI:
             return ledger.once(payload.get("op_id"), lambda: ledger.create_property(fields))
 
         return services.registries[dataset].mutate(apply, utc_now())
+
+    register_account_routes(app, services)
+    register_ha_routes(app, services)
 
     @app.exception_handler(Exception)
     async def on_unexpected(request: Request, err: Exception):  # pragma: no cover - defensive

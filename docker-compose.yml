@@ -1,24 +1,27 @@
 # Copyright © 2026 Vincent Fournet
-# Rental Cockpit — build and run locally:  docker compose up -d --build
-# Then open http://<this machine>:8080 and create the administrator account.
+# Rental Cockpit — the whole installation:
+#   docker compose up -d
+# then open http://<this machine>:8080 and create the administrator account.
+# Upgrade:  docker compose pull && docker compose up -d
 services:
   rental-cockpit:
-    build: .
-    image: rental-cockpit:local
+    # Preview: "edge" follows the main branch. Once a version is released, use
+    # ":latest" (or a version such as ":0.1") for stable updates.
+    image: ghcr.io/vinzgithub/rental-cockpit:edge
     container_name: rental-cockpit
     restart: unless-stopped
     ports:
-      # Listening address and port are visible here (TEC 05). Keep it on your
-      # local network or behind a reverse proxy with HTTPS; never open it on
-      # your router without reading docs/en/security.md.
+      # Listening address and port (TEC 05). Use "127.0.0.1:8080:8080" to listen
+      # on this machine only. Never open it on your router: see docs/en/security.md.
       - "8080:8080"
     volumes:
-      - rental-cockpit-data:/data
+      - rental-cockpit-data:/data         # everything Rental Cockpit stores
     environment:
-      TZ: Etc/UTC                          # set your own time zone, e.g. Europe/Paris
-      # RENTAL_COCKPIT_COOKIE_SECURE: "true"   # when served over HTTPS
-      # RENTAL_COCKPIT_DEFAULT_LOCALE: "en"    # language before anyone signs in
-      # FORWARDED_ALLOW_IPS: "192.0.2.10"      # IP of your reverse proxy, if any
+      TZ: Etc/UTC                          # your time zone, e.g. Europe/Paris
+      # RENTAL_COCKPIT_COOKIE_SECURE: "true"                         # when served over HTTPS
+      # RENTAL_COCKPIT_DEFAULT_LOCALE: "en"                          # language before anyone signs in
+      # RENTAL_COCKPIT_FRAME_ANCESTORS: "https://ha.example.org"     # show it inside Home Assistant
+      # FORWARDED_ALLOW_IPS: "192.0.2.10"                            # IP of your reverse proxy, if any
     read_only: true
     tmpfs:
       - /tmp

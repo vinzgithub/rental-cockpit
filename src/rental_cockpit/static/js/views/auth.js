@@ -19,7 +19,15 @@ export function renderAuth(v) {
   const { t } = i18n;
   const setup = session.setup_required;
   const error = auth.error ? html`<div class="error-box" role="alert">${raw(icon("alert"))}<span>${auth.error}</span></div>` : "";
-  const form = setup ? html`
+  const mfaForm = html`
+      <form class="stack" data-form="mfa" novalidate>
+        <div><h1>${t("auth.codeTitle")}</h1><p class="reading">${t("auth.codeSub")}</p></div>
+        <div class="field"><label for="rc-o">${t("auth.codeLabel")}</label><input id="rc-o" name="code" inputmode="text" autocomplete="one-time-code" maxlength="20" required></div>
+        ${error}
+        <button type="submit" class="btn primary" ${raw(auth.busy ? "disabled" : "")}>${raw(icon("shieldCheck"))}${t("auth.verify")}</button>
+        <button type="button" class="linkbtn" data-action="auth-back">${t("auth.back")}</button>
+      </form>`;
+  const form = auth.mfa ? mfaForm : setup ? html`
       <form class="stack" data-form="setup" novalidate>
         <div><h1>${t("auth.setupTitle")}</h1><p class="reading">${t("auth.setupSub")}</p></div>
         <div class="field"><label for="rc-u">${t("auth.username")}</label><input id="rc-u" name="username" autocomplete="username" required minlength="3" maxlength="40" aria-describedby="rc-u-h"><span class="help" id="rc-u-h">${t("auth.usernameHelp")}</span></div>
@@ -33,7 +41,6 @@ export function renderAuth(v) {
         <div><h1>${t("auth.loginTitle")}</h1><p class="reading">${t("auth.loginSub")}</p></div>
         <div class="field"><label for="rc-u">${t("auth.username")}</label><input id="rc-u" name="username" autocomplete="username" required value="${auth.username || ""}"></div>
         <div class="field"><label for="rc-p">${t("auth.password")}</label><input id="rc-p" name="password" type="password" autocomplete="current-password" required></div>
-        ${auth.mfa ? html`<div class="field"><label for="rc-o">${t("auth.code")}</label><input id="rc-o" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required></div>` : ""}
         ${error}
         <button type="submit" class="btn primary" ${raw(auth.busy ? "disabled" : "")}>${raw(icon("arrowRight"))}${t("auth.signin")}</button>
       </form>`;

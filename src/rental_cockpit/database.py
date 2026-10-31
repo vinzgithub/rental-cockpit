@@ -53,6 +53,21 @@ CREATE TABLE IF NOT EXISTS grants (
     documents INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (user_id, property_id)
 );
+CREATE TABLE IF NOT EXISTS recovery_codes (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    code_hash TEXT NOT NULL,
+    used_at TEXT,
+    PRIMARY KEY (user_id, code_hash)
+);
+CREATE TABLE IF NOT EXISTS api_keys (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    token_hash TEXT NOT NULL UNIQUE,
+    created_at TEXT NOT NULL,
+    last_used_at TEXT,
+    revoked_at TEXT
+);
 CREATE TABLE IF NOT EXISTS registries (
     dataset TEXT PRIMARY KEY CHECK (dataset IN ('real', 'demo')),
     revision INTEGER NOT NULL,
@@ -120,6 +135,72 @@ class Database:
                 (username, display_name, password_hash, now, now),
             )
             return int(cursor.lastrowid)
+
+    def set_password(self, user_id: int, password_hash: str, now: str) -> int:
+        """New password; every other session ends (returns the new session version)."""
+        with self.transaction() as db:
+            db.execute("UPDATE users SET password_hash = ?, must_change_password = 0, session_version = session_version + 1, updated_at = ? WHERE id = ?",
+                       (password_hash, now, user_id))
+            return int(db.execute("SELECT session_version FROM users WHERE id = ?", (user_id,)).fetchone()[0])
+
+    def enable_totp(self, user_id: int, secret: str, step: int, code_hashes: list[str], now: str) -> int:
+        """Turn on two-factor sign-in with fresh recovery codes; other sessions end."""
+        with self.transaction() as db:
+            db.execute("UPDATE users SET totp_secret = ?, totp_last_step = ?, session_version = session_version + 1, updated_at = ? WHERE id = ?",
+                       (secret, step, now, user_id))
+            db.execute("DELETE FROM recovery_codes WHERE user_id = ?", (user_id,))
+            db.executemany("INSERT INTO recovery_codes(user_id, code_hash) VALUES (?, ?)", [(user_id, h) for h in code_hashes])
+            return int(db.execute("SELECT session_version FROM users WHERE id = ?", (user_id,)).fetchone()[0])
+
+    def disable_totp(self, user_id: int, now: str) -> int:
+        with self.transaction() as db:
+            db.execute("UPDATE users SET totp_secret = NULL, totp_last_step = 0, session_version = session_version + 1, updated_at = ? WHERE id = ?",
+                       (now, user_id))
+            db.execute("DELETE FROM recovery_codes WHERE user_id = ?", (user_id,))
+            return int(db.execute("SELECT session_version FROM users WHERE id = ?", (user_id,)).fetchone()[0])
+
+    def replace_recovery_codes(self, user_id: int, code_hashes: list[str]) -> None:
+        with self.transaction() as db:
+            db.execute("DELETE FROM recovery_codes WHERE user_id = ?", (user_id,))
+            db.executemany("INSERT INTO recovery_codes(user_id, code_hash) VALUES (?, ?)", [(user_id, h) for h in code_hashes])
+
+    def use_recovery_code(self, user_id: int, code_hash: str, now: str) -> bool:
+        """Consume one recovery code; ``False`` if unknown or already used (single use)."""
+        with self.transaction() as db:
+            cursor = db.execute("UPDATE recovery_codes SET used_at = ? WHERE user_id = ? AND code_hash = ? AND used_at IS NULL",
+                                (now, user_id, code_hash))
+            return cursor.rowcount == 1
+
+    def recovery_codes_left(self, user_id: int) -> int:
+        with self.connect() as db:
+            return int(db.execute("SELECT COUNT(*) FROM recovery_codes WHERE user_id = ? AND used_at IS NULL", (user_id,)).fetchone()[0])
+
+    # ------------------------------------------------------------ API keys (read-only, for Home Assistant)
+
+    def create_api_key(self, user_id: int, name: str, token_hash: str, now: str) -> int:
+        with self.transaction() as db:
+            cursor = db.execute("INSERT INTO api_keys(user_id, name, token_hash, created_at) VALUES (?, ?, ?, ?)", (user_id, name, token_hash, now))
+            return int(cursor.lastrowid)
+
+    def list_api_keys(self, user_id: int) -> list[dict[str, Any]]:
+        with self.connect() as db:
+            rows = db.execute("SELECT id, name, created_at, last_used_at FROM api_keys WHERE user_id = ? AND revoked_at IS NULL ORDER BY id",
+                              (user_id,)).fetchall()
+        return [dict(row) for row in rows]
+
+    def revoke_api_key(self, user_id: int, key_id: int, now: str) -> bool:
+        with self.transaction() as db:
+            cursor = db.execute("UPDATE api_keys SET revoked_at = ? WHERE id = ? AND user_id = ? AND revoked_at IS NULL", (now, key_id, user_id))
+            return cursor.rowcount == 1
+
+    def user_for_api_key(self, token_hash: str, now: str) -> sqlite3.Row | None:
+        """The account behind a valid, non-revoked key (and note when it was used)."""
+        with self.transaction() as db:
+            row = db.execute("SELECT id, user_id FROM api_keys WHERE token_hash = ? AND revoked_at IS NULL", (token_hash,)).fetchone()
+            if row is None:
+                return None
+            db.execute("UPDATE api_keys SET last_used_at = ? WHERE id = ?", (now, row["id"]))
+            return db.execute("SELECT * FROM users WHERE id = ?", (row["user_id"],)).fetchone()
 
     def set_totp_step(self, user_id: int, step: int) -> None:
         with self.transaction() as db:

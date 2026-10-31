@@ -57,8 +57,26 @@ La carte **À vérifier** liste ce qui empêche un résultat d'être définitif.
 
 Le bandeau propose **Utiliser mes données**. Vous arrivez sur un espace vide avec les étapes de démarrage : créez votre premier bien (seul le nom est obligatoire). La démonstration reste disponible et séparée.
 
+## 8. Protéger votre compte
+
+Dans **Réglages → Double authentification → Activer** :
+
+1. confirmez votre mot de passe ;
+2. scannez le code QR avec une application d'authentification (Aegis, Google Authenticator, 2FAS, Bitwarden…), ou saisissez la clé à la main, puis tapez le code à six chiffres affiché ;
+3. rangez les **dix codes de secours** (copier, télécharger) : chacun ouvre une seule connexion si vous perdez votre téléphone. La fenêtre ne se ferme qu'une fois la case « J'ai rangé ces codes en lieu sûr » cochée.
+
+À la connexion suivante, le code est demandé après le mot de passe. Les autres navigateurs ouverts sur ce compte sont déconnectés.
+
+![Activation de la double authentification](../images/fr/mfa-setup.png)
+
+## 9. Home Assistant (facultatif)
+
+Dans **Réglages → Home Assistant et API → Créer une clé**, Rental Cockpit affiche une fois la ligne à coller dans `secrets.yaml`. L'adresse à indiquer dans Home Assistant est affichée juste au-dessus. La suite (capteurs, carte, automatisations) : [home-assistant.md](home-assistant.md).
+
+![Réglages : compte, double authentification activée, clé pour Home Assistant](../images/fr/settings-desktop.png)
+
 ## Sur téléphone
 
 La même Synthèse s'affiche en une colonne, le solde en premier, avec une barre de navigation en bas. Sur écran tactile, les commandes visent 44 × 44 pixels.
 
-![Synthèse sur téléphone](../images/fr/overview-phone.png)
+<img src="../images/fr/overview-phone.png" alt="Synthèse sur téléphone" width="320"> <img src="../images/fr/settings-phone.png" alt="Réglages sur téléphone" width="320">

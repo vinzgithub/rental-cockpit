@@ -8,11 +8,13 @@ COPY pyproject.toml README.md ./
 COPY src ./src
 RUN pip install --no-cache-dir build==1.2.2 && python -m build --wheel --outdir /dist
 
-# ---- runtime image
+# ---- runtime image (linux/amd64 and linux/arm64, e.g. Raspberry Pi 4)
 FROM python:3.12-slim
+ARG VERSION=dev
 LABEL org.opencontainers.image.title="Rental Cockpit" \
-      org.opencontainers.image.description="Self-hosted rental management" \
-      org.opencontainers.image.source="https://github.com/vinzgithub/rental-cockpit"
+      org.opencontainers.image.description="Self-hosted rental management: stays, expenses, documents and explained results" \
+      org.opencontainers.image.source="https://github.com/vinzgithub/rental-cockpit" \
+      org.opencontainers.image.version="${VERSION}"
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     RENTAL_COCKPIT_DATA_DIR=/data

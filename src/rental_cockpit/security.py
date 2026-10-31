@@ -15,6 +15,7 @@ import secrets
 import struct
 import time
 from threading import Lock
+from urllib.parse import quote, urlencode
 
 _SCRYPT = {"n": 2**14, "r": 8, "p": 1}
 MIN_PASSWORD_LENGTH = 10
@@ -110,3 +111,42 @@ def totp_match(secret: str, code: str, last_step: int, now: float | None = None)
         if hmac.compare_digest(totp_at(secret, step), code) and step > last_step:
             found = step
     return found
+
+
+TOTP_ISSUER = "Rental Cockpit"
+RECOVERY_CODE_COUNT = 10
+_RECOVERY_ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789"  # no 0/o, 1/l/i
+
+
+def totp_uri(secret: str, account: str) -> str:
+    """The ``otpauth://`` link shown as a QR code to authenticator apps."""
+    label = quote(f"{TOTP_ISSUER}:{account}", safe="")
+    query = urlencode({"secret": secret, "issuer": TOTP_ISSUER, "algorithm": "SHA1", "digits": TOTP_DIGITS, "period": TOTP_PERIOD}, quote_via=quote)
+    return f"otpauth://totp/{label}?{query}"
+
+
+def new_recovery_codes(count: int = RECOVERY_CODE_COUNT) -> list[str]:
+    """Single-use codes such as ``k7m2q-x9fhr`` (about 50 bits each)."""
+    codes = []
+    for _ in range(count):
+        raw = "".join(secrets.choice(_RECOVERY_ALPHABET) for _ in range(10))
+        codes.append(f"{raw[:5]}-{raw[5:]}")
+    return codes
+
+
+def recovery_code_hash(code: str) -> str:
+    normalized = re.sub(r"[^a-z0-9]", "", (code or "").lower())
+    return hashlib.sha256(normalized.encode()).hexdigest()
+
+
+def looks_like_recovery_code(code: str) -> bool:
+    return len(re.sub(r"[^a-z0-9]", "", (code or "").lower())) == 10
+
+
+def new_api_token() -> str:
+    """A read-only API key: shown once, stored only as its SHA-256 hash."""
+    return "rc_" + secrets.token_urlsafe(32)
+
+
+def token_hash(token: str) -> str:
+    return hashlib.sha256(token.encode()).hexdigest()

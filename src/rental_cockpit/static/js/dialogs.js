@@ -6,7 +6,7 @@ import { esc, html, markup, raw } from "./dom.js";
 import { icon, propertyIcon } from "./icons.js";
 import { periodName } from "./views/synthese.js";
 
-function openDialog(app, { title, subtitle = "", body, footer, labelledby = "rc-dialog-title", wide = false }) {
+export function openDialog(app, { title, subtitle = "", body, footer, labelledby = "rc-dialog-title", wide = false }) {
   const dialog = document.createElement("dialog");
   dialog.className = "rc";
   if (wide) dialog.classList.add("dialog-wide");
@@ -20,7 +20,7 @@ function openDialog(app, { title, subtitle = "", body, footer, labelledby = "rc-
     ${footer ? html`<div class="dfoot">${footer}</div>` : ""}`);
   app.dialogHost.appendChild(dialog);
   dialog.addEventListener("click", (event) => {
-    if (event.target === dialog || event.target.closest("[data-close]")) dialog.close();
+    if ((event.target === dialog && !dialog.dataset.locked) || event.target.closest("[data-close]")) dialog.close();
   });
   dialog.addEventListener("close", () => dialog.remove());
   dialog.showModal();

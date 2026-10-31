@@ -1,0 +1,7 @@
+# Copyright © 2026 Vincent Fournet
+# Build the image from this source tree instead of downloading it:
+#   docker compose -f docker-compose.yml -f compose.build.yaml up -d --build
+services:
+  rental-cockpit:
+    image: rental-cockpit:local
+    build: .

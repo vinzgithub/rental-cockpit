@@ -8,6 +8,7 @@ works the same anywhere in the world.
 from __future__ import annotations
 
 import os
+import re
 import secrets
 from dataclasses import dataclass
 from pathlib import Path
@@ -25,6 +26,7 @@ class Config:
     cookie_secure: bool = False
     default_locale: str = "fr"
     session_max_age: int = 7 * 24 * 3600
+    frame_ancestors: str = ""
 
     @property
     def db_path(self) -> Path:
@@ -42,7 +44,16 @@ class Config:
             cookie_secure=_bool(os.environ.get("RENTAL_COCKPIT_COOKIE_SECURE"), False),
             default_locale=os.environ.get("RENTAL_COCKPIT_DEFAULT_LOCALE", "fr"),
             session_max_age=int(os.environ.get("RENTAL_COCKPIT_SESSION_MAX_AGE", str(7 * 24 * 3600))),
+            # Origins allowed to show Rental Cockpit in a frame, e.g. "https://ha.example.org"
+            # (Home Assistant "Webpage" dashboard). Empty = framing refused.
+            frame_ancestors=_origins(os.environ.get("RENTAL_COCKPIT_FRAME_ANCESTORS", "")),
         )
+
+
+def _origins(value: str) -> str:
+    """Keep only well-formed ``http(s)://host[:port]`` origins, space separated."""
+    origins = [item for item in value.replace(",", " ").split() if re.fullmatch(r"https?://[A-Za-z0-9.-]+(:\d{1,5})?", item)]
+    return " ".join(origins)
 
 
 def secret_key(data_dir: Path) -> str:

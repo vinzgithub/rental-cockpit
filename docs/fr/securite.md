@@ -5,8 +5,9 @@
 - **Aucun compte par défaut.** La première visite crée l'administrateur ; la page de création est ensuite refusée.
 - **Mots de passe** : 10 caractères minimum, hachés avec scrypt (N = 2¹⁴, r = 8, p = 1). Un identifiant inconnu prend autant de temps qu'un mauvais mot de passe.
 - **Limitation des essais** : après cinq échecs depuis une même adresse, les tentatives sont refusées pendant cinq minutes. Le message ne dit pas si l'identifiant existe.
-- **Session** : cookie signé, `HttpOnly`, `SameSite=Strict`, `Secure` quand `RENTAL_COCKPIT_COOKIE_SECURE=true`. La clé de signature est créée au premier démarrage dans le dossier de données (droits 0600). Chaque compte porte un numéro de version de session : le changement de mot de passe (écran Réglages) l'incrémentera pour déconnecter les autres navigateurs.
-- **Double authentification** : codes TOTP (RFC 6238), chaque code n'est accepté qu'une fois. La connexion la gère déjà ; son activation arrive avec l'écran Réglages.
+- **Session** : cookie signé, `HttpOnly`, `SameSite=Strict`, `Secure` quand `RENTAL_COCKPIT_COOKIE_SECURE=true`. La clé de signature est créée au premier démarrage dans le dossier de données (droits 0600). Changer de mot de passe, activer ou désactiver la double authentification déconnecte les autres navigateurs du compte.
+- **Double authentification** (facultative, recommandée) : dans **Réglages**, après confirmation du mot de passe, un code QR généré par le serveur s'ajoute à une application d'authentification ; un premier code valide l'active. Codes TOTP (RFC 6238 : SHA-1, 6 chiffres, 30 s) avec une période de tolérance ; chaque code n'est accepté qu'une fois. Dix codes de secours à usage unique sont affichés une seule fois et conservés uniquement sous forme d'empreintes SHA-256. La désactiver ou renouveler les codes demande le mot de passe et un code. À la connexion, le mot de passe correct n'ouvre rien : le code est demandé dans les cinq minutes. Le secret TOTP doit rester lisible pour vérifier les codes : il est stocké dans la base, protégez donc le dossier `/data` et ses sauvegardes.
+- **Téléphone perdu** et plus de codes de secours : seule une personne qui a accès au serveur peut désactiver la double authentification (`python -m rental_cockpit.cli disable-mfa <identifiant>`, voir [installation.md](installation.md)).
 
 ## Droits
 
@@ -29,9 +30,16 @@ La démonstration (données fictives) est visible par tout compte connecté et m
 
 ## Navigateur
 
-- Politique de sécurité du contenu stricte : `default-src 'self'`, aucun script ni style en ligne ou externe, aucun cadre (`frame-ancestors 'none'`).
+- Politique de sécurité du contenu stricte : `default-src 'self'`, aucun script ni style en ligne ou externe, aucun affichage dans un cadre par défaut (`frame-ancestors 'none'`).
 - `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `Permissions-Policy` restrictive, réponses de l'API non mises en cache.
 - Polices et icônes servies par l'application : aucune requête vers un autre site.
+
+## Clés d'API (Home Assistant)
+
+- **Lecture seule** : une clé lit le résumé de `/api/v1/summary` avec les droits de son compte (mêmes biens, données réelles uniquement) et ne peut rien modifier.
+- Affichée une seule fois, conservée uniquement sous forme d'empreinte SHA-256, révocable à tout moment ; la date de dernière lecture est visible.
+- Dix clés actives au maximum par compte. Voir [home-assistant.md](home-assistant.md).
+- L'application refuse d'être affichée dans un cadre, sauf pour les origines listées dans `RENTAL_COCKPIT_FRAME_ANCESTORS`.
 
 ## Données
 
@@ -43,7 +51,7 @@ La démonstration (données fictives) est visible par tout compte connecté et m
 ## Exposition réseau
 
 - Utilisez Rental Cockpit sur votre réseau local ou derrière un VPN.
-- Si un accès extérieur est indispensable : proxy inverse en HTTPS, `RENTAL_COCKPIT_COOKIE_SECURE=true`, `FORWARDED_ALLOW_IPS` réglé sur l'adresse du proxy, et double authentification activée dès qu'elle sera disponible.
+- Si un accès extérieur est indispensable : proxy inverse en HTTPS, `RENTAL_COCKPIT_COOKIE_SECURE=true`, `FORWARDED_ALLOW_IPS` réglé sur l'adresse du proxy, et double authentification activée.
 - L'installation de base n'ouvre aucun port sur votre box.
 
 ## Signaler une vulnérabilité

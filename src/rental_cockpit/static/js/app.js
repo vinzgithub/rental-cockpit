@@ -11,6 +11,8 @@ import { esc, html, markup, opId, raw } from "./dom.js";
 import { makeI18n } from "./i18n.js";
 import { icon } from "./icons.js";
 import { langSwitch, renderAuth } from "./views/auth.js";
+import { openCreateKey, openMfaCodes, openMfaDisable, openMfaEnable, openPasswordDialog, openRevokeKey, copyText } from "./settings-dialogs.js";
+import { renderSettings } from "./views/settings.js";
 import { renderSynthese } from "./views/synthese.js";
 import { renderNoAccess, renderOnboarding, renderPlaceholder, renderWelcome } from "./views/welcome.js";
 
@@ -35,7 +37,7 @@ function writePrefs(update) {
 export class App {
   constructor(root) {
     this.root = root;
-    this.state = { screen: "synthese", mode: "activity", propertyId: "all", periodKey: "", loading: true, error: "", overview: null };
+    this.state = { screen: "synthese", mode: "activity", propertyId: "all", periodKey: "", loading: true, error: "", overview: null, account: null };
     this.auth = { error: "", busy: false, mfa: false, username: "" };
     this.session = null;
   }
@@ -91,6 +93,7 @@ export class App {
     this.state.screen = prefs.screen || "synthese";
     if (!this.state.periodKey) this.state.periodKey = this._defaultPeriodKey();
     await this.load();
+    if (this.state.screen === "reglages") await this.loadAccount();
   }
 
   _sessionLost() {
@@ -177,6 +180,16 @@ export class App {
     return undefined;
   }
 
+  /** Account, two-factor status and API keys for « Réglages ». */
+  async loadAccount() {
+    try {
+      this.state.account = await this.api.request("GET", "/api/account");
+    } catch (err) {
+      if (err.status !== 401) this.toast(err.message, true);
+    }
+    this._render();
+  }
+
   async afterPropertyCreated(propertyId) {
     this.session = await this.api.request("GET", "/api/session");
     this.state.propertyId = propertyId || "all";
@@ -191,6 +204,7 @@ export class App {
       boot: this.session,
       session: this.session,
       auth: this.auth,
+      account: this.state.account,
       overview,
       properties: overview?.properties || [],
       canWrite: this.canWrite,
@@ -211,6 +225,40 @@ export class App {
         writePrefs({ screen: value });
         this._render();
         this.root.querySelector(".main")?.scrollTo({ top: 0 });
+        if (value === "reglages") await this.loadAccount();
+        break;
+      case "pwd":
+        openPasswordDialog(this);
+        break;
+      case "mfa-enable":
+        openMfaEnable(this);
+        break;
+      case "mfa-disable":
+        openMfaDisable(this);
+        break;
+      case "mfa-codes":
+        openMfaCodes(this);
+        break;
+      case "key-new":
+        openCreateKey(this);
+        break;
+      case "key-revoke":
+        openRevokeKey(this, { id: value, name: target.dataset.name || "" });
+        break;
+      case "copy":
+        copyText(this, target.dataset.copy || "");
+        break;
+      case "auth-back":
+        this.auth = { error: "", busy: false, mfa: false, username: this.auth.username };
+        this._render();
+        this.root.querySelector("#rc-u")?.focus();
+        break;
+      case "open-settings":
+        this.dialogHost.querySelectorAll("dialog").forEach((d) => d.close());
+        this.state.screen = "reglages";
+        writePrefs({ screen: "reglages" });
+        this._render();
+        await this.loadAccount();
         break;
       case "mode":
         this.state.mode = value;
@@ -276,6 +324,8 @@ export class App {
     try {
       if (kind === "setup") {
         await this.api.request("POST", "/api/auth/setup", { body: data });
+      } else if (kind === "mfa") {
+        await this.api.request("POST", "/api/auth/mfa", { body: data });
       } else {
         const result = await this.api.request("POST", "/api/auth/login", { body: data });
         if (result.mfa_required) {
@@ -290,8 +340,9 @@ export class App {
       await this.refreshSession();
     } catch (err) {
       this.auth = { ...this.auth, busy: false, error: err.message };
+      if (err.code === "mfa_expired") this.auth.mfa = false;
       this._render();
-      this.root.querySelector(kind === "setup" ? "#rc-u" : "#rc-p")?.focus();
+      this.root.querySelector(kind === "setup" ? "#rc-u" : kind === "mfa" && this.auth.mfa ? "#rc-o" : "#rc-p")?.focus();
     }
   }
 
@@ -342,7 +393,7 @@ export class App {
         <div class="userbox"><div class="who"><span class="avatar" aria-hidden="true">${initials(user.name)}</span><span><b>${user.name}</b><small>${t(`auth.role.${user.role}`)}</small></span></div></div>
         <div class="field"><span class="help">${t("lang.label")}</span>${langSwitch(this.viewModel())}</div>
       </div>
-      <div class="dfoot"><button type="button" class="btn ghost" data-action="logout">${raw(icon("logout"))}${t("auth.signout")}</button></div>`);
+      <div class="dfoot"><button type="button" class="btn ghost" data-action="open-settings">${raw(icon("sliders"))}${t("nav.reglages")}</button><button type="button" class="btn ghost" data-action="logout">${raw(icon("logout"))}${t("auth.signout")}</button></div>`);
     this.dialogHost.appendChild(dialog);
     dialog.addEventListener("click", (event) => {
       if (event.target === dialog || event.target.closest("[data-close]")) dialog.close();
@@ -413,6 +464,8 @@ export class App {
       body = html`<div class="loading"><div class="spinner"></div><span>${t("common.loading")}</span></div>`;
     } else if (this.state.error) {
       body = html`<div class="error-box">${raw(icon("alert"))}<span>${t("error.load")} ${this.state.error}</span></div><div><button type="button" class="btn ghost" data-action="retry">${t("common.retry")}</button></div>`;
+    } else if (this.state.screen === "reglages") {
+      body = renderSettings(this.viewModel());
     } else if (this.state.screen !== "synthese") {
       body = renderPlaceholder(this.viewModel(), this.state.screen);
     } else if (!this.state.overview.properties.length) {

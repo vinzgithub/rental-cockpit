@@ -57,8 +57,26 @@ The **To check** card lists what keeps a result from being final. In the demo: c
 
 The banner offers **Use my data**. You land on an empty space with the getting-started steps: create your first property (only the name is required). The demo stays available and separate.
 
+## 8. Protect your account
+
+In **Settings → Two-factor sign-in → Turn on**:
+
+1. confirm your password;
+2. scan the QR code with an authenticator app (Aegis, Google Authenticator, 2FAS, Bitwarden…), or type the key by hand, then type the six-digit code shown;
+3. store the **ten recovery codes** (copy, download): each one opens a single sign-in if you lose your phone. The window only closes once "I have stored these codes safely" is ticked.
+
+At the next sign-in, the code is asked after the password. The other browsers signed in to this account are signed out.
+
+![Turning on two-factor sign-in](../images/en/mfa-setup.png)
+
+## 9. Home Assistant (optional)
+
+In **Settings → Home Assistant and API → Create a key**, Rental Cockpit shows once the line to paste into `secrets.yaml`. The address to enter in Home Assistant is shown just above. What comes next (sensors, card, automations): [home-assistant.md](home-assistant.md).
+
+![Settings: account, two-factor sign-in on, a key for Home Assistant](../images/en/settings-desktop.png)
+
 ## On a phone
 
 The same Overview shows in one column, balance first, with a navigation bar at the bottom. On touch screens, controls aim at 44 × 44 pixels.
 
-![Overview on a phone](../images/en/overview-phone.png)
+<img src="../images/en/overview-phone.png" alt="Overview on a phone" width="320"> <img src="../images/en/settings-phone.png" alt="Settings on a phone" width="320">

@@ -14,9 +14,10 @@ The original private project is neither modified nor read at run time: the publi
 Browser ──HTTPS (optional proxy)──► Rental Cockpit application (one process)
                                     ├─ interface: HTML, CSS, JavaScript modules served by the app
                                     ├─ JSON API /api/*: session, CSRF check, rights checked on every request
+                                    ├─ API /api/v1/summary: read-only, API key ◄── Home Assistant (optional)
                                     ├─ business engine (plain Python, no dependency)
                                     └─ data folder /data
-                                         ├─ rental_cockpit.db   accounts, rights, real registry, demo registry
+                                         ├─ rental_cockpit.db   accounts, rights, keys (hashes), real registry, demo registry
                                          ├─ documents/          private PDF documents (coming)
                                          └─ .secret_key         session signing key (0600)
 ```
@@ -26,8 +27,11 @@ Browser ──HTTPS (optional proxy)──► Rental Cockpit application (one pr
 | Business engine | Cents, dates, properties, stays, entries, payments, allocated services, three readings, explained indicators, demo | `src/rental_cockpit/engine/` |
 | Storage | SQLite, one transaction per change, revision number | `src/rental_cockpit/database.py` |
 | Rights | Administrator, reader per property, separate PDF access | `src/rental_cockpit/access.py` |
-| Security | scrypt passwords, CSRF token, sign-in throttling, TOTP codes | `src/rental_cockpit/security.py` |
-| Web application | Routes, security headers, sessions | `src/rental_cockpit/app.py` |
+| Security | scrypt passwords, CSRF token, sign-in throttling, TOTP codes, recovery codes, API keys | `src/rental_cockpit/security.py` |
+| Web application | Routes, security headers, sessions, two-step sign-in | `src/rental_cockpit/app.py`, `web.py` |
+| Account | Password, two-factor sign-in, API keys | `src/rental_cockpit/account_routes.py` |
+| Home Assistant link | Read-only summary for the RESTful integration | `src/rental_cockpit/ha_api.py` |
+| Recovery | Reset a password, turn two-factor sign-in off from the server | `src/rental_cockpit/cli.py` |
 | Interface | Screens, French/English texts, styles | `src/rental_cockpit/static/` |
 
 The engine knows nothing about the web or the database: it receives a registry, applies an operation and returns a result. That is what makes each calculation rule testable on its own (`tests/test_indicators.py`, `tests/test_ledger.py`).
@@ -62,11 +66,23 @@ Inventory required by the specification (REP 01): each item is **reused**, **ada
 | Identity | Home Assistant users | Own accounts: first administrator created on the first visit, no default account | Replaced |
 | Rights | HA administrator = administrator | Administrator or reader role; granted properties and PDF access in the `grants` table | Adapted |
 | Storage | JSON file in the HA configuration | One SQLite database, one transaction per change | Replaced |
-| Installation | HACS and integration flow | Docker Compose, or `pip install` and `uvicorn` | Replaced |
+| Installation | HACS and integration flow | Published Docker image (`ghcr.io`, x86-64 and ARM64) with Docker Compose, or `pip install` and `uvicorn` | Replaced |
+| Home Assistant link | The add-on lived inside Home Assistant | Optional: Home Assistant reads a summary with a read-only key; it can also show the interface in a *Webpage* dashboard | New |
 | Language | The HA user's | Chosen in the app (remembered by the browser), else the browser's | Adapted |
 | Time zone | Home Assistant's | The process's (`TZ`), never imposed | Adapted |
 
 The double navigation (Home Assistant sidebar + Rental Cockpit's) disappears with the standalone application.
+
+### Optional link with Home Assistant
+
+Home Assistant is no longer needed, but it remains a good place to **show** a few figures and **trigger** automations (heating the day before an arrival). The link is deliberately narrow:
+
+- one route, `GET /api/v1/summary`, read-only; no writing route accepts a key;
+- a key belongs to an account and reads exactly what that account can read (same properties, real data);
+- the key is shown once, kept as a SHA-256 hash, revocable;
+- on the Home Assistant side nothing to install: the bundled RESTful integration is enough (examples in [home-assistant.md](home-assistant.md)).
+
+Showing the whole interface inside Home Assistant is still possible, provided its origin is explicitly allowed (`RENTAL_COCKPIT_FRAME_ANCESTORS`).
 
 ## Effects on the specification
 
@@ -77,7 +93,7 @@ The double navigation (Home Assistant sidebar + Rental Cockpit's) disappears wit
 | SEC 01 | Identity comes from the application's accounts. Every request and download is still checked on the server. |
 | SEC 02, 03, 05, 06, 07 | Unchanged. |
 | TEC 02 | One instance = one process (one worker), the only financial authority. |
-| TEC 03 | HACS is replaced by Docker Compose and a documented Python installation. |
+| TEC 03 | HACS is replaced by a published Docker image (Docker Compose) and a documented Python installation. |
 | TEC 04 | The start-up assistant is inside the app: first account, then *Use my data* / *Explore the demo*. |
 | TEC 05 | The Docker recipe becomes the main method; listening address and port are visible in `docker-compose.yml`. |
 | TEC 06 | Platforms to test: x86-64 and ARM64 (Raspberry Pi 4) images. No Home Assistant version to follow anymore. |
@@ -93,12 +109,11 @@ The double navigation (Home Assistant sidebar + Rental Cockpit's) disappears wit
 | **Expenses** | API for entries, payments, archiving, filters; CSV export with neutralised formulas | Table with explicit statuses ("Payment to confirm", "Paid"…), quick entry, visible actions |
 | **Suppliers** | API for suppliers and indicative rates; multi-service invoice; matching existing entries | "Split an invoice": services detail, split per stay, "€150 allocated out of €150" check |
 | **Documents** | HTTP upload (8 MiB), PDF check with *pypdf* (added then), fingerprint, binary and business duplicates, download after a rights check | "Check the invoice": file → check → save; "This invoice is already recorded" |
-| **Settings** | Reader accounts, rights per property and PDF access, two-factor authentication, categories, backup / check / restore, diagnostics | Matching screens; language; demo reset |
-| Cross-cutting | Versioned SQLite migrations; Docker image published after approval; continuous integration | Accessibility checked (keyboard, screen reader, 360 px) on each screen |
+| **Settings** | Done: password, two-factor sign-in, API keys. Coming: reader accounts, rights per property and PDF access, categories, backup / check / restore, diagnostics | Matching screens; language; demo reset |
+| Cross-cutting | Versioned SQLite migrations; `edge` image published on every change to the main branch, `latest` on every tagged release; continuous integration | Accessibility checked (keyboard, screen reader, 360 px) on each screen |
 
 ## Still open
 
 - Project licence.
-- A ready-made Docker image, or local build only.
-- An **optional** link with Home Assistant (for example a read-only API to show a balance): never required.
-- Exact content of backups (accounts, password hashes).
+- Date of the first tagged release.
+- Exact content of backups (accounts, password hashes, two-factor secrets, API keys).
