@@ -107,6 +107,7 @@ def build_demo(today: date | None = None) -> dict[str, Any]:
     # monthly), which is why the demo shows payments to confirm.
     month = history_start
     previous_start = _shift_month(focus_start, -1)
+    inv_month = _shift_month(focus_start, -2)  # holds the service invoice example below
     while month < focus_start:
         _, month_end = month_period(month.year, month.month)
         settled = month < previous_start
@@ -116,11 +117,22 @@ def build_demo(today: date | None = None) -> dict[str, Any]:
                 length = rng.randint(2, 5)
                 if day + timedelta(days=length) >= month_end:
                     break
-                sid = stay(prop, letter, day, length, f"{rate * length + rng.choice((0, 15, 25))}", rng.randint(1, cap))
+                gross, guests = f"{rate * length + rng.choice((0, 15, 25))}", rng.randint(1, cap)
                 depart = day + timedelta(days=length)
-                expense(prop, "cleaning", "Ménage de départ", depart, "45" if letter == "A" else "35", supplier=cleaner,
-                        stay_id=sid, paid=settled)
+                # In the month of the service invoice example, Appartement A only has the two
+                # example stays: the drawn ones are skipped (the draws still happen, so every
+                # other month stays exactly the same).
+                if not (prop == a and month == inv_month):
+                    sid = stay(prop, letter, day, length, gross, guests)
+                    expense(prop, "cleaning", "Ménage de départ", depart, "45" if letter == "A" else "35", supplier=cleaner,
+                            stay_id=sid, paid=settled)
                 day = depart + timedelta(days=rng.randint(2, 6))
+            # One stay across the end of a month, four months before the example month, so the
+            # demo shows a stay spread over two months (its own stay page explains the split).
+            if prop == a and month == _shift_month(focus_start, -4) and day <= month_end - timedelta(days=2):
+                sid = stay(prop, letter, month_end - timedelta(days=2), 3, "354", 2)
+                expense(prop, "cleaning", "Ménage de départ", month_end + timedelta(days=1), "45", supplier=cleaner,
+                        stay_id=sid, paid=settled)
         if rng.random() < 0.35:
             prop = rng.choice((a, b))
             expense(prop, "maintenance", "Petite réparation (fictif)", month + timedelta(days=rng.randint(5, 25)),
@@ -140,7 +152,6 @@ def build_demo(today: date | None = None) -> dict[str, Any]:
 
     # The documentation example of a service invoice: 150 € = 100 cleaning + 40 linen + 10 travel,
     # 90 € for stay A and 60 € for stay B. One expense of 150 €, never 300 €.
-    inv_month = _shift_month(focus_start, -2)
     s1 = stay(a, "A", inv_month + timedelta(days=4), 7, "826", 4)
     s2 = stay(a, "A", inv_month + timedelta(days=11), 7, "840", 3)
     invoice = led.create_entry({

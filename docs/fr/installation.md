@@ -49,7 +49,7 @@ docker compose pull
 docker compose up -d
 ```
 
-Copiez le volume de données avant une mise à jour (voir plus bas). Une base écrite par une version plus récente n'est jamais ouverte par une version plus ancienne.
+Copiez le volume de données avant une mise à jour (voir plus bas). Quand une nouvelle version change le format des données, Rental Cockpit écrit en plus une copie complète de la base dans `backups/` avant de la convertir. Une base écrite par une version plus récente n'est jamais ouverte par une version plus ancienne.
 
 ### Construire l'image soi-même
 
@@ -93,6 +93,7 @@ Gardez **un seul processus** (`--workers 1`, la valeur par défaut) : l'applicat
 |---|---|
 | `rental_cockpit.db` | Comptes, droits, clés d'API (empreintes), registre réel et registre de démonstration (SQLite) |
 | `.secret_key` | Clé de signature des sessions, créée au premier démarrage (droits 0600) |
+| `backups/` | Copies automatiques de la base faites avant chaque migration de format (`pre-migration-v1-to-v2-….db`) |
 | `documents/` | Justificatifs PDF privés (à partir de l'écran Documents) |
 
 **Sauvegarde manuelle** en attendant la sauvegarde intégrée : arrêtez l'application, copiez tout le dossier, redémarrez.

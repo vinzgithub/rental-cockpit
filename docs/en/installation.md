@@ -49,7 +49,7 @@ docker compose pull
 docker compose up -d
 ```
 
-Copy the data volume before an upgrade (see below). A database written by a newer version is never opened by an older one.
+Copy the data volume before an upgrade (see below). When a new version changes the data format, Rental Cockpit also writes a full copy of the database to `backups/` before converting it. A database written by a newer version is never opened by an older one.
 
 ### Building the image yourself
 
@@ -93,6 +93,7 @@ Keep **one process** (`--workers 1`, the default): the application is the only a
 |---|---|
 | `rental_cockpit.db` | Accounts, rights, API keys (hashes), real registry and demo registry (SQLite) |
 | `.secret_key` | Session signing key, created on first start (mode 0600) |
+| `backups/` | Automatic copies of the database made before each data format migration (`pre-migration-v1-to-v2-….db`) |
 | `documents/` | Private PDF documents (from the Documents screen on) |
 
 **Manual backup** until the built-in backup exists: stop the app, copy the whole folder, start again.

@@ -55,9 +55,26 @@ La carte **À vérifier** liste ce qui empêche un résultat d'être définitif.
 
 ## 7. Passer à vos données
 
-Le bandeau propose **Utiliser mes données**. Vous arrivez sur un espace vide avec les étapes de démarrage : créez votre premier bien (seul le nom est obligatoire). La démonstration reste disponible et séparée.
+Le bandeau propose **Utiliser mes données**. Vous arrivez sur un espace vide avec les étapes de démarrage : créez votre premier bien (seul le nom est obligatoire). La démonstration reste disponible et séparée : la bascule **Mes données / Démo** est en bas de la barre latérale (dans la fenêtre du compte sur téléphone, et dans Réglages).
 
-## 8. Protéger votre compte
+## 8. Saisir un séjour
+
+**Séjours → Ajouter un séjour** : choisissez le bien, l'arrivée et le départ. Sous les dates, Rental Cockpit indique déjà comment les nuits se répartissent (« 3 nuits en septembre · 3 nuits en octobre »). Renseignez, si vous les connaissez, le montant brut payé par le voyageur et la commission de la plateforme : le versement net attendu est calculé. Un montant inconnu reste vide : il n'est jamais compté comme 0.
+
+La fiche du séjour montre ensuite :
+
+- les montants, ce qui est déjà reçu et ce qui reste à recevoir ;
+- **ce que le séjour compte dans la Synthèse**, mois par mois ;
+- les versements reçus, avec **Enregistrer un versement** quand l'argent arrive ;
+- **Modifier**, **Annuler le séjour** (avec le montant éventuellement conservé) et, pour une saisie par erreur, **Supprimer**.
+
+Dans la Synthèse, « 1 versement à confirmer » mène directement à la liste des séjours à vérifier.
+
+![Liste des séjours](../images/fr/stays-desktop.png)
+
+![Fiche d'un séjour](../images/fr/stay-detail.png)
+
+## 9. Protéger votre compte
 
 Dans **Réglages → Double authentification → Activer** :
 
@@ -69,7 +86,7 @@ Dans **Réglages → Double authentification → Activer** :
 
 ![Activation de la double authentification](../images/fr/mfa-setup.png)
 
-## 9. Home Assistant (facultatif)
+## 10. Home Assistant (facultatif)
 
 Dans **Réglages → Home Assistant et API → Créer une clé**, Rental Cockpit affiche une fois la ligne à coller dans `secrets.yaml`. L'adresse à indiquer dans Home Assistant est affichée juste au-dessus. La suite (capteurs, carte, automatisations) : [home-assistant.md](home-assistant.md).
 
@@ -79,4 +96,4 @@ Dans **Réglages → Home Assistant et API → Créer une clé**, Rental Cockpit
 
 La même Synthèse s'affiche en une colonne, le solde en premier, avec une barre de navigation en bas. Sur écran tactile, les commandes visent 44 × 44 pixels.
 
-<img src="../images/fr/overview-phone.png" alt="Synthèse sur téléphone" width="320"> <img src="../images/fr/settings-phone.png" alt="Réglages sur téléphone" width="320">
+<img src="../images/fr/overview-phone.png" alt="Synthèse sur téléphone" width="260"> <img src="../images/fr/stays-phone.png" alt="Séjours sur téléphone" width="260"> <img src="../images/fr/settings-phone.png" alt="Réglages sur téléphone" width="260">

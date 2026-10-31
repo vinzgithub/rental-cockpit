@@ -1,18 +1,19 @@
 # Roadmap
 
-Rental Cockpit moves forward in short work packages. Each screen is shown as screenshots for approval of its look before it is rolled out.
+Rental Cockpit moves forward in short, usable **deliveries**. Each delivery is a pull request that can be tested on its own, with its test Docker image (`ghcr.io/vinzgithub/rental-cockpit:pr-<number>`), a scenario with figures and automated tests. It is only merged once the testers have approved it.
 
-| Package | Content | Status |
-|---|---|---|
-| **1. Foundations** | Inventory of the original project, isolated and tested calculation engine, separate fictional demo | ✅ Done |
-| **1b. Standalone application** | Accounts, sessions, rights, SQLite storage, Docker, Overview and welcome screens | ✅ Done — 0.1.0 |
-| **1c. Account, installation, Home Assistant** | Two-factor sign-in (TOTP, recovery codes), account settings, published Docker images (x86-64, ARM64), optional Home Assistant link (read-only keys, JSON summary) | ✅ Done — 0.1.0 |
-| **2. Recording** | Stays, Expenses and payments, Suppliers with invoice splitting | Coming |
-| **3. Documents and imports** | PDF documents (checks, duplicates, protected download), reused Airbnb import, generic CSV import with preview | Coming |
-| **4. Settings and backup** | Readers and rights per property, categories, checked backup and restore, diagnostics | Coming |
-| **5. Public release** | Test on a real ARM64 machine, beginner tests, full repository audit, criteria T01 to T12, version 1.0 | Coming |
+| Delivery | Version | Content | Status |
+|---|---|---|---|
+| Foundations | 0.1.0 | Standalone application: accounts, rights, two-factor sign-in, Overview and three readings, separate demo, Home Assistant link, Docker images | ✅ Released |
+| **L0** — audit fixes | 0.1.1 | Menu without empty screens, My data / Demo switch, bell, explanations readable on a phone, copy over HTTP, browser tests | Under review |
+| **L1** — Stays | 0.2.0 | Create, edit, cancel, restore and delete stays; booking channel; payouts received; stay page with its share of the Overview; data format migration with an automatic copy | Under review |
+| **L2** — Import | 0.3.0 | Airbnb import (reader reused and adapted) and generic CSV: preview without writing, duplicates detected, all-at-once validation, undo of the last import | Coming |
+| **L3** — Expenses and payments | 0.4.0 | Expenses and income outside stays, partial payments, to pay / to receive, loan instalments, categories, CSV export | Coming |
+| **L4** — Suppliers | 0.5.0 | Suppliers and rates, multi-service invoice split between stays | Coming |
+| **L5** — Documents | 0.6.0 | Checked PDFs, duplicates, link with expenses, download after a rights check | Coming |
+| **L6** — Version 1.0 | 1.0.0 | Checked backup and restore, reader accounts, accessibility and mobile pass, ARM64 test, full acceptance run | Coming |
 
-Abritel (and other platforms) will only be announced after analysing genuine, anonymised exports: no format is guessed.
+Day-to-day use (priority P0) is reached with 0.4.0. Abritel (and other platforms) will only be announced after analysing genuine, anonymised exports: no format is guessed.
 
 ## Pending decisions
 

@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.2.0 — not released yet
+
+Stays (delivery L1): real fictional stays can be entered and show up correctly in the Overview.
+
+- Stays screen: list with views (upcoming and current, past, to check, cancelled, all), property filter and search; table on a computer, cards on a phone.
+- Stay form: property, dates with the nights per month shown live, guests, label, booking reference, channel (Airbnb, Abritel, Booking.com, direct, other), status, gross amount, commission, net payout (computed when empty), tourist tax and security deposit (never revenue).
+- Stay page: amounts, received and left to receive, month-by-month share in the Overview (same rule as the indicators), payouts, history; edit, cancel with the retained amount, restore, delete an entry made by mistake.
+- Payouts: record and delete; a payout cannot exceed what is still expected.
+- The Overview links to the stays: upcoming stays open their page, "payout to confirm" opens the list to check, "How is this amount calculated?" lines lead to their stay.
+- Data format 2 (booking channel). Before converting, the database is copied to `backups/`; the migration is tested on a frozen schema-1 registry.
+- A change made on an outdated copy of a stay is refused (revision number) instead of overwriting.
+- New automated tests: rules, migration, API (rights, CSRF, double click, outdated copy) and a browser journey with the figures of the pull request.
+
 ## 0.1.1 — not released yet
 
 Fixes from the independent audit of 0.1.0.
