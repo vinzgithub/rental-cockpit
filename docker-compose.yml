@@ -5,9 +5,9 @@
 # Upgrade:  docker compose pull && docker compose up -d
 services:
   rental-cockpit:
-    # Preview: "edge" follows the main branch. Once a version is released, use
-    # ":latest" (or a version such as ":0.1") for stable updates.
-    image: ghcr.io/vinzgithub/rental-cockpit:edge
+    # ":latest" = latest released version; ":0.1" to stay on 0.1.x;
+    # ":edge" = main branch, to try what is coming.
+    image: ghcr.io/vinzgithub/rental-cockpit:latest
     container_name: rental-cockpit
     restart: unless-stopped
     ports:

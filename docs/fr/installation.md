@@ -10,11 +10,10 @@ Les images sont publiées sur le registre de conteneurs de GitHub, pour **x86-64
 
 | Étiquette | Contenu |
 |---|---|
-| `ghcr.io/vinzgithub/rental-cockpit:edge` | Dernier état de la branche principale — celle qu'utilise `docker-compose.yml` pendant la préversion |
-| `ghcr.io/vinzgithub/rental-cockpit:latest` | Dernière version publiée (à partir de la première version étiquetée) |
-| `ghcr.io/vinzgithub/rental-cockpit:0.1` (`0.1.x`…) | Une version précise (idem) |
-
-Quand une version sera publiée, remplacez `:edge` par `:latest` dans `docker-compose.yml` pour ne recevoir que des versions publiées.
+| `ghcr.io/vinzgithub/rental-cockpit:latest` | Dernière version publiée — celle qu'utilise `docker-compose.yml` |
+| `ghcr.io/vinzgithub/rental-cockpit:0.1` | Reste sur les versions 0.1.x |
+| `ghcr.io/vinzgithub/rental-cockpit:0.1.0` | Une version précise |
+| `ghcr.io/vinzgithub/rental-cockpit:edge` | Dernier état de la branche principale, pour essayer ce qui arrive |
 
 ### En trois commandes
 
@@ -40,7 +39,7 @@ Pensez à régler `TZ` sur votre fuseau horaire (par exemple `Europe/Paris`).
 docker run -d --name rental-cockpit --restart unless-stopped \
   -p 8080:8080 -v rental-cockpit-data:/data -e TZ=Europe/Paris \
   --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges:true \
-  ghcr.io/vinzgithub/rental-cockpit:edge
+  ghcr.io/vinzgithub/rental-cockpit:latest
 ```
 
 ### Mise à jour

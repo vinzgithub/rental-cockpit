@@ -115,5 +115,4 @@ Showing the whole interface inside Home Assistant is still possible, provided it
 ## Still open
 
 - Project licence.
-- Date of the first tagged release.
 - Exact content of backups (accounts, password hashes, two-factor secrets, API keys).

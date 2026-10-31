@@ -10,11 +10,10 @@ Images are published on GitHub's container registry for **x86-64** and **ARM64**
 
 | Tag | Content |
 |---|---|
-| `ghcr.io/vinzgithub/rental-cockpit:edge` | Latest state of the main branch — the one `docker-compose.yml` uses during the preview |
-| `ghcr.io/vinzgithub/rental-cockpit:latest` | Latest released version (from the first tagged version on) |
-| `ghcr.io/vinzgithub/rental-cockpit:0.1` (`0.1.x`…) | A specific version (same) |
-
-Once a version is released, replace `:edge` with `:latest` in `docker-compose.yml` to receive released versions only.
+| `ghcr.io/vinzgithub/rental-cockpit:latest` | Latest released version — the one `docker-compose.yml` uses |
+| `ghcr.io/vinzgithub/rental-cockpit:0.1` | Stays on 0.1.x versions |
+| `ghcr.io/vinzgithub/rental-cockpit:0.1.0` | A specific version |
+| `ghcr.io/vinzgithub/rental-cockpit:edge` | Latest state of the main branch, to try what is coming |
 
 ### In three commands
 
@@ -40,7 +39,7 @@ Remember to set `TZ` to your time zone (for example `Europe/Paris`).
 docker run -d --name rental-cockpit --restart unless-stopped \
   -p 8080:8080 -v rental-cockpit-data:/data -e TZ=Europe/Paris \
   --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges:true \
-  ghcr.io/vinzgithub/rental-cockpit:edge
+  ghcr.io/vinzgithub/rental-cockpit:latest
 ```
 
 ### Upgrading

@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 — preview (not released)
+## 0.1.0 — 2026-10-31 (preview)
 
 First public preview of the standalone application.
 

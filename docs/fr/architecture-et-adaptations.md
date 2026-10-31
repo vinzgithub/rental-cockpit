@@ -115,5 +115,4 @@ Afficher toute l'interface dans Home Assistant reste possible, à condition d'au
 ## Points encore ouverts
 
 - Licence du projet.
-- Date de la première version étiquetée.
 - Contenu exact des sauvegardes (comptes, empreintes de mots de passe, secrets de double authentification, clés d'API).
