@@ -28,7 +28,9 @@ from typing import Any, Callable
 from . import money
 from .dates import optional_date, parse_date, utc_now_iso
 from .errors import RCError, from_value_error
+from .indicators import expected_payout
 from .schema import (
+    CHANNELS,
     CURRENCY,
     EXPENSE_TREATMENTS,
     INCOME_TREATMENTS,
@@ -176,6 +178,7 @@ class Ledger:
                 del history[: len(history) - HISTORY_LIMIT]
             item["updated_at"] = self.clock()
             item["updated_by"] = self.actor
+            item["revision"] = int(item.get("revision") or 0) + 1
         return list(changes)
 
     def _get(self, collection: str, item_id: Any) -> dict[str, Any]:
@@ -185,13 +188,26 @@ class Ledger:
         return item
 
     def _check_revision(self, item: dict[str, Any], payload: dict[str, Any]) -> None:
+        """Refuse a change made on an outdated copy (somebody else saved in between).
+
+        ``revision`` is a counter bumped by every change; ``updated_at`` is still
+        accepted for older clients but cannot tell two changes in the same second apart.
+        """
+        if payload.get("revision") is not None:
+            try:
+                expected = int(payload["revision"])
+            except (TypeError, ValueError) as exc:
+                raise RCError("stale_revision") from exc
+            if expected != int(item.get("revision") or 0):
+                raise RCError("stale_revision")
+            return
         expected = payload.get("updated_at")
         if expected is not None and expected != item.get("updated_at"):
             raise RCError("stale_revision")
 
     def _stamp(self, item: dict[str, Any]) -> dict[str, Any]:
         now = self.clock()
-        item.update(created_at=now, created_by=self.actor, updated_at=now, updated_by=self.actor, history=[])
+        item.update(created_at=now, created_by=self.actor, updated_at=now, updated_by=self.actor, history=[], revision=1)
         return item
 
     def property(self, property_id: Any, *, writable: bool = True) -> dict[str, Any]:
@@ -359,6 +375,7 @@ class Ledger:
             "start": iso(start),
             "end": iso(end),
             "status": choice(payload.get("status"), STAY_STATUSES, "status", "confirmed"),
+            "channel": choice(payload.get("channel"), CHANNELS, "channel", "airbnb" if source == "airbnb" else "direct"),
             "guest_label": clean_text(payload.get("guest_label", ""), "guest_label", 80),
             "guests": _small_int(payload.get("guests"), "guests"),
             "amounts": self._stay_amounts(payload),
@@ -383,7 +400,16 @@ class Ledger:
                 raise RCError("stay_dates")
             stay["start"], stay["end"] = iso(start), iso(end)
         if "status" in payload:
-            stay["status"] = choice(payload["status"], STAY_STATUSES, "status")
+            status = choice(payload["status"], STAY_STATUSES, "status")
+            if status == "cancelled" and stay["status"] != "cancelled":
+                raise RCError("stay_cancel_route")
+            if stay["status"] == "cancelled" and status != "cancelled":
+                raise RCError("stay_restore_route")
+            stay["status"] = status
+        if "channel" in payload:
+            stay["channel"] = choice(payload["channel"], CHANNELS, "channel")
+        if "external_ref" in payload:
+            stay["external_ref"] = clean_text(payload["external_ref"], "external_ref", 80)
         for key, limit in (("guest_label", 80), ("note", 600)):
             if key in payload:
                 stay[key] = clean_text(payload[key], key, limit, multiline=key == "note")
@@ -391,8 +417,52 @@ class Ledger:
             stay["guests"] = _small_int(payload.get("guests"), "guests")
         if "amounts" in payload:
             stay["amounts"] = self._stay_amounts(payload, stay)
-        changed = self._history(stay, before, ("start", "end", "status", "guest_label", "guests", "amounts", "note"))
+        changed = self._history(stay, before, ("start", "end", "status", "channel", "external_ref", "guest_label", "guests", "amounts", "note"))
         self.audit("stay.update", stay["id"], detail=",".join(changed))
+        return {"stay": deepcopy(stay), "warnings": self.stay_warnings(stay)}
+
+    def cancel_stay(self, stay_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        """Cancellation: the stay keeps only what was retained (cancellation fee), counted on the arrival date.
+
+        The amounts before the cancellation are kept so it can be undone, and
+        the change is in the stay's history.
+        """
+        stay = self._get("stays", stay_id)
+        self._check_revision(stay, payload)
+        self.property(stay["property_id"])
+        if stay["status"] == "cancelled":
+            raise RCError("stay_already_cancelled")
+        retained = read_amount(payload, "retained", allow_zero=True, required=False) or 0
+        retained_commission = read_amount(payload, "retained_commission", allow_zero=True, required=False) or 0
+        if retained_commission > retained:
+            raise RCError("cancel_commission_too_high")
+        received = sum(link["amount"] for p in self.data["payments"].values() for link in p["links"]
+                       if link["type"] == "stay" and link["id"] == stay["id"])
+        if received > retained - retained_commission:
+            raise RCError("cancel_received_too_high", received=money.format_cents(received))
+        before = deepcopy(stay)
+        stay["amounts_before_cancel"] = deepcopy(stay.get("amounts") or {})
+        stay["status"] = "cancelled"
+        stay["amounts"] = {"gross": retained, "commission": retained_commission, "payout": None,
+                           "taxes_collected": None, "deposit": None}
+        self._history(stay, before, ("status", "amounts"))
+        self.audit("stay.cancel", stay["id"])
+        return {"stay": deepcopy(stay), "warnings": []}
+
+    def restore_stay(self, stay_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        """Undo a cancellation: the amounts from before come back, the stay is confirmed again."""
+        stay = self._get("stays", stay_id)
+        self._check_revision(stay, payload)
+        self.property(stay["property_id"])
+        if stay["status"] != "cancelled":
+            raise RCError("stay_not_cancelled")
+        before = deepcopy(stay)
+        previous = stay.pop("amounts_before_cancel", None)
+        if previous is not None:
+            stay["amounts"] = previous
+        stay["status"] = "confirmed"
+        self._history(stay, before, ("status", "amounts"))
+        self.audit("stay.restore", stay["id"])
         return {"stay": deepcopy(stay), "warnings": self.stay_warnings(stay)}
 
     def add_stay_adjustment(self, stay_id: str, payload: dict[str, Any]) -> dict[str, Any]:
@@ -410,6 +480,7 @@ class Ledger:
         }
         stay.setdefault("adjustments", []).append(adjustment)
         stay["updated_at"], stay["updated_by"] = self.clock(), self.actor
+        stay["revision"] = int(stay.get("revision") or 0) + 1
         self.audit("stay.adjustment", stay["id"])
         return {"stay": deepcopy(stay)}
 
@@ -682,8 +753,16 @@ class Ledger:
                 remaining = target["amount"] - self.entry_paid(target["id"])
                 if link_amount > remaining:
                     raise RCError("payment_exceeds", remaining=money.format_cents(remaining))
-            elif direction != "in":
-                raise RCError("payment_direction")
+            else:
+                if direction != "in":
+                    raise RCError("payment_direction")
+                expected = expected_payout(target)
+                if expected is not None:
+                    already = sum(link["amount"] for p in self.data["payments"].values() for link in p["links"]
+                                  if link["type"] == "stay" and link["id"] == target["id"])
+                    if already + link_amount > expected:
+                        raise RCError("payout_exceeds", remaining=money.format_cents(max(expected - already, 0)),
+                                      expected=money.format_cents(expected))
             links.append({"type": link_type, "id": target["id"], "amount": link_amount})
         if not links or sum(link["amount"] for link in links) != amount:
             raise RCError("payment_links_mismatch", links=money.format_cents(sum(link["amount"] for link in links)), total=money.format_cents(amount))

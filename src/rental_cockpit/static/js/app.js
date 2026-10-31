@@ -7,6 +7,7 @@
 
 import { Api } from "./api.js";
 import { openAddMenu, openAlerts, openConfirm, openExplain, openPropertyDialog } from "./dialogs.js";
+import { openStay, openStayForm } from "./stay-dialogs.js";
 import { esc, html, markup, opId, raw } from "./dom.js";
 import { makeI18n } from "./i18n.js";
 import { icon } from "./icons.js";
@@ -14,13 +15,15 @@ import { langSwitch, renderAuth } from "./views/auth.js";
 import { openCreateKey, openMfaCodes, openMfaDisable, openMfaEnable, openPasswordDialog, openRevokeKey, copyText } from "./settings-dialogs.js";
 import { datasetSwitch } from "./views/dataset.js";
 import { renderSettings } from "./views/settings.js";
+import { renderStays, STAY_VIEWS } from "./views/stays.js";
 import { renderSynthese } from "./views/synthese.js";
 import { renderNoAccess, renderOnboarding, renderWelcome } from "./views/welcome.js";
 
 // A screen enters the menu only once it works: no « coming soon » page.
-// Séjours, Dépenses, Prestataires and Documents join this list as they are delivered.
+// Dépenses, Prestataires and Documents join this list as they are delivered.
 const SCREENS = [
   ["synthese", "chart"],
+  ["sejours", "calendar"],
   ["reglages", "sliders"],
 ];
 const READY = new Set(SCREENS.map(([key]) => key));
@@ -37,7 +40,9 @@ function writePrefs(update) {
 export class App {
   constructor(root) {
     this.root = root;
-    this.state = { screen: "synthese", mode: "activity", propertyId: "all", periodKey: "", loading: true, error: "", overview: null, account: null };
+    this.state = { screen: "synthese", mode: "activity", propertyId: "all", periodKey: "", loading: true, error: "", overview: null, account: null,
+      stays: { view: "active", q: "", data: null } };
+    this.searchTimer = null;
     this.auth = { error: "", busy: false, mfa: false, username: "" };
     this.session = null;
   }
@@ -55,6 +60,7 @@ export class App {
     this.root.addEventListener("click", (event) => this._onClick(event));
     this.root.addEventListener("change", (event) => this._onChange(event));
     this.root.addEventListener("submit", (event) => this._onSubmit(event));
+    this.root.addEventListener("input", (event) => this._onInput(event));
     this._render();
     await this.refreshSession();
   }
@@ -94,6 +100,7 @@ export class App {
     if (!this.state.periodKey) this.state.periodKey = this._defaultPeriodKey();
     await this.load();
     if (this.state.screen === "reglages") await this.loadAccount();
+    if (this.state.screen === "sejours") await this.loadStays();
   }
 
   _sessionLost() {
@@ -190,6 +197,23 @@ export class App {
     this._render();
   }
 
+  /** « Séjours » list for the current view, property and search. */
+  async loadStays() {
+    const { view, q } = this.state.stays;
+    try {
+      const data = await this.api.get("/api/stays", { view, q, property_id: this.state.propertyId });
+      if (view === this.state.stays.view && q === this.state.stays.q) this.state.stays.data = data;
+    } catch (err) {
+      if (err.status !== 401) this.toast(err.message, true);
+    }
+    this._render();
+  }
+
+  /** After any change to a stay: the list and the Overview are both refreshed from the server. */
+  async afterStayChange() {
+    await Promise.all([this.load(), this.state.screen === "sejours" ? this.loadStays() : Promise.resolve()]);
+  }
+
   async afterPropertyCreated(propertyId) {
     this.session = await this.api.request("GET", "/api/session");
     this.state.propertyId = propertyId || "all";
@@ -206,7 +230,8 @@ export class App {
       auth: this.auth,
       account: this.state.account,
       overview,
-      properties: overview?.properties || [],
+      properties: overview?.properties || this.state.stays.data?.properties || [],
+      stays: this.state.stays,
       canWrite: this.canWrite,
       periodOptions: this.session?.authenticated ? this.periodOptions() : [],
       dataset: this.api.dataset,
@@ -226,9 +251,24 @@ export class App {
         if (!READY.has(value)) break;
         this.state.screen = value;
         writePrefs({ screen: value });
+        if (target.dataset.view && STAY_VIEWS.includes(target.dataset.view)) {
+          this.state.stays = { ...this.state.stays, view: target.dataset.view, q: "", data: null };
+        }
         this._render();
         this.root.querySelector(".main")?.scrollTo({ top: 0 });
         if (value === "reglages") await this.loadAccount();
+        if (value === "sejours") await this.loadStays();
+        break;
+      case "stays-view":
+        this.state.stays = { ...this.state.stays, view: value, data: this.state.stays.data };
+        this._render();
+        await this.loadStays();
+        break;
+      case "stay-open":
+        openStay(this, value);
+        break;
+      case "stay-new":
+        openStayForm(this);
         break;
       case "pwd":
         openPasswordDialog(this);
@@ -322,7 +362,16 @@ export class App {
     if (!target) return;
     if (target.dataset.change === "property") this.state.propertyId = target.value;
     if (target.dataset.change === "period") this.state.periodKey = target.value;
-    await this.load();
+    if (this.state.screen === "sejours") await Promise.all([this.loadStays(), this.load()]);
+    else await this.load();
+  }
+
+  _onInput(event) {
+    const target = event.target.closest("[data-input]");
+    if (!target || target.dataset.input !== "stays-q") return;
+    this.state.stays.q = target.value;
+    clearTimeout(this.searchTimer);
+    this.searchTimer = setTimeout(() => this.loadStays(), 250);
   }
 
   async _onSubmit(event) {
@@ -514,6 +563,8 @@ export class App {
       body = html`<div class="error-box">${raw(icon("alert"))}<span>${t("error.load")} ${this.state.error}</span></div><div><button type="button" class="btn ghost" data-action="retry">${t("common.retry")}</button></div>`;
     } else if (this.state.screen === "reglages") {
       body = renderSettings(this.viewModel());
+    } else if (this.state.screen === "sejours") {
+      body = renderStays(this.viewModel());
     } else if (!this.state.overview.properties.length) {
       body = this.canWrite ? renderOnboarding(this.viewModel()) : renderNoAccess(this.viewModel());
     } else {
@@ -538,15 +589,18 @@ export class App {
       return;
     }
     const active = document.activeElement;
-    const focusKey = active && this.root.contains(active) ? `${active.dataset?.action || active.dataset?.change || ""}|${active.dataset?.value || ""}` : null;
+    const focusKey = active && this.root.contains(active) ? `${active.dataset?.action || active.dataset?.change || active.dataset?.input || ""}|${active.dataset?.value || ""}` : null;
+    const caret = active?.dataset?.input ? [active.selectionStart, active.selectionEnd] : null;
     const scroll = this.root.querySelector(".main")?.scrollTop || 0;
     this.pageEl.innerHTML = markup(html`<div class="root">${this._shell(this._content())}</div>`);
     const main = this.root.querySelector(".main");
     if (main) main.scrollTop = scroll;
     if (focusKey && focusKey !== "|") {
       const [a, v] = focusKey.split("|");
-      const selector = `[data-action="${esc(a)}"]${v ? `[data-value="${esc(v)}"]` : ""}, [data-change="${esc(a)}"]`;
-      this.root.querySelector(selector)?.focus({ preventScroll: true });
+      const selector = `[data-action="${esc(a)}"]${v ? `[data-value="${esc(v)}"]` : ""}, [data-change="${esc(a)}"], [data-input="${esc(a)}"]`;
+      const element = this.root.querySelector(selector);
+      element?.focus({ preventScroll: true });
+      if (caret && element?.setSelectionRange) element.setSelectionRange(caret[0], caret[1]);
     }
   }
 }

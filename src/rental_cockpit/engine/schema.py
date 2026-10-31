@@ -12,7 +12,7 @@ from typing import Any
 
 from .dates import utc_now_iso
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2  # 2: booking channel on stays, cancellation keeps the amounts before it
 CURRENCY = "EUR"
 
 # How a category counts in the results.
@@ -47,6 +47,8 @@ DEFAULT_CATEGORIES: tuple[dict[str, Any], ...] = (
 
 STAY_STATUSES = ("provisional", "confirmed", "cancelled", "completed")
 STAY_SOURCES = ("manual", "airbnb", "csv", "demo")
+# Where the booking was made (independent of how it was recorded: ``source``).
+CHANNELS = ("airbnb", "abritel", "booking", "direct", "other")
 PAYMENT_DECLARED = ("unknown", "unpaid")
 SERVICE_KINDS = ("cleaning", "linen", "travel", "other", "discount", "tax", "adjustment")
 SERVICE_UNITS = ("hour", "flat", "set", "unit", "km", "trip")
@@ -71,6 +73,13 @@ LABELS: dict[str, dict[str, tuple[str, str]]] = {
         "financing": ("Financement", "Financing"),
         "tax": ("Impôts et taxes", "Taxes"),
         "information": ("Information seulement", "Information only"),
+    },
+    "channel": {
+        "airbnb": ("Airbnb", "Airbnb"),
+        "abritel": ("Abritel", "Abritel"),
+        "booking": ("Booking.com", "Booking.com"),
+        "direct": ("En direct", "Direct"),
+        "other": ("Autre", "Other"),
     },
     "mode": {
         "activity": ("Activité", "Activity"),

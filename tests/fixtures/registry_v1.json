@@ -1,0 +1,387 @@
+{
+ "audit": [
+  {
+   "action": "property.create",
+   "at": "2026-10-01T08:00:03+00:00",
+   "by": "1",
+   "detail": "",
+   "result": "ok",
+   "target": "prop-1a931a6a368d0477"
+  },
+  {
+   "action": "stay.create",
+   "at": "2026-10-01T08:00:09+00:00",
+   "by": "1",
+   "detail": "",
+   "result": "ok",
+   "target": "stay-6b8dbdcf4edebba3"
+  },
+  {
+   "action": "stay.create",
+   "at": "2026-10-01T08:00:15+00:00",
+   "by": "1",
+   "detail": "",
+   "result": "ok",
+   "target": "stay-775ff4402c15f75c"
+  },
+  {
+   "action": "stay.create",
+   "at": "2026-10-01T08:00:21+00:00",
+   "by": "1",
+   "detail": "",
+   "result": "ok",
+   "target": "stay-f417823cc4e90841"
+  },
+  {
+   "action": "payment.create",
+   "at": "2026-10-01T08:00:27+00:00",
+   "by": "1",
+   "detail": "",
+   "result": "ok",
+   "target": "pay-caf9aaaea6a863b3"
+  },
+  {
+   "action": "entry.create",
+   "at": "2026-10-01T08:00:33+00:00",
+   "by": "1",
+   "detail": "",
+   "result": "ok",
+   "target": "ent-336476ba600b420c"
+  }
+ ],
+ "categories": {
+  "accommodation": {
+   "archived": false,
+   "builtin": true,
+   "en": "Accommodation revenue",
+   "fr": "Recettes d'hébergement",
+   "icon": "home",
+   "id": "accommodation",
+   "kind": "income",
+   "label": "",
+   "treatment": "operating_income"
+  },
+  "cleaning": {
+   "archived": false,
+   "builtin": true,
+   "en": "Cleaning",
+   "fr": "Ménage",
+   "icon": "spray",
+   "id": "cleaning",
+   "kind": "expense",
+   "label": "",
+   "treatment": "operating_expense"
+  },
+  "energy": {
+   "archived": false,
+   "builtin": true,
+   "en": "Energy",
+   "fr": "Énergie",
+   "icon": "bolt",
+   "id": "energy",
+   "kind": "expense",
+   "label": "",
+   "treatment": "operating_expense"
+  },
+  "equipment": {
+   "archived": false,
+   "builtin": true,
+   "en": "Equipment",
+   "fr": "Équipement",
+   "icon": "sofa",
+   "id": "equipment",
+   "kind": "expense",
+   "label": "",
+   "treatment": "investment"
+  },
+  "insurance": {
+   "archived": false,
+   "builtin": true,
+   "en": "Insurance",
+   "fr": "Assurance",
+   "icon": "shield",
+   "id": "insurance",
+   "kind": "expense",
+   "label": "",
+   "treatment": "operating_expense"
+  },
+  "linen": {
+   "archived": false,
+   "builtin": true,
+   "en": "Linen",
+   "fr": "Linge",
+   "icon": "linen",
+   "id": "linen",
+   "kind": "expense",
+   "label": "",
+   "treatment": "operating_expense"
+  },
+  "loan": {
+   "archived": false,
+   "builtin": true,
+   "en": "Loan repayment",
+   "fr": "Remboursement d'emprunt",
+   "icon": "bank",
+   "id": "loan",
+   "kind": "expense",
+   "label": "",
+   "treatment": "financing"
+  },
+  "maintenance": {
+   "archived": false,
+   "builtin": true,
+   "en": "Maintenance and repairs",
+   "fr": "Entretien et réparation",
+   "icon": "wrench",
+   "id": "maintenance",
+   "kind": "expense",
+   "label": "",
+   "treatment": "operating_expense"
+  },
+  "other_expense": {
+   "archived": false,
+   "builtin": true,
+   "en": "Other expense",
+   "fr": "Autre dépense",
+   "icon": "dots",
+   "id": "other_expense",
+   "kind": "expense",
+   "label": "",
+   "treatment": "operating_expense"
+  },
+  "other_income": {
+   "archived": false,
+   "builtin": true,
+   "en": "Other income",
+   "fr": "Autres recettes",
+   "icon": "plus",
+   "id": "other_income",
+   "kind": "income",
+   "label": "",
+   "treatment": "operating_income"
+  },
+  "platform_fees": {
+   "archived": false,
+   "builtin": true,
+   "en": "Platform fees",
+   "fr": "Frais de plateforme",
+   "icon": "percent",
+   "id": "platform_fees",
+   "kind": "expense",
+   "label": "",
+   "treatment": "operating_expense"
+  },
+  "subscription": {
+   "archived": false,
+   "builtin": true,
+   "en": "Subscription",
+   "fr": "Abonnement",
+   "icon": "repeat",
+   "id": "subscription",
+   "kind": "expense",
+   "label": "",
+   "treatment": "operating_expense"
+  },
+  "taxes": {
+   "archived": false,
+   "builtin": true,
+   "en": "Taxes",
+   "fr": "Impôts et taxes",
+   "icon": "receipt",
+   "id": "taxes",
+   "kind": "expense",
+   "label": "",
+   "treatment": "tax"
+  },
+  "travel": {
+   "archived": false,
+   "builtin": true,
+   "en": "Travel",
+   "fr": "Déplacement",
+   "icon": "car",
+   "id": "travel",
+   "kind": "expense",
+   "label": "",
+   "treatment": "operating_expense"
+  }
+ },
+ "created_at": "2026-10-01T08:00:00+00:00",
+ "csv_profiles": {},
+ "documents": {},
+ "entries": {
+  "ent-336476ba600b420c": {
+   "allocations": [],
+   "amount": 4000,
+   "archived": false,
+   "category_id": "cleaning",
+   "created_at": "2026-10-01T08:00:31+00:00",
+   "created_by": "1",
+   "currency": "EUR",
+   "date": "2026-10-04",
+   "history": [],
+   "id": "ent-336476ba600b420c",
+   "invoice_number": "",
+   "kind": "expense",
+   "label": "Ménage de départ",
+   "lines": [],
+   "loan_split": null,
+   "note": "",
+   "origin": {
+    "type": "manual"
+   },
+   "payment_declared": "unknown",
+   "period_end": "",
+   "period_start": "",
+   "property_id": "prop-1a931a6a368d0477",
+   "stay_id": "",
+   "superseded_by": "",
+   "supplier_id": "",
+   "updated_at": "2026-10-01T08:00:31+00:00",
+   "updated_by": "1"
+  }
+ },
+ "imports": {},
+ "ops": {},
+ "payments": {
+  "pay-caf9aaaea6a863b3": {
+   "amount": 51000,
+   "created_at": "2026-10-01T08:00:25+00:00",
+   "created_by": "1",
+   "date": "2026-10-05",
+   "direction": "in",
+   "history": [],
+   "id": "pay-caf9aaaea6a863b3",
+   "links": [
+    {
+     "amount": 51000,
+     "id": "stay-6b8dbdcf4edebba3",
+     "type": "stay"
+    }
+   ],
+   "method": "",
+   "note": "",
+   "origin": {
+    "type": "manual"
+   },
+   "property_id": "prop-1a931a6a368d0477",
+   "updated_at": "2026-10-01T08:00:25+00:00",
+   "updated_by": "1"
+  }
+ },
+ "permissions": {},
+ "properties": {
+  "prop-1a931a6a368d0477": {
+   "activity_start": "",
+   "address": "",
+   "archived": false,
+   "bedrooms": null,
+   "capacity": 4,
+   "created_at": "2026-10-01T08:00:01+00:00",
+   "created_by": "1",
+   "currency": "EUR",
+   "history": [],
+   "id": "prop-1a931a6a368d0477",
+   "kind": "house",
+   "name": "Maison d'essai",
+   "note": "",
+   "timezone": "",
+   "unavailable": [],
+   "updated_at": "2026-10-01T08:00:01+00:00",
+   "updated_by": "1"
+  }
+ },
+ "schema": 1,
+ "settings": {
+  "currency": "EUR",
+  "first_choice": null,
+  "guest_retention_months": 0,
+  "onboarding": {
+   "backup": false,
+   "dashboard": false,
+   "first_record": true,
+   "property": true
+  }
+ },
+ "stays": {
+  "stay-6b8dbdcf4edebba3": {
+   "adjustments": [],
+   "amounts": {
+    "commission": 9000,
+    "deposit": null,
+    "gross": 60000,
+    "payout": null,
+    "taxes_collected": null
+   },
+   "created_at": "2026-10-01T08:00:07+00:00",
+   "created_by": "1",
+   "end": "2026-10-04",
+   "external_ref": "",
+   "guest_label": "Famille Test",
+   "guests": 2,
+   "history": [],
+   "id": "stay-6b8dbdcf4edebba3",
+   "note": "",
+   "origin_import": "",
+   "property_id": "prop-1a931a6a368d0477",
+   "source": "manual",
+   "start": "2026-09-28",
+   "status": "confirmed",
+   "updated_at": "2026-10-01T08:00:07+00:00",
+   "updated_by": "1"
+  },
+  "stay-775ff4402c15f75c": {
+   "adjustments": [],
+   "amounts": {
+    "commission": 3000,
+    "deposit": null,
+    "gross": 20000,
+    "payout": 17000,
+    "taxes_collected": null
+   },
+   "created_at": "2026-10-01T08:00:13+00:00",
+   "created_by": "1",
+   "end": "2026-10-12",
+   "external_ref": "HMTEST0001",
+   "guest_label": "",
+   "guests": null,
+   "history": [],
+   "id": "stay-775ff4402c15f75c",
+   "note": "",
+   "origin_import": "",
+   "property_id": "prop-1a931a6a368d0477",
+   "source": "airbnb",
+   "start": "2026-10-10",
+   "status": "confirmed",
+   "updated_at": "2026-10-01T08:00:13+00:00",
+   "updated_by": "1"
+  },
+  "stay-f417823cc4e90841": {
+   "adjustments": [],
+   "amounts": {
+    "commission": null,
+    "deposit": null,
+    "gross": null,
+    "payout": null,
+    "taxes_collected": null
+   },
+   "created_at": "2026-10-01T08:00:19+00:00",
+   "created_by": "1",
+   "end": "2026-10-23",
+   "external_ref": "CSV-7",
+   "guest_label": "",
+   "guests": null,
+   "history": [],
+   "id": "stay-f417823cc4e90841",
+   "note": "",
+   "origin_import": "",
+   "property_id": "prop-1a931a6a368d0477",
+   "source": "csv",
+   "start": "2026-10-20",
+   "status": "confirmed",
+   "updated_at": "2026-10-01T08:00:19+00:00",
+   "updated_by": "1"
+  }
+ },
+ "suppliers": {},
+ "updated_at": "2026-10-01T08:00:35+00:00"
+}

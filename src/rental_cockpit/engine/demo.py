@@ -79,6 +79,7 @@ def build_demo(today: date | None = None) -> dict[str, Any]:
         created = led.create_stay({
             "property_id": prop, "start": start.isoformat(), "end": end.isoformat(), "status": status, "guests": guests,
             "guest_label": f"Séjour {letter}-{counter['n']:02d}", "external_ref": f"DEMO-{1000 + counter['n']}",
+            "channel": "abritel" if counter["n"] % 3 == 0 else "airbnb",
             "amounts": {"gross_cents": gross_cents, "commission_cents": commission, "payout_cents": gross_cents - commission},
         }, source="demo")["stay"]
         pay_day = start + timedelta(days=1)

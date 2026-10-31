@@ -142,23 +142,24 @@ const CHECK_ICONS = {
   stays_without_amount: ["alert", "amber"],
   allocations_incomplete: ["split", "blue"],
 };
+// Where each « À vérifier » item leads, and which list it opens there.
 const CHECK_TARGET = {
-  documents_incomplete: "documents",
-  payouts_to_confirm: "sejours",
-  payments_unknown: "depenses",
-  stays_without_amount: "sejours",
-  allocations_incomplete: "prestataires",
+  documents_incomplete: ["documents"],
+  payouts_to_confirm: ["sejours", "attention"],
+  payments_unknown: ["depenses"],
+  stays_without_amount: ["sejours", "attention"],
+  allocations_incomplete: ["prestataires"],
 };
 
 /** One « À vérifier » item. It only leads somewhere when that screen exists. */
 export function checkItem(v, item) {
   const [ic, tone] = CHECK_ICONS[item.kind] || ["info", "amber"];
-  const target = CHECK_TARGET[item.kind];
+  const [target, view] = CHECK_TARGET[item.kind] || [];
   const body = html`
     <span class="bubble ${tone}">${raw(icon(ic))}</span>
     <span><b>${item.title}</b><p>${item.hint}</p></span>`;
   if (target && v.ready.has(target)) {
-    return html`<button type="button" class="check" data-action="go" data-value="${target}">${body}<span class="chev">${raw(icon("chevronRight"))}</span></button>`;
+    return html`<button type="button" class="check" data-action="go" data-value="${target}" data-view="${view || ""}">${body}<span class="chev">${raw(icon("chevronRight"))}</span></button>`;
   }
   return html`<div class="check static">${body}</div>`;
 }
@@ -212,25 +213,26 @@ function staysCard(v) {
             <th scope="col">${t("stays.status")}</th><th scope="col">${t("stays.guests")}</th>${linked ? html`<th scope="col"><span class="sr-only">${t("stays.actions")}</span></th>` : ""}
           </tr></thead>
           <tbody>
-            ${stays.map((s) => html`<tr>
+            ${stays.map((s) => html`<tr class="${linked ? "clickable" : ""}" ${raw(linked ? `data-action="stay-open" data-value="${s.id}"` : "")}>
               <td class="num">${i18n.dateLong(s.start)}</td>
               <td class="num">${i18n.dateLong(s.end)}</td>
               <td><span class="propcell">${raw(propertyIcon(s.property_kind))}<span>${s.property}</span></span></td>
               <td>${statusPill(v, s)}</td>
               <td>${guests(v, s.guests)}</td>
-              ${linked ? html`<td><button type="button" class="iconbtn" data-action="go" data-value="sejours" aria-label="${t("stays.actionsFor", { date: i18n.dateLong(s.start) })}">${raw(icon("dots"))}</button></td>` : ""}
+              ${linked ? html`<td><button type="button" class="iconbtn" data-action="stay-open" data-value="${s.id}" aria-label="${t("stays.actionsFor", { date: i18n.dateLong(s.start) })}">${raw(icon("chevronRight"))}</button></td>` : ""}
             </tr>`)}
           </tbody>
         </table>
         <div class="stays-cards">
-          <div class="stay-card">
+          ${linked ? html`<button type="button" class="stay-card clickable" data-action="stay-open" data-value="${next.id}" aria-label="${t("stays.actionsFor", { date: i18n.dateLong(next.start) })}">
             <span class="tile">${raw(propertyIcon(next.property_kind))}</span>
-            <div>
-              <div class="stay-title"><b>${next.property}</b>${statusPill(v, next)}</div>
-              <div class="when num">${i18n.dateShort(next.start)} → ${i18n.dateShort(next.end)}</div>
-              <div class="facts"><span>${raw(icon("users"))}${guests(v, next.guests)}</span><span>${raw(icon("moon"))}${i18n.plural(next.nights, "stays.night", "stays.nights")}</span></div>
-            </div>
-          </div>
+            <span class="body">
+              <span class="stay-title"><b>${next.property}</b>${statusPill(v, next)}</span>
+              <span class="when num">${i18n.dateShort(next.start)} → ${i18n.dateShort(next.end)}</span>
+              <span class="facts"><span>${raw(icon("users"))}${guests(v, next.guests)}</span><span>${raw(icon("moon"))}${i18n.plural(next.nights, "stays.night", "stays.nights")}</span></span>
+            </span>
+            <span class="chev">${raw(icon("chevronRight"))}</span>
+          </button>` : ""}
         </div>` : html`<div class="empty">${raw(icon("calendar"))}<span>${t("stays.empty")}</span></div>`}
     </section>`;
 }
