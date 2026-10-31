@@ -469,7 +469,8 @@ dialog.rc .dfoot { display: flex; gap: 10px; justify-content: flex-end; flex-wra
 .auth h1 { font-family: var(--rc-serif); font-weight: 600; font-size: 32px; line-height: 1.12; }
 .auth .tagline { font-family: var(--rc-serif); font-size: 19px; color: var(--rc-muted); margin-top: 6px; }
 .auth form { display: grid; gap: 14px; align-content: start; }
-.auth .brand { margin-bottom: 4px; }
+.auth .brand { margin-bottom: -6px; }
+/* Phone: brand, then the form, then the presentation — the form stays above the fold. */
 .auth .points { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
 .auth .points li { display: grid; grid-template-columns: auto 1fr; gap: 12px; color: var(--rc-muted); font-size: 14px; }
 .auth .points svg.i { color: var(--rc-accent); margin-top: 1px; }
@@ -477,7 +478,10 @@ dialog.rc .dfoot { display: flex; gap: 10px; justify-content: flex-end; flex-wra
 .langs button { min-height: 32px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--rc-border); background: transparent; color: var(--rc-muted); cursor: pointer; font-size: 12.5px; }
 .langs button[aria-pressed="true"] { border-color: var(--rc-accent-line); color: var(--rc-accent); }
 @container rc (min-width: 860px) {
-  .auth .hero-card { grid-template-columns: 1.05fr 1fr; padding: 40px; gap: 40px; align-items: center; }
+  .auth .hero-card { grid-template-columns: 1.05fr 1fr; grid-template-areas: "brand form" "intro form"; grid-template-rows: auto 1fr; padding: 40px; gap: 18px 40px; }
+  .auth .hero-card > .brand { grid-area: brand; margin-bottom: 0; }
+  .auth .hero-card > .intro { grid-area: intro; align-content: start; }
+  .auth .hero-card > form { grid-area: form; align-self: center; }
 }
 .root > .main { height: 100%; }
 /* Touch screens: every control aims at 44 × 44 px (UX 07). */

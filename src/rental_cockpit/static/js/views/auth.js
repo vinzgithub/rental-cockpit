@@ -47,8 +47,9 @@ export function renderAuth(v) {
   return html`
     <div class="auth">
       <section class="card hero-card">
-        <div class="stack">
-          <div class="brand"><span class="logo">${raw(icon("logo"))}</span><span><b>Rental Cockpit</b><small>${t("app.tagline")}</small></span></div>
+        <div class="brand"><span class="logo">${raw(icon("logo"))}</span><span><b>Rental Cockpit</b><small>${t("app.tagline")}</small></span></div>
+        ${form}
+        <div class="stack intro">
           ${raw(WELCOME_ART)}
           <ul class="points">
             <li>${raw(icon("checkCircle"))}<span>${t("auth.p1")}</span></li>
@@ -57,7 +58,6 @@ export function renderAuth(v) {
           </ul>
           ${langSwitch(v)}
         </div>
-        ${form}
       </section>
     </div>`;
 }

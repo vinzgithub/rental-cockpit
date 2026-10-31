@@ -1,75 +1,200 @@
 <div align="center">
 
-# Rental Cockpit
+# 🏡 Rental Cockpit
 
-### Suivre sa location saisonnière et comprendre chaque chiffre
+### Votre location saisonnière, chaque chiffre expliqué
 
-**Biens · Séjours · Dépenses · Justificatifs · Prestataires · Résultats expliqués**
+**Synthèse · Trois lectures · Indicateurs expliqués · À vérifier · Double authentification · Home Assistant**
 
-🇬🇧 [Read in English](README.md)
+**Français** · [**English**](README.md)
 
-<img src="docs/images/fr/overview-desktop.png" alt="Synthèse de Rental Cockpit sur ordinateur, avec des données de démonstration fictives" width="100%">
+![Version](https://img.shields.io/badge/version-0.1.0%20pr%C3%A9version-126caa) ![Docker](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-2496ED) ![Licence](https://img.shields.io/badge/licence-%C3%A0%20d%C3%A9finir-lightgrey)
+
+<br>
+
+<img src="docs/images/fr/hero.png"
+     alt="Rental Cockpit sur ordinateur et sur téléphone : synthèse du mois, trois lectures, biens et données à vérifier"
+     width="100%">
 
 <sub>Les captures montrent la démonstration intégrée : deux biens fictifs, des prestataires « Démo » et des montants inventés.</sub>
 
-**Auto-hébergé · Local d'abord · Bilingue français / anglais · Aucun service externe requis**
+<br><br>
+
+**Auto-hébergé · Local d'abord · Bilingue (FR / EN) · Aucun service externe**
 
 </div>
 
 ---
 
-> [!IMPORTANT]
-> **Préversion 0.1.0, en cours de développement.** L'écran **Synthèse** fonctionne de bout en bout (comptes, démonstration, indicateurs expliqués, création d'un bien), ainsi que la partie compte des **Réglages** (mot de passe, double authentification, clés pour Home Assistant). Les écrans Séjours, Dépenses, Prestataires et Documents arrivent ensuite, dans le même style. Ce n'est pas encore une version stable : n'y confiez pas votre seule copie de données réelles.
-
-## Pour qui ?
-
-Pour un particulier qui loue un ou plusieurs logements (location saisonnière ou classique) et veut suivre ses recettes et ses dépenses, conserver ses justificatifs et **comprendre** chaque résultat, sans apprendre la comptabilité ni confier ses données à un service en ligne.
-
-Rental Cockpit est une application web autonome que vous installez chez vous (un conteneur Docker ou un simple processus Python). Elle ne dépend d'aucun autre logiciel pour l'installation, l'authentification, le stockage ou l'interface.
-
-## Ce qui fonctionne aujourd'hui
-
-| | |
-|---|---|
-| **Premier démarrage guidé** | Aucun compte par défaut : la première visite crée le compte administrateur. Ensuite, deux choix explicites : *Utiliser mes données* ou *Explorer la démonstration*. |
-| **Démonstration séparée** | Les données fictives vivent dans leur propre registre et ne touchent jamais vos données réelles. Un bandeau permanent la signale. |
-| **Trois lectures des chiffres** | *Activité* (ce que la location a produit, séjours répartis nuit par nuit), *Factures* (chaque document à sa date), *Trésorerie* (l'argent réellement reçu ou payé). Elles ne sont jamais mélangées. |
-| **« Comment est calculé ce montant ? »** | Chaque indicateur affiche sa formule, la période, les biens inclus, ce qui est exclu et **toutes les lignes utilisées**. |
-| **Évolutions calculées** | Les pourcentages comparent la période à la précédente avec les mêmes règles. |
-| **À vérifier** | Ce qui empêche un résultat d'être définitif : paiements inconnus, séjours sans montant, versements non reçus, sommes restant à affecter. |
-| **Mes biens** | Recettes, dépenses et solde par bien ; création d'un bien en quelques secondes. |
-| **Double authentification** | Facultative : code à six chiffres d'une application d'authentification (TOTP), dix codes de secours à usage unique, activation guidée en trois étapes. |
-| **Lien avec Home Assistant** | Facultatif : clé en lecture seule et résumé JSON (recettes, solde, occupation ce soir, prochaine arrivée, à vérifier) pour vos capteurs, cartes et automatisations. [Guide](docs/fr/home-assistant.md) |
-| **Ordinateur, tablette, téléphone** | Barre latérale, onglets en haut ou barre en bas selon la largeur. |
+## 🚀 En bref
 
 <table>
 <tr>
-<td width="50%"><img src="docs/images/fr/explain.png" alt="Explication d'un indicateur : formule, période, exclusions et lignes utilisées"></td>
-<td width="25%"><img src="docs/images/fr/overview-phone.png" alt="Synthèse sur téléphone"></td>
-<td width="25%"><img src="docs/images/fr/first-account.png" alt="Création du premier compte administrateur"></td>
+<td width="33%" valign="top"><b>🧾 Chaque chiffre s'explique</b><br>Sous chaque montant, « Comment est calculé ce montant ? » : formule, période, exclusions et toutes les lignes utilisées.</td>
+<td width="33%" valign="top"><b>🔀 Trois lectures, jamais mélangées</b><br>Activité, Factures, Trésorerie : trois questions différentes, trois règles de calcul annoncées.</td>
+<td width="33%" valign="top"><b>✅ Ce qui reste à vérifier</b><br>Paiements inconnus, séjours sans montant, versements non reçus : un résultat incomplet est signalé, jamais déguisé en zéro.</td>
 </tr>
 <tr>
-<td width="50%"><img src="docs/images/fr/settings-desktop.png" alt="Réglages : compte, double authentification activée, clé pour Home Assistant"></td>
-<td width="50%" colspan="2"><img src="docs/images/fr/mfa-setup.png" alt="Activation de la double authentification avec un code QR"></td>
+<td valign="top"><b>🎮 Une démo à part</b><br>Deux biens fictifs et un an d'activité inventée pour tout essayer, sans jamais toucher à vos données.</td>
+<td valign="top"><b>🔐 Double authentification</b><br>Un code d'application d'authentification après le mot de passe, et dix codes de secours à usage unique.</td>
+<td valign="top"><b>🏠 Home Assistant, si vous voulez</b><br>Une clé en lecture seule : recettes, occupation, prochaine arrivée, et des automatisations comme chauffer la veille d'une arrivée.</td>
 </tr>
 </table>
 
-## Règles de calcul en bref
+> [!NOTE]
+> **Version 0.1.0, préversion.** La Synthèse, la démonstration, les comptes, la double authentification et le lien avec Home Assistant sont prêts. Les écrans **Séjours, Dépenses, Prestataires et Documents** arrivent dans les prochaines versions : avec vos propres données, seule la création des biens est possible pour l'instant.
+
+---
+
+## ✨ Pourquoi Rental Cockpit ?
+
+Louer un logement, c'est jongler avec des versements de plateforme déjà amputés de la commission, une facture de ménage qui couvre trois séjours, une mensualité de crédit, une taxe qui tombe une fois par an… À la fin du mois, une question simple reste sans réponse claire : **qu'est-ce que la location a vraiment rapporté ?**
+
+Un tableur donne un chiffre ; il ne dit pas d'où il vient. Rental Cockpit fait l'inverse : **chaque montant montre son calcul**, chaque résultat incomplet est signalé, et rien n'est jamais compté deux fois.
+
+Il est né d'un outil personnel de suivi d'une location saisonnière, dont il reprend les règles de calcul, dans une application autonome que vous installez chez vous. Pas d'abonnement, pas de compte en ligne : vos données restent sur votre serveur.
+
+---
+
+## 🧾 « Comment est calculé ce montant ? »
+
+<table>
+<tr>
+<td width="60%" valign="top"><img src="docs/images/fr/explain-card.png" alt="Explication d'un indicateur : formule, période, exclusions et lignes utilisées"></td>
+<td width="40%" valign="top">
+
+Un clic sous n'importe quel indicateur ouvre son explication :
+
+- l'**équation** : Recettes − Dépenses = Solde ;
+- la **formule**, la **période**, la **lecture** et les **biens inclus** ;
+- ce qui est **exclu**, et pourquoi ;
+- **toutes les lignes utilisées**, avec la règle appliquée à chacune — « Réparti nuit par nuit sur le séjour », « Compté à sa date »… — et le total.
+
+Pas de boîte noire : vous pouvez refaire chaque calcul à la main.
+
+</td>
+</tr>
+</table>
+
+---
+
+## 🔀 Même mois, plusieurs questions
+
+<img src="docs/images/fr/readings.png" alt="Le même mois en lecture Activité puis en lecture Trésorerie" width="100%">
+
+<sub>En haut, la lecture Activité ; en bas, la Trésorerie du même mois : 970 € réellement reçus, la commission de 30 € étant déjà déduite du versement.</sub>
+
+| Lecture | La question | La règle |
+|---|---|---|
+| **Activité** | Qu'a produit la location pendant la période ? | Un séjour est réparti nuit par nuit ; une dépense compte à sa date ou sur la période qu'elle couvre |
+| **Factures** | Quels documents sont datés de la période ? | Chaque facture à sa date, chaque séjour à sa date d'arrivée |
+| **Trésorerie** | Quel argent est réellement entré ou sorti ? | Uniquement les paiements, à leur date |
+
+Les pourcentages comparent toujours la période à la précédente, **calculée avec les mêmes règles**.
+
+### Un exemple que vous pouvez vérifier
+
+Il est reproduit à l'identique dans le mois d'exemple de la démonstration :
+
+```text
+   1 000 €   recettes du séjour
+ −    30 €   commission de la plateforme
+ −    80 €   ménage
+ −    20 €   linge
+ −    10 €   déplacement
+ −    60 €   réparation
+ ──────────
+     800 €   solde avant financement
+ −   200 €   mensualité du crédit
+ ──────────
+     600 €   trésorerie après financement
+```
+
+### Les règles qui ne bougent pas
 
 - Les montants sont stockés en **centimes entiers** : aucun arrondi flottant, les totaux se rapprochent au centime.
 - Un séjour du 10 au 12 juin compte **deux nuits** : le jour du départ n'est pas une nuit.
 - Une valeur inconnue n'est **jamais affichée comme zéro** : le résultat est signalé incomplet.
 - Une échéance, la mention « paiement comptant » ou un PDF **ne valent pas paiement**.
 - Une facture répartie entre plusieurs séjours reste **une seule dépense**.
-- Le *solde avant financement* exclut emprunt, impôts et investissements ; ce n'est **pas un bénéfice fiscal**.
+- Le *solde avant financement* exclut emprunt, impôts et investissements : ce n'est **pas un bénéfice fiscal**.
 
-Exemple vérifiable (il est reproduit dans le mois d'exemple de la démonstration) : 1 000 € de recettes − 30 € de commission − 80 € de ménage − 20 € de linge − 10 € de déplacement − 60 € de réparation = **800 €** avant financement ; avec une mensualité de 200 € payée le même mois, la trésorerie après financement est de **600 €**.
+📖 [Toutes les règles de calcul](docs/fr/calculs.md)
 
-Détails : [docs/fr/calculs.md](docs/fr/calculs.md).
+---
 
-## Installation
+## 📱 Ordinateur, tablette, téléphone
 
-**Avec Docker** (recommandé) : une image prête à l'emploi est publiée pour x86-64 et ARM64 (Raspberry Pi 4 compris).
+<table>
+<tr>
+<td width="46%" valign="top"><img src="docs/images/fr/overview-tablet.png" alt="Synthèse sur tablette"></td>
+<td width="27%" valign="top"><img src="docs/images/fr/overview-phone.png" alt="Synthèse sur téléphone"></td>
+<td width="27%" valign="top"><img src="docs/images/fr/settings-phone.png" alt="Réglages sur téléphone"></td>
+</tr>
+<tr>
+<td align="center"><b>Sur tablette</b></td>
+<td align="center"><b>Sur téléphone</b></td>
+<td align="center"><b>Les réglages, au pouce</b></td>
+</tr>
+</table>
+
+Barre latérale sur grand écran, onglets en haut sur tablette, barre en bas sur téléphone. Sur écran tactile, chaque commande vise 44 × 44 pixels.
+
+---
+
+## 🎮 Démarrer en deux minutes
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="docs/images/fr/first-account-card.png" alt="Création du premier compte administrateur"></td>
+<td width="50%" valign="top"><img src="docs/images/fr/welcome-card.png" alt="Écran d'accueil : utiliser mes données ou explorer la démonstration"></td>
+</tr>
+<tr>
+<td align="center"><b>1. Le compte administrateur</b><br><sub>Aucun compte par défaut : la première visite le crée.</sub></td>
+<td align="center"><b>2. Vos données ou la démonstration</b><br><sub>Deux choix explicites, chacun réversible.</sub></td>
+</tr>
+</table>
+
+Avec la démonstration, tout est déjà rempli : un bandeau permanent rappelle que les chiffres sont fictifs. Avec vos données, vous partez d'un espace vide et créez votre premier bien — seul le nom est obligatoire.
+
+📖 [Guide de démarrage : les dix premières minutes](docs/fr/guide.md)
+
+---
+
+## 🏠 Home Assistant, en option
+
+Rental Cockpit n'a **pas besoin** de Home Assistant. Mais si vous l'utilisez, une clé en lecture seule suffit pour afficher vos chiffres et déclencher des automatisations, avec l'intégration RESTful déjà incluse : rien à installer.
+
+```yaml
+rest:
+  - resource: http://rental-cockpit.lan:8080/api/v1/summary?lang=fr
+    headers:
+      Authorization: !secret rental_cockpit_authorization
+    scan_interval: 900
+    sensor:
+      - name: Location solde du mois
+        value_template: "{{ value_json.month.balance_before_financing }}"
+        unit_of_measurement: "EUR"
+        device_class: monetary
+    binary_sensor:
+      - name: Location arrivée demain
+        value_template: "{{ value_json.properties | selectattr('arrival_tomorrow') | list | count > 0 }}"
+```
+
+Et ensuite : **chauffer le logement la veille d'une arrivée**, être prévenu quand un paiement est à confirmer, afficher l'occupation du soir sur votre tableau de bord…
+
+- La clé lit **ce que son compte peut lire** et ne peut **rien modifier**.
+- Elle est affichée une seule fois, conservée sous forme d'empreinte et révocable à tout moment.
+
+<img src="docs/images/fr/settings-desktop.png" alt="Réglages : compte, double authentification activée et clé pour Home Assistant" width="100%">
+
+📖 [Guide Home Assistant : capteurs, carte, automatisations, référence de l'API](docs/fr/home-assistant.md)
+
+---
+
+## 📦 Installation
+
+Une image prête à l'emploi est publiée pour **x86-64 et ARM64** (Raspberry Pi 4 compris). Pas besoin de Python ni de cloner le dépôt :
 
 ```bash
 mkdir rental-cockpit && cd rental-cockpit
@@ -77,44 +202,111 @@ curl -fsSLO https://raw.githubusercontent.com/vinzgithub/rental-cockpit/main/doc
 docker compose up -d
 ```
 
-Ouvrez ensuite `http://<adresse-de-la-machine>:8080` et créez le compte administrateur. Mise à jour : `docker compose pull && docker compose up -d`.
+Ouvrez `http://<adresse-de-la-machine>:8080`, créez le compte administrateur, puis explorez la démonstration ou commencez avec vos biens.
 
-**Sans Docker** (Python 3.11 ou plus récent) :
+Mise à jour : `docker compose pull && docker compose up -d`.
 
-```bash
-pip install .
-RENTAL_COCKPIT_DATA_DIR=./data uvicorn --factory rental_cockpit.app:create_app --host 127.0.0.1 --port 8080
-```
+| Image | Pour |
+|---|---|
+| `ghcr.io/vinzgithub/rental-cockpit:latest` | La dernière version publiée |
+| `ghcr.io/vinzgithub/rental-cockpit:0.1` | Rester sur les versions 0.1.x |
+| `ghcr.io/vinzgithub/rental-cockpit:edge` | Essayer ce qui arrive (branche principale) |
 
-Toutes les options, la mise à jour et la sauvegarde manuelle : [docs/fr/installation.md](docs/fr/installation.md).
+> [!WARNING]
+> Rental Cockpit contient vos données financières. Gardez-le sur votre réseau local ou derrière un VPN, et sauvegardez le volume `/data`.
 
-## Confidentialité et sécurité
+📖 [Guide complet : Docker, Python, variables, sauvegarde, dépannage du compte](docs/fr/installation.md)
 
-- Les données restent dans un seul dossier (`/data`) : une base SQLite et, plus tard, les PDF privés. Aucune télémétrie, aucun appel sortant.
-- Mots de passe hachés (scrypt), double authentification facultative (TOTP et codes de secours), session signée `HttpOnly` et `SameSite=Strict`, jeton anti-CSRF sur chaque modification, verrouillage après cinq échecs de connexion, politique de sécurité du contenu stricte (aucun script ni style externe ou en ligne).
-- Le conteneur tourne sans privilège, avec un système de fichiers en lecture seule.
-- Les clés pour Home Assistant ne font que lire, ne sont affichées qu'une fois et se révoquent à tout moment.
-- Les droits sont vérifiés sur le serveur à chaque requête : un lecteur ne voit que les biens qui lui sont accordés, et l'accès aux PDF est une permission distincte.
-- Gardez l'application sur votre réseau local ou derrière un proxy HTTPS ; ne l'ouvrez pas directement sur Internet.
+---
 
-Voir [SECURITY.md](SECURITY.md) et [docs/fr/securite.md](docs/fr/securite.md).
+## 🔒 Sécurisé par défaut
 
-## Documentation
+- Pas de compte par défaut : la première visite crée l'administrateur
+- Mots de passe hachés avec scrypt, verrouillage après cinq échecs, jeton anti-CSRF sur chaque modification
+- Double authentification en option : code TOTP après le mot de passe, codes de secours à usage unique
+- Droits vérifiés sur le serveur à chaque requête : un lecteur ne voit que les biens qui lui sont accordés
+- Politique de sécurité du contenu stricte : aucun script, police ou traceur externe — Rental Cockpit n'appelle jamais Internet
+- Clés d'API en lecture seule, affichées une seule fois et conservées sous forme d'empreinte
+- Conteneur sans privilège, système de fichiers en lecture seule
+
+<table>
+<tr>
+<td width="65%" valign="top"><img src="docs/images/fr/mfa-card.png" alt="Activer la double authentification avec un code QR"></td>
+<td width="35%" valign="top"><img src="docs/images/fr/login-code.png" alt="Le code demandé après le mot de passe, sur téléphone"></td>
+</tr>
+<tr>
+<td align="center"><b>La double authentification en un scan</b></td>
+<td align="center"><b>Le code demandé après le mot de passe</b></td>
+</tr>
+</table>
+
+📖 [Sécurité et protection des données](docs/fr/securite.md) · [Signaler une vulnérabilité](SECURITY.md)
+
+---
+
+## 💾 Vos données
+
+Tout tient dans **un seul dossier**, `/data` : une base SQLite et, bientôt, vos justificatifs PDF privés. La démonstration vit dans son propre registre et ne se mélange jamais à vos données réelles. Aucune télémétrie, aucun compte chez un éditeur, aucun appel sortant.
+
+En attendant la sauvegarde intégrée, une copie du volume suffit : la commande est dans le [guide d'installation](docs/fr/installation.md#le-dossier-de-données).
+
+---
+
+## 🗺️ Feuille de route
+
+| | Étape | Contenu |
+|:--:|---|---|
+| ✅ | **0.1.0** | Synthèse, trois lectures, indicateurs expliqués, démonstration, comptes et droits, double authentification, lien Home Assistant, images Docker |
+| 🔜 | **Saisie** | Séjours, Dépenses et paiements, Prestataires avec répartition d'une facture |
+| 🔜 | **Justificatifs et imports** | Documents PDF contrôlés, import Airbnb, import CSV avec prévisualisation |
+| 🔜 | **Réglages et sauvegarde** | Lecteurs et droits par bien, catégories, sauvegarde vérifiée et restauration |
+| 🎯 | **1.0** | Tests sur une vraie machine ARM64, recette complète, première version stable |
+
+📖 [Feuille de route détaillée](docs/fr/feuille-de-route.md)
+
+---
+
+## 📚 Documentation
 
 | Document | Contenu |
 |---|---|
 | [Installation](docs/fr/installation.md) | Image Docker, Python, variables, mise à jour, sauvegarde, dépannage du compte |
 | [Guide de démarrage](docs/fr/guide.md) | Les dix premières minutes, avec la démonstration |
 | [Règles de calcul](docs/fr/calculs.md) | Les trois lectures, chaque indicateur, glossaire |
-| [Architecture et adaptations](docs/fr/architecture-et-adaptations.md) | Ce qui est repris du projet d'origine, ce qui change avec une application autonome |
-| [Sécurité](docs/fr/securite.md) | Comptes, double authentification, droits, clés d'API, données, exposition réseau |
 | [Home Assistant](docs/fr/home-assistant.md) | Lien facultatif : capteurs, automatisations, carte, référence de l'API |
+| [Sécurité](docs/fr/securite.md) | Comptes, double authentification, droits, clés d'API, données, exposition réseau |
+| [Architecture et adaptations](docs/fr/architecture-et-adaptations.md) | Ce qui est repris du projet d'origine, ce qui change avec une application autonome |
 | [Feuille de route](docs/fr/feuille-de-route.md) | Écrans et lots à venir |
+| [Journal des modifications](CHANGELOG.md) | Le contenu de chaque version |
 
-## Licence
+---
 
-**À définir.** Aucune licence n'est encore accordée sur ce code ; tant qu'une licence n'est pas publiée dans ce dépôt, les droits d'auteur s'appliquent par défaut.
+## 🛡️ Licence et droits d'auteur
+
+**Copyright © 2026 Vincent Fournet.**
+
+La licence est **à définir**. Aucune licence n'est encore accordée sur ce code : tant qu'une licence n'est pas publiée dans ce dépôt, les droits d'auteur s'appliquent par défaut.
 
 Les polices incluses (Source Serif 4 et Inter) sont distribuées sous SIL Open Font License 1.1 : voir [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
+---
+
+## ℹ️ Avertissement
+
+Rental Cockpit est un outil de suivi, pas un logiciel de comptabilité ni un conseil fiscal : le solde avant financement n'est pas un bénéfice imposable, et Rental Cockpit ne remplace ni votre déclaration ni un expert-comptable.
+
+Les chiffres des captures et de la documentation viennent de la démonstration fictive fournie avec l'application.
+
+Airbnb, Abritel, Home Assistant et les autres noms de produits ou de sociétés cités restent la propriété de leurs détenteurs. Rental Cockpit n'est affilié à aucune de ces sociétés.
+
+---
+
+<div align="center">
+
+### 🏡 Rental Cockpit
+
+**Chaque euro de votre location, expliqué.**
+
 Copyright © 2026 Vincent Fournet
+
+</div>

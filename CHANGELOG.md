@@ -13,4 +13,5 @@ First public preview of the standalone application.
 - Optional Home Assistant link: read-only API keys (shown once, stored as hashes, revocable) and `GET /api/v1/summary` for the RESTful integration; documented sensors, automations and card; framing allowed only for the origins in `RENTAL_COCKPIT_FRAME_ANCESTORS`.
 - Account recovery from the server: `python -m rental_cockpit.cli reset-password|disable-mfa <username>`.
 - Docker images for x86-64 and ARM64 published on `ghcr.io/vinzgithub/rental-cockpit` (`edge` from the main branch, `latest` and version tags from releases), each one started and checked before publication; unprivileged, read-only container.
+- Sign-in on a phone: the form comes right after the name, above the presentation.
 - Python installation; French and English interface and documentation.
