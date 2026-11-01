@@ -59,8 +59,12 @@ def state_of(entry: dict[str, Any], paid: int) -> str:
     return "unpaid" if entry.get("payment_declared") == "unpaid" else "unknown"
 
 
-def summary(data: dict[str, Any], entry: dict[str, Any], lang: str, paid: int | None = None) -> dict[str, Any]:
-    """One line of the list: amounts, status and the names of what the entry points to."""
+def summary(data: dict[str, Any], entry: dict[str, Any], lang: str, paid: int | None = None, today: date | None = None) -> dict[str, Any]:
+    """One line of the list: amounts, status and the names of what the entry points to.
+
+    An entry dated after today (the next loan instalments, say) is *upcoming*:
+    it is planned, not yet due, and stays out of « À payer » until its date.
+    """
     if paid is None:
         paid = paid_by_entry(data).get(entry["id"], 0)
     prop = data["properties"].get(entry["property_id"], {})
@@ -82,12 +86,13 @@ def summary(data: dict[str, Any], entry: dict[str, Any], lang: str, paid: int | 
         "paid": paid, "remaining": max(entry["amount"] - paid, 0),
         "loan_split": entry.get("loan_split"), "lines": len(entry.get("lines") or []),
         "series": entry.get("series"), "archived": bool(entry.get("archived")), "superseded": bool(entry.get("superseded_by")),
+        "upcoming": bool(today and entry["date"] > today.isoformat()),
         "origin": (entry.get("origin") or {}).get("type", "manual"),
         "revision": int(entry.get("revision") or 0), "updated_at": entry.get("updated_at"),
     }
 
 
-def detail(data: dict[str, Any], entry: dict[str, Any], lang: str) -> dict[str, Any]:
+def detail(data: dict[str, Any], entry: dict[str, Any], lang: str, today: date | None = None) -> dict[str, Any]:
     """Everything the entry page shows: summary, payments, service lines, allocations and history."""
     payments = []
     for payment in data.get("payments", {}).values():
@@ -97,7 +102,7 @@ def detail(data: dict[str, Any], entry: dict[str, Any], lang: str) -> dict[str, 
                                  "method": payment.get("method", ""), "note": payment.get("note", ""),
                                  "shared": len(payment["links"]) > 1})
     payments.sort(key=lambda p: (p["date"], p["id"]))
-    result = summary(data, entry, lang, sum(p["amount"] for p in payments))
+    result = summary(data, entry, lang, sum(p["amount"] for p in payments), today)
     stays = data.get("stays", {})
     linked_docs = [d for d in data.get("documents", {}).values() if entry["id"] in (d.get("entry_ids") or [])]
     result.update({
@@ -121,11 +126,11 @@ def matches(item: dict[str, Any], view: str) -> bool:
     if hidden:
         return False
     if view == "to_pay":
-        return item["kind"] == "expense" and item["state"] in ("unpaid", "partial")
+        return item["kind"] == "expense" and item["state"] in ("unpaid", "partial") and not item["upcoming"]
     if view == "to_confirm":
         return item["kind"] == "expense" and item["state"] == "unknown"
     if view == "to_receive":
-        return item["kind"] == "income" and item["state"] != "paid"
+        return item["kind"] == "income" and item["state"] != "paid" and not item["upcoming"]
     return True
 
 
@@ -137,17 +142,21 @@ def search(item: dict[str, Any], query: str) -> bool:
 
 
 def totals(items: list[dict[str, Any]]) -> dict[str, int]:
-    """Sums of a list, expenses and income apart (adding them together would mean nothing)."""
-    result = {"expenses": 0, "income": 0, "to_pay": 0, "to_receive": 0, "count": len(items)}
+    """Sums of a list, expenses and income apart (adding them together would mean nothing).
+
+    What is still due today and what is planned later (``upcoming``) are kept apart.
+    """
+    result = {"expenses": 0, "income": 0, "to_pay": 0, "to_receive": 0, "upcoming": 0, "count": len(items)}
     for item in items:
         if item["archived"] or item["superseded"]:
             continue
         if item["kind"] == "expense":
             result["expenses"] += item["amount"]
-            result["to_pay"] += item["remaining"]
+            result["upcoming" if item["upcoming"] else "to_pay"] += item["remaining"]
         else:
             result["income"] += item["amount"]
-            result["to_receive"] += item["remaining"]
+            if not item["upcoming"]:
+                result["to_receive"] += item["remaining"]
     return result
 
 

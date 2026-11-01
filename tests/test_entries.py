@@ -222,10 +222,15 @@ def test_api_scenario_views_totals_and_payments(client):
                                   "amount": "150", "date": "2026-10-20", "payment_declared": "unpaid"}, "op-7")
 
     listing = client.get("/api/entries", params={"property_id": pid}).json()
-    assert listing["counts"] == {"all": 15, "to_pay": 12, "to_confirm": 1, "to_receive": 1, "archived": 0}
+    # The eleven next instalments are planned, not due yet: they stay out of « À payer » until their date.
+    assert listing["counts"] == {"all": 15, "to_pay": 1, "to_confirm": 1, "to_receive": 1, "archived": 0}
+    # Left to pay: the repair (200 €) and the cleaning whose payment is still to confirm (80 €), like the Overview.
+    assert (listing["totals"]["to_pay"], listing["totals"]["upcoming"]) == (28000, 11 * 50000)
+    assert [e["upcoming"] for e in listing["entries"]][:4] == [False] * 4 and listing["entries"][4]["upcoming"] is True
+    assert listing["entries"][0]["label"] == "Remboursement sinistre"  # newest first, then what comes next
+    assert listing["entries"][4]["date"] == "2026-11-05"
     to_pay = client.get("/api/entries", params={"property_id": pid, "view": "to_pay"}).json()
-    assert to_pay["entries"][0]["label"] == "Réparation chauffe-eau"  # oldest debt first
-    assert to_pay["totals"]["to_pay"] == 20000 + 11 * 50000
+    assert [e["label"] for e in to_pay["entries"]] == ["Réparation chauffe-eau"] and to_pay["totals"]["to_pay"] == 20000
     october = client.get("/api/overview", params={"property_id": pid, "start": "2026-10-01", "end": "2026-11-01"}).json()["indicators"]
     assert (october["operating_expenses"]["value"], october["financing"]["value"], october["revenue"]["value"]) == (38000, 50000, 15000)
     assert (october["to_pay"]["value"], october["to_receive"]["value"]) == (28000, 15000)

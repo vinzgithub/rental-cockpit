@@ -1,7 +1,7 @@
 /* Copyright © 2026 Vincent Fournet */
-// « Réglages » — account, two-factor sign-in, data shown (own data or demo)
-// and the optional Home Assistant link. Categories, readers and backup arrive
-// with later deliveries, as working settings.
+// « Réglages » — account, two-factor sign-in, data shown (own data or demo),
+// categories of expenses and income, and the optional Home Assistant link.
+// Readers and backup arrive with later deliveries, as working settings.
 
 import { html, raw } from "../dom.js";
 import { icon } from "../icons.js";
@@ -96,6 +96,32 @@ function dataCard(v) {
     </section>`;
 }
 
+function categoriesCard(v) {
+  const { t } = v.i18n;
+  const list = v.categories?.categories || [];
+  const group = (kind) => list.filter((c) => c.kind === kind);
+  const row = (c) => html`
+    <div class="keyrow cat-row ${c.archived ? "archived" : ""}">
+      <span class="tile">${raw(icon(c.kind === "income" ? "coins" : "tag"))}</span>
+      <span><b>${c.label}</b><small>${c.treatment_label}${c.entries ? ` · ${v.i18n.plural(c.entries, "cat.entry", "cat.entries")}` : ""}${c.archived ? ` · ${t("cat.archived")}` : ""}${c.custom_label && c.builtin ? ` · ${t("cat.was", { label: c.default_label })}` : ""}</small></span>
+      ${v.canWrite ? html`<span class="row-actions">
+        <button type="button" class="iconbtn" data-action="category-edit" data-value="${c.id}" aria-label="${t("cat.rename", { label: c.label })}">${raw(icon("pencil"))}</button>
+        <button type="button" class="iconbtn" data-action="category-toggle" data-value="${c.id}" aria-label="${t(c.archived ? "cat.restore" : "cat.archive", { label: c.label })}">${raw(icon(c.archived ? "repeat" : "archive"))}</button>
+      </span>` : ""}
+    </div>`;
+  return html`
+    <section class="card" aria-labelledby="rc-set-cat">
+      <div class="card-head"><span class="ico">${raw(icon("tag"))}</span><h2 id="rc-set-cat">${t("cat.title")}</h2>
+        ${v.canWrite ? html`<button type="button" class="btn primary small end" data-action="category-new">${raw(icon("plus"))}${t("cat.new")}</button>` : ""}</div>
+      <p class="reading">${t("cat.intro")}</p>
+      ${!v.categories ? html`<div class="loading small"><div class="spinner"></div></div>` : html`
+        <h3 class="section-title">${t("ex.kind.expense")}</h3>
+        <div class="rows">${group("expense").map(row)}</div>
+        <h3 class="section-title">${t("ex.kind.income")}</h3>
+        <div class="rows">${group("income").map(row)}</div>`}
+    </section>`;
+}
+
 export function renderSettings(v) {
   const { t } = v.i18n;
   const head = html`<header class="pagehead"><div><h1>${t("settings.title")}</h1><p class="sub">${t("settings.sub")}</p></div></header>`;
@@ -105,5 +131,6 @@ export function renderSettings(v) {
     <div class="settings-grid">
       <div class="stack">${accountCard(v)}${mfaCard(v)}</div>
       <div class="stack">${dataCard(v)}${haCard(v)}</div>
-    </div>`;
+    </div>
+    ${categoriesCard(v)}`;
 }

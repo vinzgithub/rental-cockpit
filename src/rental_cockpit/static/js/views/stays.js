@@ -6,6 +6,7 @@
 
 import { html, raw } from "../dom.js";
 import { icon, propertyIcon } from "../icons.js";
+import { exportUrl } from "./expenses.js";
 
 export const STAY_VIEWS = ["active", "past", "attention", "cancelled", "all"];
 
@@ -141,9 +142,11 @@ export function renderStays(v) {
     <header class="pagehead">
       <div class="headline">
         <div><h1>${t("nav.sejours")}</h1><p class="sub">${t("sj.sub")}</p></div>
-        ${canWrite && v.properties.length ? html`<div class="head-actions">
-          <button type="button" class="btn ghost" data-action="import">${raw(icon("upload"))}${t("sj.import")}</button>
-          <button type="button" class="btn primary" data-action="stay-new">${raw(icon("plus"))}${t("sj.add")}</button>
+        ${v.properties.length ? html`<div class="head-actions">
+          <a class="btn ghost" href="${exportUrl(v, "/api/export/stays.csv", { view, property_id: v.state.propertyId, q: v.stays.q })}" download>${raw(icon("download"))}${t("ex.export")}</a>
+          ${canWrite ? html`
+            <button type="button" class="btn ghost" data-action="import">${raw(icon("upload"))}${t("sj.import")}</button>
+            <button type="button" class="btn primary" data-action="stay-new">${raw(icon("plus"))}${t("sj.add")}</button>` : ""}
         </div>` : ""}
       </div>
       ${toolbar(v)}

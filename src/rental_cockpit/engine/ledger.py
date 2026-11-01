@@ -699,6 +699,10 @@ class Ledger:
             if payload["supplier_id"]:
                 self._get("suppliers", payload["supplier_id"])
             entry["supplier_id"] = payload["supplier_id"] or ""
+        if "stay_id" in payload:
+            if payload["stay_id"] and self._get("stays", payload["stay_id"])["property_id"] != entry["property_id"]:
+                raise RCError("allocation_stay_property")
+            entry["stay_id"] = payload["stay_id"] or ""
         if "payment_declared" in payload:
             entry["payment_declared"] = choice(payload["payment_declared"], PAYMENT_DECLARED, "payment_declared")
         if "lines" in payload or "amount" in payload or "amount_cents" in payload:
@@ -713,7 +717,8 @@ class Ledger:
         else:
             self._validate_allocations(entry, entry.get("allocations", []))
         changed = self._history(entry, before, ("category_id", "amount", "date", "period_start", "period_end", "label", "note",
-                                                "invoice_number", "supplier_id", "payment_declared", "lines", "allocations", "loan_split"))
+                                                "invoice_number", "supplier_id", "stay_id", "payment_declared", "lines", "allocations",
+                                                "loan_split"))
         self.audit("entry.update", entry["id"], detail=",".join(changed))
         return {"entry": deepcopy(entry)}
 

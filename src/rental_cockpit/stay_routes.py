@@ -188,5 +188,5 @@ def register_stay_routes(app: FastAPI, services: Services) -> None:
             result["detail"] = stay_views.detail(data, data["stays"][stay_ids[0]], services.today(), lang)
         elif entry_ids and entry_ids[0] in data.get("entries", {}):
             from .engine import entries as entry_views  # the « Dépenses » page gets its entry back
-            result["detail"] = entry_views.detail(data, data["entries"][entry_ids[0]], lang)
+            result["detail"] = entry_views.detail(data, data["entries"][entry_ids[0]], lang, services.today())
         return result

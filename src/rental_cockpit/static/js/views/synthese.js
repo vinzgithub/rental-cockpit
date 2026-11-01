@@ -146,7 +146,7 @@ const CHECK_ICONS = {
 const CHECK_TARGET = {
   documents_incomplete: ["documents"],
   payouts_to_confirm: ["sejours", "attention"],
-  payments_unknown: ["depenses"],
+  payments_unknown: ["depenses", "to_confirm"],
   stays_without_amount: ["sejours", "attention"],
   allocations_incomplete: ["prestataires"],
 };
@@ -237,6 +237,70 @@ function staysCard(v) {
     </section>`;
 }
 
+function metric(v, { id, labelKey, value, sub = "", strong = false, explain = true, go = null }) {
+  const { i18n } = v;
+  const label = i18n.t(labelKey);
+  return html`
+    <div class="metric ${strong ? "strong" : ""}">
+      <span class="what"><b>${label}</b>${sub ? html`<small>${sub}</small>` : ""}</span>
+      <span class="num value">${i18n.money(value)}</span>
+      ${explain ? html`<button type="button" class="iconbtn" data-action="explain" data-value="${id}" aria-label="${i18n.t("kpi.howFor", { label })}">${raw(icon("help"))}</button>`
+        : go && v.ready.has(go[0]) ? html`<button type="button" class="iconbtn" data-action="go" data-value="${go[0]}" data-view="${go[1] || ""}" aria-label="${i18n.t("kpi.see", { label })}">${raw(icon("chevronRight"))}</button>`
+        : html`<span></span>`}
+    </div>`;
+}
+
+/** Investment, taxes and loan repayments: shown apart, they never change the operating balance. */
+function beyondCard(v) {
+  const { i18n, overview } = v;
+  const { t } = i18n;
+  const ind = overview.indicators;
+  if (!["investment", "taxes", "financing"].some((key) => ind[key]?.value)) return "";
+  const split = ind.financing.split || {};
+  const parts = [["principal", "kpi.principal"], ["interest", "kpi.interest"], ["insurance", "kpi.insurance"], ["unknown", "kpi.unsplit"]]
+    .filter(([key]) => split[key]).map(([key, label]) => `${t(label)} ${i18n.money(split[key])}`).join(" · ");
+  return html`
+    <section class="card" aria-labelledby="rc-beyond">
+      <div class="card-head"><span class="ico">${raw(icon("scale"))}</span><h2 id="rc-beyond">${t("kpi.beyond")}</h2></div>
+      <p class="reading">${t("kpi.beyondIntro")}</p>
+      <div class="metrics">
+        ${ind.investment.value ? metric(v, { id: "investment", labelKey: "kpi.investment", value: ind.investment.value }) : ""}
+        ${ind.taxes.value ? metric(v, { id: "taxes", labelKey: "kpi.taxes", value: ind.taxes.value }) : ""}
+        ${ind.financing.value ? metric(v, { id: "financing", labelKey: "kpi.financing", value: ind.financing.value, sub: parts }) : ""}
+        ${metric(v, { id: "balance_after_financing", labelKey: v.state.mode === "cash" ? "kpi.afterCash" : "kpi.after", value: ind.balance_after_financing.value, strong: true })}
+      </div>
+    </section>`;
+}
+
+/** What is still to pay and to receive at the end of the period, with the list behind it. */
+function settleCard(v) {
+  const { i18n, overview } = v;
+  const { t } = i18n;
+  const ind = overview.indicators;
+  if (!ind.to_pay?.value && !ind.to_receive?.value) return "";
+  const receive = ind.to_receive;
+  const sub = receive.entries && receive.stays
+    ? t("kpi.receiveSplit", { stays: i18n.money(receive.stays), entries: i18n.money(receive.entries) })
+    : receive.entries ? t("kpi.receiveEntries") : t("kpi.receiveStays");
+  return html`
+    <section class="card" aria-labelledby="rc-settle">
+      <div class="card-head"><span class="ico">${raw(icon("hourglass"))}</span><h2 id="rc-settle">${t("kpi.settle")}</h2></div>
+      <p class="reading">${t("kpi.settleIntro", { date: i18n.dateLong(prevDayIso(overview.period.end)) })}</p>
+      <div class="metrics">
+        ${metric(v, { id: "to_pay", labelKey: "kpi.toPay", value: ind.to_pay.value, explain: false, go: ["depenses", "to_pay"],
+                      sub: i18n.plural(ind.to_pay.count || 0, "kpi.expenseOne", "kpi.expenseMany") })}
+        ${metric(v, { id: "to_receive", labelKey: "kpi.toReceive", value: receive.value, explain: false,
+                      go: receive.entries && !receive.stays ? ["depenses", "to_receive"] : ["sejours", "attention"], sub })}
+      </div>
+    </section>`;
+}
+
+function prevDayIso(iso) {
+  const d = new Date(`${iso}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
+
 export function renderSynthese(v) {
   const { i18n, overview } = v;
   const { t } = i18n;
@@ -261,5 +325,6 @@ export function renderSynthese(v) {
       ${propertiesCard(v)}
       ${checksCard(v)}
     </div>
+    ${beyondCard(v) || settleCard(v) ? html`<div class="grid-2">${beyondCard(v)}${settleCard(v)}</div>` : ""}
     <div class="desktop-only">${staysCard(v)}</div>`;
 }

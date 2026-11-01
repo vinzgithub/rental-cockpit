@@ -9,6 +9,7 @@ import { Api } from "./api.js";
 import { openAddMenu, openAlerts, openConfirm, openExplain, openPropertyDialog } from "./dialogs.js";
 import { openStay, openStayForm } from "./stay-dialogs.js";
 import { openImport, openImportHistory } from "./import-dialogs.js";
+import { openCategoryForm, openEntry, openEntryForm, toggleCategory } from "./entry-dialogs.js";
 import { esc, html, markup, opId, raw } from "./dom.js";
 import { makeI18n } from "./i18n.js";
 import { icon } from "./icons.js";
@@ -16,6 +17,7 @@ import { langSwitch, renderAuth } from "./views/auth.js";
 import { openCreateKey, openMfaCodes, openMfaDisable, openMfaEnable, openPasswordDialog, openRevokeKey, copyText } from "./settings-dialogs.js";
 import { datasetSwitch } from "./views/dataset.js";
 import { renderSettings } from "./views/settings.js";
+import { ENTRY_VIEWS, renderExpenses } from "./views/expenses.js";
 import { renderStays, STAY_VIEWS } from "./views/stays.js";
 import { renderSynthese } from "./views/synthese.js";
 import { renderNoAccess, renderOnboarding, renderWelcome } from "./views/welcome.js";
@@ -25,6 +27,7 @@ import { renderNoAccess, renderOnboarding, renderWelcome } from "./views/welcome
 const SCREENS = [
   ["synthese", "chart"],
   ["sejours", "calendar"],
+  ["depenses", "wallet"],
   ["reglages", "sliders"],
 ];
 const READY = new Set(SCREENS.map(([key]) => key));
@@ -42,7 +45,7 @@ export class App {
   constructor(root) {
     this.root = root;
     this.state = { screen: "synthese", mode: "activity", propertyId: "all", periodKey: "", loading: true, error: "", overview: null, account: null,
-      stays: { view: "active", q: "", data: null } };
+      stays: { view: "active", q: "", data: null }, entries: { view: "all", q: "", kind: "", year: "", data: null }, categories: null };
     this.searchTimer = null;
     this.auth = { error: "", busy: false, mfa: false, username: "" };
     this.session = null;
@@ -102,6 +105,7 @@ export class App {
     await this.load();
     if (this.state.screen === "reglages") await this.loadAccount();
     if (this.state.screen === "sejours") await this.loadStays();
+    if (this.state.screen === "depenses") await this.loadEntries();
   }
 
   _sessionLost() {
@@ -188,14 +192,41 @@ export class App {
     return undefined;
   }
 
-  /** Account, two-factor status and API keys for « Réglages ». */
+  /** Account, two-factor status, API keys and categories for « Réglages ». */
   async loadAccount() {
     try {
-      this.state.account = await this.api.request("GET", "/api/account");
+      const [account, categories] = await Promise.all([this.api.request("GET", "/api/account"), this.api.get("/api/categories")]);
+      this.state.account = account;
+      this.state.categories = categories;
     } catch (err) {
       if (err.status !== 401) this.toast(err.message, true);
     }
     this._render();
+  }
+
+  /** « Dépenses » list for the current view, filters and search. */
+  async loadEntries() {
+    const { view, q, kind, year } = this.state.entries;
+    try {
+      const data = await this.api.get("/api/entries", { view, q, kind, year, property_id: this.state.propertyId });
+      const now = this.state.entries;
+      if (view === now.view && q === now.q && kind === now.kind && year === now.year) this.state.entries.data = data;
+    } catch (err) {
+      if (err.status !== 401) this.toast(err.message, true);
+    }
+    this._render();
+  }
+
+  /** After any change to an expense or an income: the list and the Overview come back from the server. */
+  async afterEntryChange() {
+    await Promise.all([this.load(), this.state.screen === "depenses" ? this.loadEntries() : Promise.resolve()]);
+  }
+
+  async afterCategoryChange(categories) {
+    if (this.state.categories && categories) this.state.categories = { ...this.state.categories, categories };
+    this.state.entries.data = this.state.entries.data && { ...this.state.entries.data, categories: categories || this.state.entries.data.categories };
+    this._render();
+    if (this.state.screen === "depenses") await this.loadEntries();
   }
 
   /** « Séjours » list for the current view, property and search. */
@@ -244,6 +275,8 @@ export class App {
       overview,
       properties: overview?.properties || this.state.stays.data?.properties || [],
       stays: this.state.stays,
+      entries: this.state.entries,
+      categories: this.state.categories,
       canWrite: this.canWrite,
       periodOptions: this.session?.authenticated ? this.periodOptions() : [],
       dataset: this.api.dataset,
@@ -263,13 +296,37 @@ export class App {
         if (!READY.has(value)) break;
         this.state.screen = value;
         writePrefs({ screen: value });
-        if (target.dataset.view && STAY_VIEWS.includes(target.dataset.view)) {
+        if (value === "sejours" && target.dataset.view && STAY_VIEWS.includes(target.dataset.view)) {
           this.state.stays = { ...this.state.stays, view: target.dataset.view, q: "", data: null };
+        }
+        if (value === "depenses" && target.dataset.view && ENTRY_VIEWS.includes(target.dataset.view)) {
+          this.state.entries = { ...this.state.entries, view: target.dataset.view, q: "", kind: "", year: "", data: null };
         }
         this._render();
         this.root.querySelector(".main")?.scrollTo({ top: 0 });
         if (value === "reglages") await this.loadAccount();
         if (value === "sejours") await this.loadStays();
+        if (value === "depenses") await this.loadEntries();
+        break;
+      case "entries-view":
+        this.state.entries = { ...this.state.entries, view: value };
+        this._render();
+        await this.loadEntries();
+        break;
+      case "entry-open":
+        openEntry(this, value);
+        break;
+      case "entry-new":
+        openEntryForm(this, { kind: value === "income" ? "income" : "expense" });
+        break;
+      case "category-new":
+        openCategoryForm(this);
+        break;
+      case "category-edit":
+        openCategoryForm(this, { category: this.state.categories?.categories.find((c) => c.id === value) });
+        break;
+      case "category-toggle":
+        toggleCategory(this, this.state.categories?.categories.find((c) => c.id === value));
         break;
       case "stays-view":
         this.state.stays = { ...this.state.stays, view: value, data: this.state.stays.data };
@@ -380,16 +437,26 @@ export class App {
     if (!target) return;
     if (target.dataset.change === "property") this.state.propertyId = target.value;
     if (target.dataset.change === "period") this.state.periodKey = target.value;
-    if (this.state.screen === "sejours") await Promise.all([this.loadStays(), this.load()]);
+    if (target.dataset.change === "entries-kind") this.state.entries = { ...this.state.entries, kind: target.value };
+    if (target.dataset.change === "entries-year") this.state.entries = { ...this.state.entries, year: target.value };
+    if (target.dataset.change.startsWith("entries-")) await this.loadEntries();
+    else if (this.state.screen === "sejours") await Promise.all([this.loadStays(), this.load()]);
+    else if (this.state.screen === "depenses") await Promise.all([this.loadEntries(), this.load()]);
     else await this.load();
   }
 
   _onInput(event) {
     const target = event.target.closest("[data-input]");
-    if (!target || target.dataset.input !== "stays-q") return;
-    this.state.stays.q = target.value;
-    clearTimeout(this.searchTimer);
-    this.searchTimer = setTimeout(() => this.loadStays(), 250);
+    if (!target) return;
+    if (target.dataset.input === "stays-q") {
+      this.state.stays.q = target.value;
+      clearTimeout(this.searchTimer);
+      this.searchTimer = setTimeout(() => this.loadStays(), 250);
+    } else if (target.dataset.input === "entries-q") {
+      this.state.entries.q = target.value;
+      clearTimeout(this.searchTimer);
+      this.searchTimer = setTimeout(() => this.loadEntries(), 250);
+    }
   }
 
   async _onSubmit(event) {
@@ -448,7 +515,14 @@ export class App {
     if (!READY.has(this.state.screen)) this.state.screen = "synthese";
     this.session = await this.api.request("GET", "/api/session");
     this.state.periodKey = this._defaultPeriodKey();
+    // Lists of the other dataset must never show, even for an instant.
+    this.state.stays = { ...this.state.stays, data: null };
+    this.state.entries = { ...this.state.entries, data: null };
+    this.state.categories = null;
     await this.load();
+    if (this.state.screen === "sejours") await this.loadStays();
+    if (this.state.screen === "depenses") await this.loadEntries();
+    if (this.state.screen === "reglages") await this.loadAccount();
   }
 
   /** « Mes données / Démonstration » from the menu, the account window or Réglages. */
@@ -583,6 +657,8 @@ export class App {
       body = renderSettings(this.viewModel());
     } else if (this.state.screen === "sejours") {
       body = renderStays(this.viewModel());
+    } else if (this.state.screen === "depenses") {
+      body = renderExpenses(this.viewModel());
     } else if (!this.state.overview.properties.length) {
       body = this.canWrite ? renderOnboarding(this.viewModel()) : renderNoAccess(this.viewModel());
     } else {

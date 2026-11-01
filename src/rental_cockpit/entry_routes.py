@@ -82,7 +82,7 @@ def register_entry_routes(app: FastAPI, services: Services) -> None:
         data = registry.snapshot()
         target = (result.get("entry") or {}).get("id") or entry_id
         if target and target in data.get("entries", {}):
-            result["detail"] = entry_views.detail(data, data["entries"][target], lang)
+            result["detail"] = entry_views.detail(data, data["entries"][target], lang, services.today())
         return result
 
     def listing(request: Request) -> tuple[dict[str, Any], Any, str, list[dict[str, Any]], dict[str, int], str]:
@@ -98,13 +98,18 @@ def register_entry_routes(app: FastAPI, services: Services) -> None:
         query = str(params.get("q") or "")[:80]
         data = registry.snapshot()
         paid = entry_views.paid_by_entry(data)
-        items = [entry_views.summary(data, e, lang, paid.get(e["id"], 0)) for e in data.get("entries", {}).values() if e["property_id"] in selected]
+        today = services.today()
+        items = [entry_views.summary(data, e, lang, paid.get(e["id"], 0), today) for e in data.get("entries", {}).values() if e["property_id"] in selected]
         items = [i for i in items if entry_views.search(i, query) and (not kind or i["kind"] == kind)
                  and (not category or i["category_id"] == category) and (not year or i["date"].startswith(year))]
         counts = {key: sum(1 for i in items if entry_views.matches(i, key)) for key in entry_views.VIEWS}
         shown = [i for i in items if entry_views.matches(i, view)]
-        # What is still due comes oldest first; everything else newest first.
-        shown.sort(key=lambda i: (i["date"], i["label"].casefold()), reverse=view not in ("to_pay", "to_confirm", "to_receive"))
+        if view in ("to_pay", "to_confirm", "to_receive"):
+            shown.sort(key=lambda i: (i["date"], i["label"].casefold()))  # oldest debt first
+        else:
+            # Newest first, then what is planned later (next instalments), soonest first.
+            past = sorted((i for i in shown if not i["upcoming"]), key=lambda i: (i["date"], i["label"].casefold()), reverse=True)
+            shown = past + sorted((i for i in shown if i["upcoming"]), key=lambda i: (i["date"], i["label"].casefold()))
         return data, acc, dataset, shown, counts, view
 
     # ------------------------------------------------------------------ reading
@@ -131,7 +136,7 @@ def register_entry_routes(app: FastAPI, services: Services) -> None:
         dataset = dataset_of(request.query_params.get("dataset"))
         acc, registry = reader(request, dataset)
         data = registry.snapshot()
-        return entry_views.detail(data, entry_or_404(data, acc, entry_id), lang)
+        return entry_views.detail(data, entry_or_404(data, acc, entry_id), lang, services.today())
 
     @app.get("/api/export/entries.csv")
     async def export_entries(request: Request) -> Response:
