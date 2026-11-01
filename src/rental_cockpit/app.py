@@ -29,6 +29,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from . import __version__
 from .account_routes import register_account_routes
 from .config import Config, secret_key
+from .document_routes import register_document_routes
 from .engine import indicators
 from .engine.demo import build_demo
 from .engine.errors import RCError, render
@@ -315,6 +316,7 @@ def create_app(config: Config | None = None) -> FastAPI:
     register_import_routes(app, services)
     register_entry_routes(app, services)
     register_supplier_routes(app, services)
+    register_document_routes(app, services)
 
     @app.exception_handler(Exception)
     async def on_unexpected(request: Request, err: Exception):  # pragma: no cover - defensive

@@ -15,6 +15,7 @@ dependencies = [
     "uvicorn>=0.32,<0.33",
     "itsdangerous>=2.2,<3",
     "segno>=1.6,<2",
+    "pypdf>=6.17,<7",
 ]
 
 [project.optional-dependencies]

@@ -64,7 +64,7 @@ export async function openSplit(app, entry, onDone) {
       ${!stays.length ? html`<div class="tip">${raw(icon("alert"))}<div><p>${t("spl.noStays")}</p></div></div>` : ""}
       ${entry.split.map((row, index) => html`
         <fieldset class="split-block amounts" data-row="${index}" data-line="${row.line_id}">
-          <legend>${row.kind_label || entry.label}${row.label && row.label !== row.kind_label ? ` · ${row.label}` : ""} · <span class="num">${i18n.money(row.amount)}</span></legend>
+          <legend>${row.kind_label || entry.label}${row.kind_label && row.label && row.label !== row.kind_label ? ` · ${row.label}` : ""} · <span class="num">${i18n.money(row.amount)}</span></legend>
           ${row.intervention_date ? html`<p class="reading">${raw(icon("calendar"))}<span>${t("spl.done_on", { date: i18n.dateLong(row.intervention_date) })}</span></p>` : ""}
           <div data-allocs>${(row.allocations.length ? row.allocations : [{ amount: row.remaining }]).map((a) => allocationRow(row, a))}</div>
           <div class="split-foot"><button type="button" class="btn ghost small" data-alloc-add>${raw(icon("plus"))}${t("spl.add")}</button><small class="num" data-row-status></small></div>

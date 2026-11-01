@@ -21,19 +21,19 @@ export class Api {
     this.onLoginRequired = null;
   }
 
-  async request(method, path, { query = {}, body = null } = {}) {
+  async request(method, path, { query = {}, body = null, file = null } = {}) {
     const url = new URL(path, window.location.origin);
     for (const [key, value] of Object.entries({ lang: this.lang, ...query })) {
       if (value !== undefined && value !== null) url.searchParams.set(key, value);
     }
     const headers = { Accept: "application/json" };
     if (method !== "GET") {
-      headers["Content-Type"] = "application/json";
+      headers["Content-Type"] = file ? "application/pdf" : "application/json";
       headers["X-CSRF-Token"] = this.csrf;
     }
     let response;
     try {
-      response = await fetch(url, { method, headers, credentials: "same-origin", body: body ? JSON.stringify(body) : undefined });
+      response = await fetch(url, { method, headers, credentials: "same-origin", body: file || (body ? JSON.stringify(body) : undefined) });
     } catch (_) {
       throw new ApiError(this.lang === "fr" ? "Serveur injoignable : vérifiez la connexion puis réessayez. Rien n'a été enregistré." : "Server unreachable: check the connection and try again. Nothing was saved.", "network", 0);
     }
@@ -48,6 +48,19 @@ export class Api {
 
   get(path, query = {}) {
     return this.request("GET", path, { query: { dataset: this.dataset, ...query } });
+  }
+
+  /** A PDF sent as it is (the server checks it, nothing is written before a confirmation). */
+  upload(path, file, query = {}) {
+    return this.request("POST", path, { query: { dataset: this.dataset, filename: file.name, ...query }, file });
+  }
+
+  /** Address of a private PDF: the server checks the rights again when it is opened. */
+  fileUrl(documentId, download = false) {
+    const url = new URL(`/api/documents/${encodeURIComponent(documentId)}/file`, window.location.origin);
+    url.searchParams.set("dataset", this.dataset);
+    if (download) url.searchParams.set("download", "1");
+    return url.pathname + url.search;
   }
 
   /** A change on the current dataset, with a fresh op_id unless one is given. */

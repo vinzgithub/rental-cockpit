@@ -189,6 +189,7 @@ export function renderExpenses(v) {
         ${v.properties.length ? html`<div class="head-actions">
           <a class="btn ghost" href="${exportUrl(v, "/api/export/entries.csv", params)}" download>${raw(icon("download"))}${t("ex.export")}</a>
           ${canWrite ? html`
+            <button type="button" class="btn ghost" data-action="invoice-import">${raw(icon("file"))}${t("ex.fromInvoice")}</button>
             <button type="button" class="btn ghost" data-action="entry-new" data-value="income">${raw(icon("plus"))}${t("ex.addIncome")}</button>
             <button type="button" class="btn primary" data-action="entry-new" data-value="expense">${raw(icon("plus"))}${t("ex.addExpense")}</button>` : ""}
         </div>` : ""}

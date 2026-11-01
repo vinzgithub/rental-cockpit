@@ -16,6 +16,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import Response
 from starlette.concurrency import run_in_threadpool
 
+from .engine import documents as document_views
 from .engine import entries as entry_views
 from .engine import exports
 from .engine import stays as stay_views
@@ -44,6 +45,15 @@ def _categories(data: dict[str, Any], lang: str) -> list[dict[str, Any]]:
             for c in data.get("categories", {}).values()]
     order = {t: i for i, t in enumerate(TREATMENTS)}
     return sorted(rows, key=lambda c: (c["kind"] != "expense", order.get(c["treatment"], 9), c["archived"], c["label"].casefold()))
+
+
+def with_documents(detail: dict[str, Any], data: dict[str, Any], acc, lang: str) -> dict[str, Any]:
+    """The PDFs attached to an entry, for whoever was granted the documents of its property (SEC 02)."""
+    allowed = acc.sees_documents(detail["property_id"])
+    detail["documents_access"] = allowed
+    detail["document_list"] = [document_views.summary(data, d, lang) for d in data.get("documents", {}).values()
+                               if detail["id"] in d.get("entry_ids", [])] if allowed else []
+    return detail
 
 
 def register_entry_routes(app: FastAPI, services: Services) -> None:
@@ -83,7 +93,7 @@ def register_entry_routes(app: FastAPI, services: Services) -> None:
         data = registry.snapshot()
         target = (result.get("entry") or {}).get("id") or entry_id
         if target and target in data.get("entries", {}):
-            result["detail"] = entry_views.detail(data, data["entries"][target], lang, services.today())
+            result["detail"] = with_documents(entry_views.detail(data, data["entries"][target], lang, services.today()), data, acc, lang)
         return result
 
     def listing(request: Request) -> tuple[dict[str, Any], Any, str, list[dict[str, Any]], dict[str, int], str]:
@@ -140,7 +150,7 @@ def register_entry_routes(app: FastAPI, services: Services) -> None:
         dataset = dataset_of(request.query_params.get("dataset"))
         acc, registry = reader(request, dataset)
         data = registry.snapshot()
-        return entry_views.detail(data, entry_or_404(data, acc, entry_id), lang, services.today())
+        return with_documents(entry_views.detail(data, entry_or_404(data, acc, entry_id), lang, services.today()), data, acc, lang)
 
     @app.get("/api/export/entries.csv")
     async def export_entries(request: Request) -> Response:
