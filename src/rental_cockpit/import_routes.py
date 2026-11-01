@@ -19,6 +19,7 @@ from starlette.concurrency import run_in_threadpool
 from .engine.errors import RCError
 from .engine.imports import airbnb, generic, plan
 from .engine.ledger import Ledger
+from .engine.schema import CHANNELS
 from .web import Services, access, current_user, dataset_of, lang_of, public_property, require_csrf, utc_now
 
 MAX_BODY = 8 * 1024 * 1024  # a 5 MiB file in base64, plus options
@@ -27,6 +28,7 @@ STATUS_LABELS = {
     "duplicate": ("Doublon probable", "Probable duplicate"), "unmapped": ("Bien non choisi", "No property chosen"),
     "error": ("Erreur", "Error"),
 }
+CSV_CHANNELS = CHANNELS  # an English Airbnb export read as CSV is still Airbnb
 DELIMITERS = {",": ("virgule", "comma"), ";": ("point-virgule", "semicolon"), "\t": ("tabulation", "tab")}
 
 
@@ -94,6 +96,16 @@ def _options(payload: dict[str, Any], parsed: dict[str, Any], data: dict[str, An
     options["property_map"] = property_map
     if options.get("property_id") not in usable:
         options["property_id"] = usable[0] if len(usable) == 1 else ""
+    if parsed["kind"] == "csv":
+        # Settings remembered with the same columns, unless the person changed them in this preview.
+        profile = data.get("csv_profiles", {}).get(parsed.get("signature", "")) or {}
+        if "commission_rate" not in options:
+            options["commission_rate"] = profile.get("commission_rate", "")
+        if "channel" not in options:
+            options["channel"] = profile.get("channel", "other")
+        rate = plan.commission_rate(options.get("commission_rate"))
+        options["commission_rate"] = format(rate.normalize(), "f") if rate is not None else ""
+        options["channel"] = options["channel"] if options["channel"] in CSV_CHANNELS else "other"
     return options
 
 
@@ -105,7 +117,8 @@ def _view(parsed: dict[str, Any], built: dict[str, Any], options: dict[str, Any]
     for row in built["rows"]:
         rows.append({
             **{k: row.get(k) for k in ("key", "lines", "status", "decision", "external_ref", "listing", "start", "end", "nights",
-                                       "guests", "guest_label", "amounts", "payout", "property_id", "stay_id", "twin_label")},
+                                       "guests", "guest_label", "amounts", "payout", "property_id", "stay_id", "twin_label",
+                                       "choices", "locked")},
             "status_label": STATUS_LABELS[row["status"]][0 if fr else 1],
             "property": names.get(row.get("property_id"), ""),
             "errors": [plan.render(e, lang) for e in row["errors"]],
@@ -119,6 +132,8 @@ def _view(parsed: dict[str, Any], built: dict[str, Any], options: dict[str, Any]
         "date_order": parsed.get("date_order", ""), "headers": parsed["headers"], "mapping": parsed.get("mapping", {}),
         "suggested": parsed.get("suggested", {}), "signature": parsed.get("signature", ""), "listings": parsed["listings"],
         "property_map": options.get("property_map", {}), "property_id": options.get("property_id", ""),
+        "commission_rate": options.get("commission_rate", ""), "channel": options.get("channel", "airbnb"),
+        "keep_names": bool(options.get("keep_names")), "create_payouts": options.get("create_payouts", True) is not False,
         "errors": [plan.render(e, lang) for e in built["errors"]], "notices": [plan.render(n, lang) for n in built["notices"]],
         "rows": rows, "counts": built["counts"], "can_apply": built["can_apply"], "sha256": sha,
     }
@@ -175,7 +190,8 @@ def register_import_routes(app: FastAPI, services: Services) -> None:
                 options = _options(payload, parsed, work, acc)
                 built = plan.build(work, parsed, options, services.today(), sha)
                 result = plan.apply(ledger, built, {"kind": parsed["kind"], "reader": parsed["reader"], "sha256": sha,
-                                                    "file_name": str(payload.get("file_name") or "")})
+                                                    "file_name": str(payload.get("file_name") or ""),
+                                                    "channel": options.get("channel", "other")})
                 settings = work.setdefault("settings", {})
                 if payload.get("remember", True) is not False:
                     aliases = settings.setdefault("listing_aliases", {})
@@ -185,7 +201,8 @@ def register_import_routes(app: FastAPI, services: Services) -> None:
                     if parsed["kind"] == "csv" and parsed.get("signature"):
                         work.setdefault("csv_profiles", {})[parsed["signature"]] = {
                             "mapping": parsed["mapping"], "date_order": parsed.get("date_order", "auto"), "at": ledger.clock(),
-                            "headers": parsed["headers"][:60]}
+                            "headers": parsed["headers"][:60], "commission_rate": options.get("commission_rate", ""),
+                            "channel": options.get("channel", "other")}
                 return result
 
             return ledger.once(payload.get("op_id"), run)
@@ -198,7 +215,7 @@ def register_import_routes(app: FastAPI, services: Services) -> None:
         _, _, registry = context(request, {"dataset": params.get("dataset")})
         data = registry.snapshot()
         last = plan.last_import(data)
-        items = sorted(data.get("imports", {}).values(), key=lambda i: i["at"], reverse=True)[:50]
+        items = sorted(data.get("imports", {}).values(), key=lambda i: (i["at"], i.get("seq", 0)), reverse=True)[:50]
         return {
             "imports": [{k: i.get(k) for k in ("id", "at", "kind", "reader", "file_name", "counts", "undone_at")} for i in items],
             "last_id": last["id"] if last else None,

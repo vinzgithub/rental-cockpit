@@ -67,7 +67,7 @@ def suggest(headers: list[str]) -> dict[str, str]:
     return mapping
 
 
-def _error(code: str, **params: Any) -> dict[str, Any]:
+def _error(code: str, /, **params: Any) -> dict[str, Any]:
     return {"code": code, "params": params}
 
 

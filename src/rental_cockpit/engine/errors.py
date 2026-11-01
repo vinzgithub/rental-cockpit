@@ -108,18 +108,6 @@ MESSAGES: dict[str, tuple[str, str]] = {
     "upload_too_large": ("Fichier trop volumineux ({limit} maximum).", "File too large ({limit} maximum)."),
     "storage_full": ("Espace disque insuffisant : rien n'a été enregistré. Libérez de l'espace puis recommencez.", "Not enough disk space: nothing was saved. Free some space and try again."),
     "storage_failed": ("L'enregistrement a échoué ({detail}) : l'état précédent a été conservé, rien n'a été modifié.", "Saving failed ({detail}): the previous state was kept, nothing was changed."),
-    # Imports
-    "csv_empty": ("Fichier CSV vide.", "Empty CSV file."),
-    "csv_encoding": ("Encodage non reconnu : enregistrez le fichier en UTF-8.", "Unrecognised encoding: save the file as UTF-8."),
-    "csv_no_header": ("Aucune ligne d'en-tête trouvée dans le fichier.", "No header row found in the file."),
-    "csv_too_many_rows": ("Fichier trop long ({limit} lignes maximum par import).", "File too long ({limit} rows maximum per import)."),
-    "csv_mapping_missing": ("Associez au moins les colonnes obligatoires : {fields}.", "Map at least the required columns: {fields}."),
-    "csv_mapping_unknown": ("La colonne « {column} » n'existe pas dans ce fichier.", "The column \"{column}\" does not exist in this file."),
-    "import_unknown_format": ("Format non reconnu : {detail}. Aucune donnée n'a été lue ni enregistrée. Consultez la liste des formats pris en charge.", "Unrecognised format: {detail}. No data was read or saved. See the list of supported formats."),
-    "import_blocking_errors": ("Le fichier contient {count} erreur(s) bloquante(s) : corrigez-les avant de confirmer.", "The file contains {count} blocking errors: fix them before confirming."),
-    "import_already": ("Ce fichier a déjà été importé le {date}. Rien n'a été modifié.", "This file was already imported on {date}. Nothing was changed."),
-    "rollback_last_only": ("Seul le dernier import peut être annulé automatiquement.", "Only the latest import can be rolled back automatically."),
-    "rollback_modified": ("Des éléments créés par cet import ont été modifiés depuis : annulation automatique refusée pour ne rien perdre. Corrigez-les à la main.", "Items created by this import were modified since: automatic rollback refused so nothing is lost. Fix them by hand."),
     # Backup
     "backup_invalid": ("Sauvegarde invalide : {detail}. Rien n'a été restauré.", "Invalid backup: {detail}. Nothing was restored."),
     "backup_schema_newer": ("Cette sauvegarde vient d'une version plus récente (schéma {schema}) : mettez à jour Rental Cockpit avant de la restaurer.", "This backup comes from a newer version (schema {schema}): update Rental Cockpit before restoring it."),

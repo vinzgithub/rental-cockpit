@@ -40,7 +40,7 @@ def is_airbnb(headers: list[str]) -> bool:
     return all(name in known for name in REQUIRED)
 
 
-def _error(code: str, **params: Any) -> dict[str, Any]:
+def _error(code: str, /, **params: Any) -> dict[str, Any]:
     return {"code": code, "params": params}
 
 

@@ -61,6 +61,8 @@ def read_table(content: bytes) -> dict[str, Any]:
         raise ValueError("imp_empty")
     if len(content) > MAX_FILE_BYTES:
         raise ValueError("imp_too_large")
+    if bytes(content[:4]) in (b"PK\x03\x04", b"%PDF") or b"\x00" in content[:4096]:
+        raise ValueError("imp_not_text")  # a workbook, a PDF or another binary file
     text, encoding, warnings = decode(bytes(content))
     delimiter = delimiter_of(text)
     reader = csv.DictReader(io.StringIO(text, newline=""), delimiter=delimiter)
