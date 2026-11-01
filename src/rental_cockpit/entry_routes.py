@@ -171,7 +171,8 @@ def register_entry_routes(app: FastAPI, services: Services) -> None:
         query = str(params.get("q") or "")[:80]
         data = registry.snapshot()
         today = services.today()
-        items = [stay_views.summary(data, s, today, lang) for s in data.get("stays", {}).values() if s["property_id"] in selected]
+        received = stay_views.received_by_stay(data)
+        items = [stay_views.summary(data, s, today, lang, received) for s in data.get("stays", {}).values() if s["property_id"] in selected]
         items = [i for i in items if stay_search(i, query) and stay_matches(i, view, today.isoformat())]
         items.sort(key=lambda i: (i["start"], i["end"]))
         name = f"rental-cockpit-{'sejours' if lang == 'fr' else 'stays'}{'-demo' if dataset == 'demo' else ''}.csv"

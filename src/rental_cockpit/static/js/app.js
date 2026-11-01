@@ -754,6 +754,7 @@ export class App {
     const current = (key) => raw(this.state.screen === key ? 'aria-current="page"' : "");
     const avatar = html`<span class="avatar" aria-hidden="true">${initials(user.name)}</span>`;
     return html`
+      <a class="skip-link" href="#rc-main">${t("nav.skip")}</a>
       <div class="app">
         <nav class="sidebar" aria-label="${t("nav.main")}">
           ${brand}
@@ -778,7 +779,7 @@ export class App {
           ${hideNav ? "" : html`<button type="button" class="iconbtn" data-action="alerts" aria-haspopup="dialog" aria-label="${t("common.alerts")}${alerts ? ` (${alerts})` : ""}">${raw(icon("bell"))}${alerts ? html`<span class="badge">${alerts}</span>` : ""}</button>`}
           <button type="button" class="iconbtn" data-action="account" aria-label="${t("auth.account")} : ${user.name}">${avatar}</button>
         </header>
-        <main class="main" id="rc-main">${content}</main>
+        <main class="main" id="rc-main" tabindex="-1">${content}</main>
         ${hideNav ? html`<div></div>` : html`<nav class="bottomnav" aria-label="${t("nav.main")}">${SCREENS.map(([key, ic]) => html`<button type="button" class="navbtn" data-action="nav" data-value="${key}" ${current(key)}>${raw(icon(ic))}<span>${t(`nav.${key}`)}</span></button>`)}</nav>`}
       </div>`;
   }

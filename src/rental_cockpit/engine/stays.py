@@ -56,6 +56,16 @@ def received_for(data: dict[str, Any], stay_id: str) -> tuple[int, list[dict[str
     return total, rows
 
 
+def received_by_stay(data: dict[str, Any]) -> dict[str, int]:
+    """Money received per stay, computed once for a whole list."""
+    totals: dict[str, int] = {}
+    for payment in data.get("payments", {}).values():
+        for link in payment["links"]:
+            if link["type"] == "stay":
+                totals[link["id"]] = totals.get(link["id"], 0) + link["amount"]
+    return totals
+
+
 def stay_state(stay: dict[str, Any], today: date) -> str:
     if stay["status"] == "cancelled":
         return "cancelled"
@@ -85,12 +95,12 @@ def payout_state(stay: dict[str, Any], expected: int | None, received: int, toda
     return "expected"
 
 
-def summary(data: dict[str, Any], stay: dict[str, Any], today: date, lang: str) -> dict[str, Any]:
+def summary(data: dict[str, Any], stay: dict[str, Any], today: date, lang: str, received_map: dict[str, int] | None = None) -> dict[str, Any]:
     """One stay as listed: its own fields plus the derived figures, never stored."""
     fr = lang == "fr"
     prop = data.get("properties", {}).get(stay["property_id"], {})
     expected = expected_payout(stay)
-    received, _ = received_for(data, stay["id"])
+    received = received_map.get(stay["id"], 0) if received_map is not None else received_for(data, stay["id"])[0]
     state = stay_state(stay, today)
     pay = payout_state(stay, expected, received, today)
     amounts = stay.get("amounts") or {}

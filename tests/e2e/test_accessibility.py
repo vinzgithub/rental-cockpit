@@ -29,6 +29,11 @@ def test_screens_and_dialogs_on_a_computer(desktop, base_url):
     page = desktop
     page.goto(base_url + "/")
     page.locator(".kpi").first.wait_for()
+    # The first Tab reaches « Aller au contenu », which leads straight to the content.
+    page.keyboard.press("Tab")
+    assert page.evaluate("() => document.activeElement.className") == "skip-link"
+    page.keyboard.press("Enter")
+    assert page.evaluate("() => document.activeElement.id") == "rc-main"
     problems = []
     for screen in SCREENS:
         page.locator(f'.sidebar [data-value="{screen}"]').click()
