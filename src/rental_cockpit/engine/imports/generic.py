@@ -87,6 +87,7 @@ def parse(content: bytes, mapping: dict[str, str] | None = None, date_order: str
         result["errors"].append(_error("imp_csv_mapping"))
         return result
     order = date_order if date_order in ("DMY", "MDY") else ""
+    result["date_order_setting"] = order or "auto"
     if not order:
         values = [raw.get(used[f], "") for _, raw in table["rows"] for f in ("start", "end", "paid_on") if f in used]
         order, warnings, errors = infer_order(values, default="DMY")

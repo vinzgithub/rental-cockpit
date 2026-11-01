@@ -173,6 +173,9 @@ def test_arrival_before_activity_start_is_skipped_unless_chosen(two):
     _, built = preview(data, AIRBNB, mapped(gite, studio))
     first = by_ref(built)["HMTEST0001"]
     assert first["decision"] == "skip" and "imp_before_activity" in codes(first["warnings"])
+    warning = next(w for w in first["warnings"] if w["code"] == "imp_before_activity")
+    assert plan.render(warning, "fr") == "arrivée avant le début d'activité du bien (1 oct. 2026)"
+    assert plan.render(warning, "en") == "arrival before the property's activity start (1 Oct 2026)"
     _, forced = preview(data, AIRBNB, mapped(gite, studio, decisions={first["key"]: "import"}))
     assert by_ref(forced)["HMTEST0001"]["decision"] == "import"
 

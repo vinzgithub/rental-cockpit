@@ -8,6 +8,7 @@
 import { Api } from "./api.js";
 import { openAddMenu, openAlerts, openConfirm, openExplain, openPropertyDialog } from "./dialogs.js";
 import { openStay, openStayForm } from "./stay-dialogs.js";
+import { openImport, openImportHistory } from "./import-dialogs.js";
 import { esc, html, markup, opId, raw } from "./dom.js";
 import { makeI18n } from "./i18n.js";
 import { icon } from "./icons.js";
@@ -214,6 +215,17 @@ export class App {
     await Promise.all([this.load(), this.state.screen === "sejours" ? this.loadStays() : Promise.resolve()]);
   }
 
+  /** « Voir les séjours » after an import: the list with every stay, newest first. */
+  async showStays(view = "all") {
+    this.state.screen = "sejours";
+    writePrefs({ screen: "sejours" });
+    this.state.propertyId = "all"; // an import can touch several properties
+    this.state.stays = { ...this.state.stays, view, q: "", data: null };
+    this._render();
+    this.root.querySelector(".main")?.scrollTo({ top: 0 });
+    await Promise.all([this.load(), this.loadStays()]);
+  }
+
   async afterPropertyCreated(propertyId) {
     this.session = await this.api.request("GET", "/api/session");
     this.state.propertyId = propertyId || "all";
@@ -269,6 +281,12 @@ export class App {
         break;
       case "stay-new":
         openStayForm(this);
+        break;
+      case "import":
+        openImport(this);
+        break;
+      case "import-history":
+        openImportHistory(this);
         break;
       case "pwd":
         openPasswordDialog(this);

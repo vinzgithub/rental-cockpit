@@ -129,7 +129,8 @@ def _view(parsed: dict[str, Any], built: dict[str, Any], options: dict[str, Any]
     return {
         "kind": parsed["kind"], "reader": parsed["reader"], "encoding": parsed["encoding"],
         "delimiter": DELIMITERS.get(parsed["delimiter"], (parsed["delimiter"],) * 2)[0 if fr else 1],
-        "date_order": parsed.get("date_order", ""), "headers": parsed["headers"], "mapping": parsed.get("mapping", {}),
+        "date_order": parsed.get("date_order", ""), "date_order_setting": parsed.get("date_order_setting", "auto"),
+        "headers": parsed["headers"], "mapping": parsed.get("mapping", {}),
         "suggested": parsed.get("suggested", {}), "signature": parsed.get("signature", ""), "listings": parsed["listings"],
         "samples": parsed.get("samples", {}),
         "property_map": options.get("property_map", {}), "property_id": options.get("property_id", ""),

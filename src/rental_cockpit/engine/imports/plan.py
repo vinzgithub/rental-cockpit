@@ -66,6 +66,17 @@ MESSAGES: dict[str, tuple[str, str]] = {
 
 AMOUNT_FIELDS = ("gross", "commission", "payout", "taxes_collected")
 AMOUNT_PARAMS = ("received", "expected")  # amounts in cents, written in the reader's language
+DATE_PARAMS = ("date", "start", "end")  # ISO days, written « 5 oct. 2026 » or « 5 Oct 2026 »
+MONTHS = {"fr": ("janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."),
+          "en": ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")}
+
+
+def _day(value: Any, lang: str) -> str:
+    try:
+        day = date.fromisoformat(str(value)[:10])
+    except ValueError:
+        return str(value)
+    return f"{day.day} {MONTHS['fr' if lang == 'fr' else 'en'][day.month - 1]} {day.year}"
 
 FIELD_LABELS = {
     "start": ("arrivée", "arrival"), "end": ("départ", "departure"), "guests": ("voyageurs", "guests"),
@@ -81,6 +92,8 @@ def render(item: dict[str, Any], lang: str) -> str:
     for key, value in item.get("params", {}).items():
         if key in AMOUNT_PARAMS:
             value = format_cents(value, lang)
+        elif key in DATE_PARAMS:
+            value = _day(value, lang)
         elif key == "fields":
             value = ", ".join(FIELD_LABELS.get(f, (f, f))[0 if lang == "fr" else 1] for f in value)
         params[key] = value

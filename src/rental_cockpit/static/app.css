@@ -608,6 +608,78 @@ fieldset.amounts legend { padding: 0 6px; color: var(--rc-text); font-weight: 60
   .stays-card { background: none; border: 0; padding: 0; }
 }
 
+/* ------------------------------------------------------------ Import */
+.head-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.empty-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
+.stays-card > .empty { flex-wrap: wrap; }
+.pill.rose { background: var(--rc-rose-soft); color: #f3a5af; }
+.import-dialog .dbody { gap: 18px; }
+.imp-foot .back { margin-right: auto; }
+.imp-kinds { border: 0; padding: 0; margin: 0; min-width: 0; display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
+.imp-kinds legend { padding: 0; margin-bottom: 8px; }
+.imp-kind { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: center; padding: 14px; border-radius: 13px; border: 1px solid var(--rc-border-strong); background: var(--rc-inset); cursor: pointer; }
+.imp-kind input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.imp-kind b { display: block; font-size: 15px; }
+.imp-kind small { display: block; color: var(--rc-muted); font-size: 12.5px; margin-top: 2px; }
+.imp-kind:hover { border-color: var(--rc-accent-line); }
+.imp-kind:has(input:checked) { border-color: var(--rc-accent-line); background: var(--rc-accent-soft); }
+.imp-kind:has(input:checked) .tile { background: var(--rc-accent); color: var(--rc-accent-ink); }
+.imp-kind:has(input:focus-visible) { outline: 2px solid var(--rc-accent); outline-offset: 2px; }
+.dropzone { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: center; padding: 22px 18px; border-radius: 14px; border: 1.5px dashed var(--rc-border-strong); background: rgba(255, 255, 255, 0.015); cursor: pointer; }
+.dropzone b { display: block; font-size: 15px; overflow-wrap: anywhere; }
+.dropzone small { display: block; color: var(--rc-muted); font-size: 12.5px; margin-top: 2px; }
+.dropzone:hover, .dropzone.over { border-color: var(--rc-accent-line); background: var(--rc-accent-soft); }
+.dropzone:focus-within { outline: 2px solid var(--rc-accent); outline-offset: 2px; }
+.dropzone.has-file { border-style: solid; border-color: var(--rc-accent-line); }
+.dropzone.has-file .tile { color: var(--rc-accent); }
+.imp-file { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 13px; background: var(--rc-inset); border: 1px solid var(--rc-border); }
+.imp-file b { display: block; overflow-wrap: anywhere; }
+.imp-file small { display: block; color: var(--rc-muted); font-size: 12.5px; }
+.imp-section { display: grid; gap: 10px; min-width: 0; }
+.imp-section .section-title { margin-bottom: 0; }
+.imp-map { display: grid; gap: 12px; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; }
+.imp-map .field label .req { color: var(--rc-faint); font-size: 12px; }
+.imp-map .field .help { overflow-wrap: anywhere; }
+.imp-listings { display: grid; gap: 10px; }
+.imp-listing { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; align-items: center; }
+.imp-listing label { font-size: 14px; overflow-wrap: anywhere; }
+.imp-listing select, .imp-row .decision select { min-height: 44px; padding: 8px 36px 8px 12px; border-radius: 11px; border: 1px solid var(--rc-border-strong); background-color: var(--rc-inset); color: var(--rc-text); font: inherit; font-size: 14px; appearance: none; -webkit-appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--rc-muted) 50%), linear-gradient(135deg, var(--rc-muted) 50%, transparent 50%); background-position: calc(100% - 20px) 50%, calc(100% - 15px) 50%; background-size: 5px 5px; background-repeat: no-repeat; max-width: 100%; }
+.imp-listing select:focus, .imp-row .decision select:focus { outline: 2px solid var(--rc-accent); outline-offset: 0; border-color: transparent; }
+.imp-opts { gap: 0; }
+.imp-opts .section-title { margin-bottom: 6px; }
+.check-line span small { display: block; color: var(--rc-faint); font-size: 12px; }
+.check-line { align-items: flex-start; padding: 6px 0; }
+.check-line input { flex: none; margin-top: 1px; }
+.imp-rows { display: grid; gap: 10px; }
+.imp-row { display: grid; gap: 6px; padding: 12px 14px; border-radius: 13px; border: 1px solid var(--rc-border); background: var(--rc-inset); min-width: 0; }
+.imp-row.error { border-color: rgba(231, 128, 141, 0.38); }
+.imp-row.duplicate, .imp-row.unmapped { border-color: rgba(232, 171, 79, 0.38); }
+.imp-row header { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; min-width: 0; }
+.imp-row header b { overflow-wrap: anywhere; }
+.imp-row header small { margin-left: auto; color: var(--rc-faint); font-size: 12px; }
+.imp-row p { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--rc-muted); margin: 0; min-width: 0; }
+.imp-row p span { min-width: 0; overflow-wrap: anywhere; }
+.imp-row p svg.i { width: 15px; height: 15px; flex: none; margin-top: 2px; }
+.imp-row p small { color: var(--rc-faint); }
+.imp-row p.ok { color: var(--rc-accent); }
+.imp-row .msg.err { color: #ffc4cb; }
+.imp-row .msg.err svg.i { color: var(--rc-rose); }
+.imp-row .msg.warn { color: #f1d5a8; }
+.imp-row .msg.warn svg.i { color: var(--rc-amber); }
+.imp-row .changes { font-size: 13px; padding: 8px 10px; border-radius: 10px; background: rgba(124, 182, 232, 0.07); border: 1px solid var(--rc-blue-soft); }
+.imp-row .changes b { font-weight: 600; }
+.imp-row .changes ul { margin: 4px 0 0; padding-left: 18px; }
+.imp-row .decision { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 13px; color: var(--rc-muted); margin-top: 2px; }
+.imp-done { display: flex; gap: 16px; align-items: center; }
+.imp-done h3 { font-family: var(--rc-serif); font-size: 21px; font-weight: 600; }
+.imp-done p { color: var(--rc-muted); font-size: 13.5px; overflow-wrap: anywhere; }
+.imp-done .bubble svg.i { width: 28px; height: 28px; }
+.imp-hist > span:nth-child(2) { min-width: 0; display: grid; gap: 4px; justify-items: start; }
+.imp-hist b { overflow-wrap: anywhere; }
+.imp-hist small { color: var(--rc-faint); font-size: 12px; }
+.error-box ul { margin: 6px 0 8px; padding-left: 18px; }
+.error-box b { display: block; }
+
 /* Dialogs live outside the page container: they follow their own width
    (kept last so it wins over the general rules above). */
 @container dialog (max-width: 560px) {
@@ -622,6 +694,13 @@ fieldset.amounts legend { padding: 0 6px; color: var(--rc-text); font-weight: 60
   .lines.breakdown td.c-item { grid-area: auto; grid-column: 1 / -1; font-weight: 600; }
   .lines.breakdown td[data-label] { display: contents; }
   .lines.breakdown td[data-label]::before { content: attr(data-label); color: var(--rc-muted); font-size: 13px; text-align: left; }
+  .imp-kinds, .imp-map, .imp-listing { grid-template-columns: minmax(0, 1fr); }
+  .imp-listing { gap: 6px; }
+  .imp-file { grid-template-columns: auto minmax(0, 1fr); }
+  .imp-file .btn { grid-column: 1 / -1; }
+  dialog.rc .dfoot.imp-foot { display: grid; grid-template-columns: 1fr 1fr; }
+  dialog.rc .dfoot.imp-foot .btn.primary { grid-column: 1 / -1; order: -1; white-space: normal; text-align: center; }
+  dialog.rc .dfoot.imp-foot .back { margin: 0; }
   dialog.rc .dfoot.stay-actions { display: grid; grid-template-columns: 1fr 1fr; }
   dialog.rc .dfoot.stay-actions .del { grid-column: 1 / -1; order: 3; margin: 0; border-color: transparent; }
 }
