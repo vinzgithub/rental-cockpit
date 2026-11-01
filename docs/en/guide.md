@@ -114,7 +114,31 @@ An entry made by mistake can be **deleted** as long as it has no payment; otherw
 
 ![An expense partly paid](../images/en/expense-detail.png)
 
-## 11. Protect your account
+## 11. Suppliers and detailed invoices
+
+**Suppliers → Add a supplier**: name, activity, usual categories (offered first for their invoices), **indicative rates** (cleaning per hour, set of linen…), contact and note. A rate only pre-fills the unit price of a service: it is never applied to an invoice amount.
+
+The supplier's page shows their invoices of the year, what is left to pay, what is left to split, their rates and their recent invoices; **See them in Expenses** opens the full list.
+
+**New invoice** (from the page) opens the expense form with the supplier and their category already chosen. Tick **Break the invoice down into services** and add one line per service: kind (cleaning, linen, travel, other, discount, tax, adjustment), label, quantity, unit, unit price or amount, **date of the work**. The total of the lines is checked live: it must equal the invoice amount, unless an **adjustment** with a mandatory reason makes up the difference. The invoice stays **one single expense**.
+
+On the invoice page, **Split between stays** gives each service to one or more stays of the same property. The stay whose departure falls on the day of the work is offered first (otherwise the stay under way that day). The split is an **analysis**: it adds no expense. An invoice split only in part is flagged in *To check*, with the amount left.
+
+If you had already typed a cleaning by hand after each departure, **Reconcile entries typed by hand** offers the expenses of the same property, of the same kind and in the invoice period. The entries ticked leave the totals and their payments move to the invoice: nothing is counted twice. **Restore the entry** undoes a reconciliation.
+
+Finally, a stay's page shows its **allocated costs** and its **margin after costs** (expected net payout − costs).
+
+![Suppliers](../images/en/suppliers-desktop.png)
+
+![An invoice broken down into services, rate pre-filled](../images/en/invoice-form.png)
+
+![Splitting the services between stays](../images/en/invoice-split.png)
+
+![An invoice split and reconciled with the entries typed by hand](../images/en/invoice-reconciled.png)
+
+![Allocated costs and margin of a stay](../images/en/stay-costs.png)
+
+## 12. Protect your account
 
 In **Settings → Two-factor sign-in → Turn on**:
 
@@ -126,7 +150,7 @@ At the next sign-in, the code is asked after the password. The other browsers si
 
 ![Turning on two-factor sign-in](../images/en/mfa-setup.png)
 
-## 12. Home Assistant (optional)
+## 13. Home Assistant (optional)
 
 In **Settings → Home Assistant and API → Create a key**, Rental Cockpit shows once the line to paste into `secrets.yaml`. The address to enter in Home Assistant is shown just above. What comes next (sensors, card, automations): [home-assistant.md](home-assistant.md).
 
@@ -136,4 +160,4 @@ In **Settings → Home Assistant and API → Create a key**, Rental Cockpit show
 
 The same Overview shows in one column, balance first, with a navigation bar at the bottom. On touch screens, controls aim at 44 × 44 pixels.
 
-<img src="../images/en/overview-phone.png" alt="Overview on a phone" width="260"> <img src="../images/en/stays-phone.png" alt="Stays on a phone" width="260"> <img src="../images/en/import-phone.png" alt="Import on a phone" width="260"> <img src="../images/en/expenses-phone.png" alt="Expenses on a phone" width="260"> <img src="../images/en/settings-phone.png" alt="Settings on a phone" width="260">
+<img src="../images/en/overview-phone.png" alt="Overview on a phone" width="260"> <img src="../images/en/stays-phone.png" alt="Stays on a phone" width="260"> <img src="../images/en/import-phone.png" alt="Import on a phone" width="260"> <img src="../images/en/expenses-phone.png" alt="Expenses on a phone" width="260"> <img src="../images/en/suppliers-phone.png" alt="A supplier's page on a phone" width="260"> <img src="../images/en/settings-phone.png" alt="Settings on a phone" width="260">

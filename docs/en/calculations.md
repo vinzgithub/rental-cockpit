@@ -117,6 +117,27 @@ Example (it is the test scenario): a €300 repair dated 10 October 2026, to pay
 
 **Archiving** removes an entry from every total without erasing it; its payments are kept. **Deleting** is only possible for an entry with no payment and no document.
 
+## A supplier's invoice
+
+**Services.** An invoice can be broken down into lines: cleaning, linen, travel, other, discount, tax, adjustment. A line has an amount, or a quantity and a unit price (amount = quantity × price, which must come out exactly to the cent: nothing is quietly rounded). A discount is negative; an adjustment may be, and needs a reason. **The lines must add up to the invoice amount**, otherwise nothing is saved. A supplier's rates pre-fill a unit price, they never change an amount. The invoice stays **one single expense**: it is what counts in the three readings.
+
+**Split between stays.** Each service (cleaning, linen, travel, other) can be given, in one or several parts, to stays of the same property (only stays that are not cancelled are offered); a discount, a tax or an adjustment follows the invoice. What is given out for a service never exceeds its amount. The stay offered is the one whose departure falls on the day of the work, otherwise the one under way that day. The split **adds no expense**: it says which stays an expense served. An invoice split only in part is listed in *To check* with the amount left.
+
+**Reconciliation.** An invoice can replace expenses typed by hand for the same services. Offered: the expenses of the same property, in the category of the invoice or of its services, dated between the first day of work (otherwise one month before the invoice month) and the invoice date, with no supplier or the same one. Always refused: an expense of another property, income, an expense that is archived, broken down, already replaced or replacing others. The total replaced does not exceed the invoice amount. The entries replaced leave every total; their payments **move to the invoice** (on their original date, so the Cash reading does not change) and cannot exceed its amount. A reconciliation is undone entry by entry: it comes back with its payments. An invoice that replaces entries can be neither deleted nor archived until those reconciliations are undone, and its amount cannot go below the total replaced.
+
+**A stay's costs and margin.** The costs allocated to a stay are its shares of split invoices, plus the expenses attached to the whole stay (with no split). **Margin after costs = expected net payout − allocated costs**; it is not computed for a cancelled stay or one whose amount is unknown.
+
+Example (it is the test scenario): stay A from 28 September to 4 October 2026 (€600, commission €90, expected payout €510) and stay B from 10 to 13 October (€300, commission €45, expected payout €255). Two cleanings typed by hand and paid: €45 on 4 October, €35 on 13 October. The supplier then sends their invoice of 20 October: **€150** = 4 h of cleaning at €25 on 4 October + 4 sets of linen at €10 on 13 October + €10 of travel on 13 October.
+
+| Step | October expenses without commissions (Activity, Invoices) | October cash | Left to pay |
+|---|---|---|---|
+| Invoice entered | 45 + 35 + 150 = €230 | €80 paid | €150 |
+| Split: cleaning → A, linen and travel → B | €230 (unchanged) | €80 | €150 |
+| Both cleanings reconciled | **€150**: counted once | €80 (payments moved, same dates) | 150 − 80 = **€70** |
+| Cleaning of 4 October restored | 45 + 150 = €195 | €80 | 150 − 35 = €115 |
+
+After the split: stay A, costs €100, margin 510 − 100 = **€410**; stay B, costs €50, margin 255 − 50 = **€205**.
+
 ## Indicators
 
 | Indicator | Formula | Excludes |
@@ -147,7 +168,7 @@ For one month: €1,000 activity revenue, €30 commission, €80 cleaning, €2
 
 The demo's example month reproduces exactly these figures; the test `test_documented_example_T03` checks them.
 
-Services example: a €150 invoice holds €100 cleaning, €40 linen and €10 travel; €90 goes to stay A and €60 to stay B. The yearly table keeps **one** €150 expense, not €300.
+Services example: a €150 invoice holds €100 cleaning, €40 linen and €10 travel; €90 goes to stay A and €60 to stay B. The yearly table keeps **one** €150 expense, not €300. The demo holds this invoice, already split (see "A supplier's invoice").
 
 ## Glossary
 

@@ -71,7 +71,7 @@ async function fillSupplier(app, dialog, supplierId) {
       <h3 class="section-title">${t("sup.rates")}</h3>
       ${s.rates.length ? html`<div class="rows">${s.rates.map((r) => html`
         <div class="keyrow"><span class="tile">${raw(icon("tag"))}</span>
-          <span><b>${r.label || r.kind_label}</b><small>${r.kind_label} · ${t("sup.per", { unit: r.unit_label })}</small></span>
+          <span><b>${r.label || r.kind_label}</b><small>${r.label ? `${r.kind_label} · ` : ""}${t("sup.per", { unit: r.unit_label })}</small></span>
           <b class="num">${i18n.money(r.unit_price_cents)}</b></div>`)}</div>
         <p class="reading">${raw(icon("info"))}<span>${t("sup.ratesNote")}</span></p>`
         : html`<div class="empty">${raw(icon("info"))}<span>${t("sup.noRate")}</span></div>`}

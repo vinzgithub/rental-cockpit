@@ -34,6 +34,7 @@ Browser ──HTTPS (optional proxy)──► Rental Cockpit application (one pr
 | Stays | Stays and payouts API; nights, expected payout, payout status and month-by-month share computed on the fly with the indicators' rules | `src/rental_cockpit/stay_routes.py`, `engine/stays.py` |
 | Import | Airbnb and CSV readers (read only), preview compared with the registry, writing in one transaction, undo of the last import | `src/rental_cockpit/import_routes.py`, `engine/imports/` |
 | Expenses | Entries, payments and categories API; payment status, amount left and monthly series computed from the payments; CSV exports | `src/rental_cockpit/entry_routes.py`, `engine/entries.py`, `engine/exports.py` |
+| Suppliers | Suppliers and rates API; an invoice's services, split between stays, undoable reconciliation with the entries typed by hand (fully checked before anything is written), a stay's costs and margin | `src/rental_cockpit/supplier_routes.py`, `engine/suppliers.py`, `engine/ledger.py` |
 | Recovery | Reset a password, turn two-factor sign-in off from the server | `src/rental_cockpit/cli.py` |
 | Interface | Screens, French/English texts, styles | `src/rental_cockpit/static/` |
 

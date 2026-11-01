@@ -114,7 +114,31 @@ Une écriture faite par erreur se **supprime** tant qu'elle n'a pas de paiement 
 
 ![Fiche d'une dépense réglée en partie](../images/fr/expense-detail.png)
 
-## 11. Protéger votre compte
+## 11. Prestataires et factures détaillées
+
+**Prestataires → Ajouter un prestataire** : nom, activité, catégories habituelles (proposées d'office pour ses factures), **tarifs indicatifs** (ménage à l'heure, lot de linge…), contact et note. Un tarif ne fait que pré-remplir le prix unitaire d'une prestation : il n'est jamais appliqué à un montant de facture.
+
+La fiche du prestataire montre ses factures de l'année, ce qui reste à payer, ce qui reste à répartir, ses tarifs et ses factures récentes ; **Les retrouver dans Dépenses** ouvre la liste complète.
+
+**Nouvelle facture** (depuis la fiche) ouvre le formulaire de dépense avec le prestataire et sa catégorie déjà choisis. Cochez **Détailler les prestations de la facture** et ajoutez une ligne par prestation : nature (ménage, linge, déplacement, autre, remise, taxe, ajustement), libellé, quantité, unité, prix unitaire ou montant, **date d'intervention**. Le total des lignes est vérifié en direct : il doit égaler le montant de la facture, à défaut d'un **ajustement** dont la justification est obligatoire. La facture reste **une seule dépense**.
+
+Sur la fiche de la facture, **Répartir entre les séjours** affecte chaque prestation à un ou plusieurs séjours du même bien. Le séjour dont le départ tombe le jour de l'intervention est proposé d'office (à défaut, le séjour en cours ce jour-là). La répartition est une **analyse** : elle n'ajoute aucune dépense. Une facture répartie en partie est signalée dans *À vérifier*, avec le montant restant.
+
+Si vous aviez déjà saisi à la main un ménage après chaque départ, **Rapprocher des saisies faites à la main** propose les dépenses du même bien, de même nature et de la période de la facture. Les saisies cochées sortent des totaux, leurs paiements sont reportés sur la facture : rien n'est compté deux fois. **Rétablir la saisie** annule un rapprochement.
+
+La fiche d'un séjour affiche enfin ses **coûts affectés** et sa **marge après coûts** (versement net attendu − coûts).
+
+![Prestataires](../images/fr/suppliers-desktop.png)
+
+![Facture détaillée en prestations, tarif pré-rempli](../images/fr/invoice-form.png)
+
+![Répartition des prestations entre les séjours](../images/fr/invoice-split.png)
+
+![Facture répartie et rapprochée des saisies faites à la main](../images/fr/invoice-reconciled.png)
+
+![Coûts affectés et marge d'un séjour](../images/fr/stay-costs.png)
+
+## 12. Protéger votre compte
 
 Dans **Réglages → Double authentification → Activer** :
 
@@ -126,7 +150,7 @@ Dans **Réglages → Double authentification → Activer** :
 
 ![Activation de la double authentification](../images/fr/mfa-setup.png)
 
-## 12. Home Assistant (facultatif)
+## 13. Home Assistant (facultatif)
 
 Dans **Réglages → Home Assistant et API → Créer une clé**, Rental Cockpit affiche une fois la ligne à coller dans `secrets.yaml`. L'adresse à indiquer dans Home Assistant est affichée juste au-dessus. La suite (capteurs, carte, automatisations) : [home-assistant.md](home-assistant.md).
 
@@ -136,4 +160,4 @@ Dans **Réglages → Home Assistant et API → Créer une clé**, Rental Cockpit
 
 La même Synthèse s'affiche en une colonne, le solde en premier, avec une barre de navigation en bas. Sur écran tactile, les commandes visent 44 × 44 pixels.
 
-<img src="../images/fr/overview-phone.png" alt="Synthèse sur téléphone" width="260"> <img src="../images/fr/stays-phone.png" alt="Séjours sur téléphone" width="260"> <img src="../images/fr/import-phone.png" alt="Import sur téléphone" width="260"> <img src="../images/fr/expenses-phone.png" alt="Dépenses sur téléphone" width="260"> <img src="../images/fr/settings-phone.png" alt="Réglages sur téléphone" width="260">
+<img src="../images/fr/overview-phone.png" alt="Synthèse sur téléphone" width="260"> <img src="../images/fr/stays-phone.png" alt="Séjours sur téléphone" width="260"> <img src="../images/fr/import-phone.png" alt="Import sur téléphone" width="260"> <img src="../images/fr/expenses-phone.png" alt="Dépenses sur téléphone" width="260"> <img src="../images/fr/suppliers-phone.png" alt="Fiche d'un prestataire sur téléphone" width="260"> <img src="../images/fr/settings-phone.png" alt="Réglages sur téléphone" width="260">

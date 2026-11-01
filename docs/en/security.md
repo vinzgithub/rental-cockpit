@@ -45,6 +45,12 @@ The demo (fictional data) can be viewed by any signed-in account and changed by 
 - **Formulas neutralised**: a text that would start with `=`, `+`, `-`, `@`, a tab or a carriage return is written with a leading apostrophe. A label typed or imported can never become a formula in an accountant's spreadsheet. Amounts are produced by the application and written as plain numbers.
 - The file is neither kept on the server nor cached (`Cache-Control: no-store`).
 
+## Suppliers
+
+- Suppliers are shared by every property. A reader sees them with totals (invoices, left to pay, left to split) computed **on their own properties only**: the invoices of a property they were not granted appear in no total.
+- Creating, editing or archiving a supplier, breaking down, splitting or reconciling an invoice: administrators only, with the usual CSRF token, revision number and operation identifier.
+- A reconciliation is fully checked before anything is written (same property, amounts, payments): when it is refused, nothing has changed.
+
 ## Browser
 
 - Strict Content-Security-Policy: `default-src 'self'`, no inline or external script or style, no framing by default (`frame-ancestors 'none'`).

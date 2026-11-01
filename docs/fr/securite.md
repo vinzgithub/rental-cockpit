@@ -45,6 +45,12 @@ La démonstration (données fictives) est visible par tout compte connecté et m
 - **Formules neutralisées** : un texte qui commencerait par `=`, `+`, `-`, `@`, une tabulation ou un retour chariot est écrit précédé d'une apostrophe. Un libellé saisi ou importé ne peut donc jamais devenir une formule dans le tableur d'un comptable. Les montants sont produits par l'application et écrits comme de simples nombres.
 - Le fichier n'est ni conservé sur le serveur ni mis en cache (`Cache-Control: no-store`).
 
+## Prestataires
+
+- Les prestataires sont communs à tous les biens. Un lecteur les voit avec les totaux (factures, reste à payer, à répartir) calculés **sur ses seuls biens** : les factures d'un bien qui ne lui est pas ouvert n'apparaissent dans aucun total.
+- Créer, modifier, archiver un prestataire, détailler, répartir ou rapprocher une facture : administrateurs seulement, avec le jeton CSRF, le numéro de révision et l'identifiant d'opération habituels.
+- Un rapprochement est entièrement vérifié avant toute écriture (même bien, montants, paiements) : en cas de refus, rien n'a changé.
+
 ## Navigateur
 
 - Politique de sécurité du contenu stricte : `default-src 'self'`, aucun script ni style en ligne ou externe, aucun affichage dans un cadre par défaut (`frame-ancestors 'none'`).

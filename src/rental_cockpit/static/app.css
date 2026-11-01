@@ -523,7 +523,7 @@ dialog.rc .dfoot { display: flex; gap: 10px; justify-content: flex-end; flex-wra
 .codebox { display: flex; align-items: center; gap: 6px; padding: 4px 4px 4px 14px; border-radius: 11px; border: 1px solid var(--rc-border-strong); background: var(--rc-inset); min-width: 0; }
 .codebox code { flex: 1; min-width: 0; overflow-wrap: anywhere; word-break: break-all; font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: 13px; color: var(--rc-text); user-select: all; }
 .keyrow { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px; border-radius: 13px; background: var(--rc-inset); border: 1px solid var(--rc-border); }
-.keyrow b { display: block; font-size: 14.5px; overflow-wrap: anywhere; }
+.keyrow b { display: block; font-size: 14.5px; overflow-wrap: break-word; }
 .keyrow small { display: block; color: var(--rc-faint); font-size: 12.5px; margin-top: 2px; }
 .keyrow .tile { width: 40px; height: 40px; }
 .keyrow .tile svg.i { width: 20px; height: 20px; color: var(--rc-accent); }
@@ -743,7 +743,7 @@ fieldset.pay-choice { display: grid; gap: 12px; }
 .supplier-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr)); }
 .supplier-card { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 16px; border-radius: 14px;
   background: var(--rc-card); border: 1px solid var(--rc-border); width: 100%; text-align: left; color: inherit; font: inherit; cursor: pointer; }
-.supplier-card:hover { border-color: var(--rc-accent-line); }
+@media (hover: hover) { .supplier-card:hover { border-color: var(--rc-accent-line); } }
 .supplier-card .body { display: grid; gap: 4px; min-width: 0; }
 .supplier-card .stay-title { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .supplier-card .when { color: var(--rc-muted); font-size: 13px; }
@@ -753,7 +753,7 @@ fieldset.pay-choice { display: grid; gap: 12px; }
 .tags { display: flex; gap: 6px; flex-wrap: wrap; }
 .tag { padding: 2px 9px; border-radius: 999px; background: rgba(255, 255, 255, 0.06); color: var(--rc-muted); font-size: 12px; }
 .keyrow.clickable { width: 100%; text-align: left; color: inherit; font: inherit; cursor: pointer; }
-.keyrow.clickable:hover { border-color: var(--rc-accent-line); }
+@media (hover: hover) { .keyrow.clickable:hover { border-color: var(--rc-accent-line); } }
 .keyrow .end-col { display: grid; justify-items: end; gap: 4px; }
 .keyrow .end-col b { overflow-wrap: normal; white-space: nowrap; }
 .keyrow.pick { grid-template-columns: auto minmax(0, 1fr) auto; cursor: pointer; }
@@ -825,6 +825,8 @@ fieldset.split-block { display: grid; gap: 8px; }
   .rate-line > :nth-child(4) { grid-area: label; } .rate-line > :nth-child(5) { grid-area: del; }
   .alloc { grid-template-columns: minmax(0, 1fr) 96px 44px; }
   dialog.rc .dbody .actions .btn, dialog.rc .dbody .keyrow .btn { white-space: normal; text-align: left; }
+  .keyrow.clickable { grid-template-columns: auto minmax(0, 1fr); }
+  .keyrow.clickable .end-col { grid-column: 2; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: flex-start; }
   .pay-option { flex: 1 1 auto; justify-content: center; }
   dialog.rc .dfoot.stay-actions { display: grid; grid-template-columns: 1fr 1fr; }
   dialog.rc .dfoot.stay-actions .del { grid-column: 1 / -1; order: 3; margin: 0; border-color: transparent; }

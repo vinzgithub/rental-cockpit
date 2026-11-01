@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.5.0 — not released yet
+
+Suppliers (delivery L4): a supplier's invoice can be broken down into services, split between the stays it served and reconciled with the entries typed by hand, without ever being counted twice.
+
+- New "Suppliers" screen in the menu: active and archived suppliers, search by name, activity or category; each card shows the invoices of the year, what is left to pay, payments to confirm and what is left to split.
+- Supplier form: name, activity, usual categories (offered first for their invoices), indicative rates (kind of service, unit, unit price, label), contact, note; archive and restore.
+- Supplier page: invoices of the year, left to pay, left to split, rates, recent invoices, "See them in Expenses" (the Expenses screen filtered on the supplier), "New invoice".
+- Detailed invoice: "Break the invoice down into services" in the expense form — cleaning, linen, travel, other, discount, tax, adjustment; quantity × unit price or amount; date of the work. The total is checked live and again by the server; an adjustment needs a reason; a supplier's rate pre-fills the unit price, never an amount. The invoice stays one expense.
+- "Split between stays": each service given to one or several stays of the same property; the stay whose departure falls on the day of the work is offered first. Analysis only: no expense is added. An invoice split only in part is listed in "To check" with the amount left.
+- "Reconcile entries typed by hand" (offered on invoices: broken down or with an invoice number): the invoice replaces the expenses typed by hand for the same services (same property and kind, invoice period). They leave every total, their payments move to the invoice on their original dates, and each reconciliation can be undone. Everything is checked before anything is written; the total replaced never exceeds the invoice.
+- Stay page: "Costs allocated to this stay" (shares of split invoices and expenses attached to the whole stay) and "Margin after costs".
+- Service lines keep unique identifiers, and editing an invoice keeps its lines intact.
+- Rows of the dialogs no longer widen a dialog on a phone; hover outlines only on devices with a mouse.
+- New automated tests: detailed invoice, split, suggested stay, reconciliation and its limits, supplier totals, API rights, and the browser journey with the figures of the documentation; the two-factor test no longer depends on crossing a 30-second step.
+
 ## 0.4.0 — not released yet
 
 Expenses and payments (delivery L3): expenses and income outside stays can be entered, settled in one or several payments, and show up in the three readings. Day-to-day use with your own data is now possible.

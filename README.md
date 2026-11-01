@@ -8,7 +8,7 @@
 
 [**Français**](README.fr.md) · **English**
 
-![Version](https://img.shields.io/badge/version-0.4.0%20preview-126caa) ![Docker](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-2496ED) ![Licence](https://img.shields.io/badge/licence-to%20be%20decided-lightgrey)
+![Version](https://img.shields.io/badge/version-0.5.0%20preview-126caa) ![Docker](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-2496ED) ![Licence](https://img.shields.io/badge/licence-to%20be%20decided-lightgrey)
 
 <br>
 
@@ -42,7 +42,7 @@
 </table>
 
 > [!NOTE]
-> **Version 0.4.0, preview.** The Overview, **stays** (entry, **Airbnb and CSV import**, cancellation, payouts received), **expenses and payments** (partial payments, loan instalments, categories, CSV export), the demo, accounts, two-factor sign-in and the Home Assistant link are ready. **Suppliers** (splitting an invoice between stays) and **PDF documents** come in the next versions.
+> **Version 0.5.0, preview.** The Overview, **stays** (entry, **Airbnb and CSV import**, cancellation, payouts received), **expenses and payments** (partial payments, loan instalments, categories, CSV export), **suppliers** (rates, detailed invoices split between stays, reconciliation), the demo, accounts, two-factor sign-in and the Home Assistant link are ready. **PDF documents** come in the next version.
 
 ---
 
@@ -144,6 +144,29 @@ No black box: you can redo every calculation by hand.
 </table>
 
 <img src="docs/images/en/overview-settle.png" alt="Overview: loan repayments broken down, balance after financing, left to pay and to receive" width="100%">
+
+---
+
+## 🧹 Suppliers: a detailed invoice, counted once
+
+<img src="docs/images/en/invoice-reconciled.png" alt="A cleaning invoice broken down into services, split between two stays and reconciled with the cleanings typed by hand" width="100%">
+
+<table>
+<tr>
+<td width="38%" valign="top"><img src="docs/images/en/suppliers-phone.png" alt="A supplier's page on a phone: invoices of the year, left to pay, indicative rates"></td>
+<td width="62%" valign="top">
+
+- **Suppliers** with their usual categories, their contact and **indicative rates** that pre-fill a service without ever forcing an amount.
+- **Detailed invoice**: cleaning, linen, travel, discount, justified adjustment… the lines must add up to the invoice, checked live.
+- **Split between stays**: each service goes to the stay whose departure falls on the day of the work, which you can change; it is an analysis, the invoice stays **one single expense**.
+- **Reconciliation** with the cleanings typed by hand after each departure: they leave the totals and their payments move to the invoice — nothing is counted twice, and it can be undone.
+- **Costs and margin of each stay**: expected net payout minus the costs allocated to it.
+
+</td>
+</tr>
+</table>
+
+<img src="docs/images/en/invoice-split.png" alt="Splitting an invoice's services between stays, the stay offered from the date of the work" width="100%">
 
 ---
 
@@ -331,7 +354,8 @@ Until the built-in backup arrives, a copy of the volume is enough: the command i
 | ✅ | **0.2.0** | Stays: entry, cancellation and restoration, payouts received, each stay's share of the Overview |
 | ✅ | **0.3.0** | Airbnb and CSV import: preview with nothing written, duplicates, commissions, checks, undo of the last import |
 | ✅ | **0.4.0** | Expenses and payments: partial payments, to pay / to receive, loan instalments, categories, CSV export |
-| 🔜 | **0.5.0 – 0.6.0** | Suppliers and invoice splitting; PDF documents |
+| ✅ | **0.5.0** | Suppliers: indicative rates, detailed invoices split between stays, reconciliation, margin per stay |
+| 🔜 | **0.6.0** | PDF documents, checked and linked to expenses |
 | 🎯 | **1.0** | Checked backup, reader accounts, full acceptance run, first stable version |
 
 📖 [Detailed roadmap](docs/en/roadmap.md)
