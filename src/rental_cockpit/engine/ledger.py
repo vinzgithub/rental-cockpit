@@ -674,13 +674,16 @@ class Ledger:
             raise RCError("superseded")
         self.property(entry["property_id"])
         before = deepcopy(entry)
-        if "category_id" in payload:
-            entry["category_id"] = self.category(payload["category_id"], entry["kind"])["id"]
+        if "category_id" in payload and payload["category_id"] != entry["category_id"]:
+            category = self.category(payload["category_id"], entry["kind"])
+            if category.get("archived"):
+                raise RCError("archived")
+            entry["category_id"] = category["id"]
         if "amount" in payload or "amount_cents" in payload:
             entry["amount"] = read_amount(payload, "amount")
             paid = self.entry_paid(entry["id"])
             if paid > entry["amount"]:
-                raise RCError("payment_exceeds", remaining=money.format_cents(entry["amount"]))
+                raise RCError("entry_amount_below_paid", paid=money.format_cents(paid))
         if "date" in payload:
             entry["date"] = iso(read_date(payload["date"], "date"))
         if "period_start" in payload or "period_end" in payload:
@@ -713,6 +716,18 @@ class Ledger:
                                                 "invoice_number", "supplier_id", "payment_declared", "lines", "allocations", "loan_split"))
         self.audit("entry.update", entry["id"], detail=",".join(changed))
         return {"entry": deepcopy(entry)}
+
+    def delete_entry(self, entry_id: str) -> dict[str, Any]:
+        """For an entry made by mistake only: with a payment or a document, it is archived instead."""
+        entry = self._get("entries", entry_id)
+        self.property(entry["property_id"])
+        if any(link["type"] == "entry" and link["id"] == entry_id for p in self.data["payments"].values() for link in p["links"]):
+            raise RCError("entry_has_payments")
+        if any(entry_id in (d.get("entry_ids") or []) for d in self.data.get("documents", {}).values()):
+            raise RCError("entry_has_documents")
+        del self.data["entries"][entry_id]
+        self.audit("entry.delete", entry_id)
+        return {"deleted": entry_id}
 
     def set_entry_archived(self, entry_id: str, archived: bool) -> dict[str, Any]:
         entry = self._get("entries", entry_id)

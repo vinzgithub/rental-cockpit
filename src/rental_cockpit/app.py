@@ -34,6 +34,7 @@ from .engine.demo import build_demo
 from .engine.errors import RCError, render
 from .engine.ledger import Ledger
 from .engine.schema import category_label
+from .entry_routes import register_entry_routes
 from .ha_api import register_ha_routes
 from .import_routes import register_import_routes
 from .security import (
@@ -311,6 +312,7 @@ def create_app(config: Config | None = None) -> FastAPI:
     register_ha_routes(app, services)
     register_stay_routes(app, services)
     register_import_routes(app, services)
+    register_entry_routes(app, services)
 
     @app.exception_handler(Exception)
     async def on_unexpected(request: Request, err: Exception):  # pragma: no cover - defensive

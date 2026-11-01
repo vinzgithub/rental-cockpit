@@ -494,6 +494,16 @@ def _pending(data: dict[str, Any], pids: set[str], end: date, lang: str) -> dict
             to_pay += remaining
             to_pay_count += 1
     to_receive = to_receive_count = 0
+    for entry in data.get("entries", {}).values():
+        # Income outside stays (a refund, an occasional rental…) is to receive until paid in full.
+        if entry["property_id"] not in pids or entry["kind"] != "income" or entry.get("archived") or entry.get("superseded_by"):
+            continue
+        if parse_date(entry["date"]) >= end:
+            continue
+        remaining = entry["amount"] - paid_by_entry[entry["id"]]
+        if remaining > 0:
+            to_receive += remaining
+            to_receive_count += 1
     for stay in data.get("stays", {}).values():
         if stay["property_id"] not in pids or stay["status"] in ("cancelled", "provisional"):
             continue

@@ -164,7 +164,7 @@ def register_stay_routes(app: FastAPI, services: Services) -> None:
 
     @app.delete("/api/payments/{payment_id}")
     async def delete_payment(request: Request, payment_id: str) -> dict[str, Any]:
-        """Undo a recorded payment (a payout entered by mistake)."""
+        """Undo a recorded payment (a payout or an expense payment entered by mistake)."""
         require_csrf(request)
         payload = await read_json(request)
         dataset = dataset_of(payload.get("dataset") or request.query_params.get("dataset"))
@@ -176,6 +176,7 @@ def register_stay_routes(app: FastAPI, services: Services) -> None:
             raise RCError("not_found")
         acc.require_property(payment["property_id"])
         stay_ids = [link["id"] for link in payment["links"] if link["type"] == "stay"]
+        entry_ids = [link["id"] for link in payment["links"] if link["type"] == "entry"]
 
         def apply(work: dict[str, Any]) -> dict[str, Any]:
             ledger = Ledger(work, acc.user_id)
@@ -185,4 +186,7 @@ def register_stay_routes(app: FastAPI, services: Services) -> None:
         data = registry.snapshot()
         if stay_ids and stay_ids[0] in data.get("stays", {}):
             result["detail"] = stay_views.detail(data, data["stays"][stay_ids[0]], services.today(), lang)
+        elif entry_ids and entry_ids[0] in data.get("entries", {}):
+            from .engine import entries as entry_views  # the « Dépenses » page gets its entry back
+            result["detail"] = entry_views.detail(data, data["entries"][entry_ids[0]], lang)
         return result
