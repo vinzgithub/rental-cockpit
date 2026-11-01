@@ -129,7 +129,8 @@ def register_entry_routes(app: FastAPI, services: Services) -> None:
             "totals": entry_views.totals(shown), "years": years,
             "properties": sorted(visible, key=lambda p: (p["archived"], p["name"].casefold())),
             "categories": _categories(data, lang),
-            "suppliers": sorted(({"id": s["id"], "name": s["name"], "archived": bool(s.get("archived")), "categories": s.get("categories", [])}
+            "suppliers": sorted(({"id": s["id"], "name": s["name"], "archived": bool(s.get("archived")), "categories": s.get("categories", []),
+                                  "rates": s.get("rates", [])}
                                  for s in data.get("suppliers", {}).values()), key=lambda s: (s["archived"], s["name"].casefold())),
         }
 

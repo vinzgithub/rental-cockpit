@@ -554,7 +554,7 @@ class Ledger:
 
     def _lines(self, payload: dict[str, Any], total: int) -> list[dict[str, Any]]:
         lines = []
-        for index, raw in enumerate(payload.get("lines") or []):
+        for raw in payload.get("lines") or []:
             kind = choice(raw.get("kind"), SERVICE_KINDS, "lines.kind")
             quantity = read_quantity(raw.get("quantity"))
             unit = choice(raw.get("unit"), SERVICE_UNITS, "lines.unit", "flat") if raw.get("unit") else ""
@@ -573,7 +573,7 @@ class Ledger:
             if kind == "adjustment" and not note:
                 raise RCError("adjustment_note_required")
             lines.append({
-                "id": str(raw.get("id") or f"line-{index + 1}")[:40],
+                "id": str(raw.get("id") or new_id("ln"))[:40],  # stable: a split between stays refers to it
                 "kind": kind,
                 "label": clean_text(raw.get("label", ""), "lines.label", 120),
                 "quantity": quantity,
@@ -710,7 +710,10 @@ class Ledger:
         if "payment_declared" in payload:
             entry["payment_declared"] = choice(payload["payment_declared"], PAYMENT_DECLARED, "payment_declared")
         if "lines" in payload or "amount" in payload or "amount_cents" in payload:
-            entry["lines"] = self._lines({"lines": payload.get("lines", entry.get("lines"))}, entry["amount"])
+            # Stored lines hold cents: they are checked again as such, never re-read as euros.
+            lines = payload["lines"] if "lines" in payload else [{**line, "amount_cents": line["amount"], "amount": None}
+                                                                 for line in entry.get("lines") or []]
+            entry["lines"] = self._lines({"lines": lines}, entry["amount"])
         category = self.data["categories"][entry["category_id"]]
         if "loan_split" in payload:
             entry["loan_split"] = self._loan_split(payload, category, entry["amount"])

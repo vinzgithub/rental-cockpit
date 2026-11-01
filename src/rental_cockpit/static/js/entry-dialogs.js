@@ -6,6 +6,7 @@
 import { openConfirm, openDialog } from "./dialogs.js";
 import { html, markup, raw } from "./dom.js";
 import { icon } from "./icons.js";
+import { openReconcile, openSplit } from "./split-dialogs.js";
 import { entryStatePill, seriesText } from "./views/expenses.js";
 
 /** "1 234,50 €" typed by a person → "1234,50" for the server (spaces are only grouping). */
@@ -92,14 +93,38 @@ function fillEntry(app, dialog, e) {
       </div>` : ""}
     </section>`;
 
-  const lines = e.service_lines.length ? html`
+  // Detailed invoice: its services, and how they are split between stays (analytical only).
+  // An expense already linked to one stay as a whole needs no split (it is that stay's cost).
+  const splittable = !income && (e.service_lines.length || e.allocations.length || (!e.stay_id && ["cleaning", "linen", "travel"].includes(e.category_id)));
+  const leftToSplit = e.split.reduce((sum, row) => sum + Math.max(row.remaining, 0), 0);
+  const lines = splittable ? html`
     <section>
-      <h3 class="section-title">${t("exd.lines")}</h3>
-      <div class="lines-wrap compact-table"><table class="lines">
-        <thead><tr><th>${t("exd.line")}</th><th class="amt">${t("exd.lineAmount")}</th></tr></thead>
-        <tbody>${e.service_lines.map((l) => html`<tr><td class="c-item">${l.label || l.kind}${l.quantity ? html`<small>${l.quantity} × ${i18n.money(l.unit_price_cents)}</small>` : ""}</td><td class="amt num c-share">${i18n.money(l.amount)}</td></tr>`)}</tbody>
-      </table></div>
-      ${e.allocations.length ? html`<ul class="plain-list notes">${e.allocations.map((a) => html`<li>${i18n.money(a.amount)} → ${a.stay_label || "—"}</li>`)}</ul>` : ""}
+      <h3 class="section-title">${t(e.service_lines.length ? "spl.titleLines" : "spl.title")}</h3>
+      <p class="reading">${raw(icon("info"))}<span>${t("spl.intro")}</span></p>
+      <div class="split-rows">${e.split.map((row) => html`
+        <div class="split-row">
+          <div class="split-head"><b>${row.kind_label || e.label}${row.label && row.label !== row.kind_label ? html` <small>· ${row.label}</small>` : ""}</b>
+            <span class="num">${i18n.money(row.amount)}</span></div>
+          ${row.allocations.length ? html`<ul class="plain-list notes">${row.allocations.map((a) => html`<li><span class="num">${i18n.money(a.amount)}</span> → ${a.stay_id ? html`<button type="button" class="linkbtn small inline" data-action="stay-open" data-value="${a.stay_id}">${a.stay_label}</button>` : t("spl.noStay")}</li>`)}</ul>` : ""}
+          ${row.remaining <= 0 ? html`<small class="done">${raw(icon("check"))}${t("spl.done")}</small>`
+            : e.allocations.length ? html`<small class="left num">${t("spl.left", { amount: i18n.money(row.remaining) })}</small>` : html`<small class="muted">${t("spl.notSplit")}</small>`}
+        </div>`)}
+      </div>
+      ${editable ? html`<div class="actions"><button type="button" class="btn outline-accent" data-split>${raw(icon("split"))}${t(e.allocations.length ? "spl.edit" : "spl.open")}</button>
+        ${leftToSplit && e.allocations.length ? html`<span class="pill amber">${t("spl.leftTotal", { amount: i18n.money(leftToSplit) })}</span>` : ""}</div>` : ""}
+    </section>` : "";
+
+  // An invoice that replaces entries typed by hand for the same services (reconciliation).
+  const reconcile = !income && !e.superseded && (e.replaces.length || (editable && (e.service_lines.length || e.invoice_number))) ? html`
+    <section>
+      <h3 class="section-title">${t("rec.title")}</h3>
+      ${e.replaces.length ? html`<div class="rows">${e.replaces.map((r) => html`
+        <div class="keyrow">
+          <span class="tile">${raw(icon("copy"))}</span>
+          <span><b>${r.label}</b><small class="num">${i18n.dateShort(r.date)} · ${i18n.money(r.amount)}${r.payments ? ` · ${t("rec.paidMoved", { amount: i18n.money(r.payments) })}` : ""}</small></span>
+          ${canWrite ? html`<button type="button" class="btn ghost small" data-unreconcile="${r.id}">${raw(icon("repeat"))}${t("rec.undo")}</button>` : ""}
+        </div>`)}</div>` : html`<p class="reading">${raw(icon("info"))}<span>${t("rec.intro")}</span></p>`}
+      ${editable ? html`<div class="actions"><button type="button" class="btn ghost" data-reconcile>${raw(icon("copy"))}${t("rec.open")}</button></div>` : ""}
     </section>` : "";
 
   dialog.querySelector(".dbody").innerHTML = markup(html`
@@ -109,6 +134,8 @@ function fillEntry(app, dialog, e) {
       ${e.series ? html`<span class="pill blue">${raw(icon("repeat"))}${seriesText(app.viewModel(), e)}</span>` : ""}
     </div>
     ${e.archived ? html`<div class="tip">${raw(icon("info"))}<div><p>${t("exd.archivedNote")}</p></div></div>` : ""}
+    ${e.superseded_by ? html`<div class="tip">${raw(icon("copy"))}<div><p>${t("rec.replacedBy", { label: e.superseded_by.label })}</p>
+      <button type="button" class="linkbtn small" data-action="entry-open" data-value="${e.superseded_by.id}" data-close>${t("rec.openInvoice")}</button></div></div>` : ""}
     <section>
       <h3 class="section-title">${t("sjd.amounts")}</h3>
       <dl class="facts-list money-facts">
@@ -132,6 +159,7 @@ function fillEntry(app, dialog, e) {
     </section>
     ${payments}
     ${lines}
+    ${reconcile}
     <section>
       <h3 class="section-title">${t("sjd.about")}</h3>
       <dl class="facts-list">
@@ -148,7 +176,7 @@ function fillEntry(app, dialog, e) {
   foot.classList.toggle("stay-actions", canWrite);
   foot.innerHTML = markup(canWrite ? html`
     ${e.deletable ? html`<button type="button" class="btn ghost danger-text del" data-delete>${raw(icon("trash"))}${t("exd.delete")}</button>` : ""}
-    <button type="button" class="btn ghost" data-archive="${e.archived ? "0" : "1"}">${raw(icon("archive"))}${t(e.archived ? "exd.unarchive" : "exd.archive")}</button>
+    ${e.superseded ? "" : html`<button type="button" class="btn ghost" data-archive="${e.archived ? "0" : "1"}">${raw(icon("archive"))}${t(e.archived ? "exd.unarchive" : "exd.archive")}</button>`}
     ${editable ? html`<button type="button" class="btn primary" data-edit>${raw(icon("pencil"))}${t("sjd.edit")}</button>` : ""}`
     : html`<button type="button" class="btn ghost" data-close>${t("common.close")}</button>`);
 
@@ -160,6 +188,12 @@ function fillEntry(app, dialog, e) {
   const body = (extra = {}) => ({ dataset: app.api.dataset, lang: i18n.lang, op_id: app.newOpId(), ...extra });
   dialog.querySelector("[data-edit]")?.addEventListener("click", () => openEntryForm(app, { entry: e, onSaved: reopen }));
   dialog.querySelector("[data-pay]")?.addEventListener("click", () => openEntryPayment(app, e, reopen));
+  dialog.querySelector("[data-split]")?.addEventListener("click", () => openSplit(app, e, reopen));
+  dialog.querySelector("[data-reconcile]")?.addEventListener("click", () => openReconcile(app, e, reopen));
+  dialog.querySelectorAll("[data-unreconcile]").forEach((button) => button.addEventListener("click", () => openConfirm(app, {
+    title: t("rec.undoTitle"), text: t("rec.undoText"), confirm: t("rec.undo"), danger: false,
+    run: async () => reopen(await app.api.post(`/api/entries/${e.id}/unreconcile`, { entry_id: button.dataset.unreconcile, revision: e.revision }), t("rec.undone")),
+  })));
   dialog.querySelectorAll("[data-declare]").forEach((button) => button.addEventListener("click", async () => {
     button.disabled = true;
     try {
@@ -198,7 +232,39 @@ function fillEntry(app, dialog, e) {
 
 // ------------------------------------------------------------------ form
 
-export async function openEntryForm(app, { entry = null, kind = "expense", propertyId = null, onSaved = null } = {}) {
+const LINE_KINDS = ["cleaning", "linen", "travel", "other", "discount", "tax", "adjustment"];
+const LINE_UNITS = ["hour", "flat", "set", "unit", "km", "trip"];
+
+/** One service line of a detailed invoice (the server checks again that the lines add up to the amount). */
+function lineRow(t, line = {}, index = 0) {
+  const qty = line.quantity ?? "";
+  return html`
+    <div class="svc-line" data-line="${line.id || `n${index}`}">
+      <div class="field f-kind"><label for="rc-l-kind-${index}">${t("svc.kind")}</label>
+        <select id="rc-l-kind-${index}" data-l="kind">${LINE_KINDS.map((k) => html`<option value="${k}" ${raw(k === (line.kind || "cleaning") ? "selected" : "")}>${t(`svc.kind.${k}`)}</option>`)}</select></div>
+      <div class="field f-label"><label for="rc-l-label-${index}">${t("svc.label")}</label><input id="rc-l-label-${index}" data-l="label" maxlength="120" autocomplete="off" value="${line.label || ""}"></div>
+      <div class="field f-qty"><label for="rc-l-qty-${index}">${t("svc.qty")}</label><input id="rc-l-qty-${index}" data-l="quantity" inputmode="decimal" autocomplete="off" value="${qty}"></div>
+      <div class="field f-unit"><label for="rc-l-unit-${index}">${t("svc.unit")}</label>
+        <select id="rc-l-unit-${index}" data-l="unit"><option value="">—</option>${LINE_UNITS.map((u) => html`<option value="${u}" ${raw(u === line.unit ? "selected" : "")}>${t(`svc.unit.${u}`)}</option>`)}</select></div>
+      <div class="field f-price"><label for="rc-l-price-${index}">${t("svc.price")}</label><input id="rc-l-price-${index}" data-l="unit_price" inputmode="decimal" autocomplete="off" value="${amountValue(line.unit_price_cents)}"></div>
+      <div class="field f-amount"><label for="rc-l-amount-${index}">${t("svc.amount")}</label><input id="rc-l-amount-${index}" data-l="amount" inputmode="decimal" autocomplete="off" value="${line.unit_price_cents && qty ? "" : amountValue(line.amount)}"></div>
+      <div class="field f-date"><label for="rc-l-date-${index}">${t("svc.date")}</label><input id="rc-l-date-${index}" data-l="intervention_date" type="date" value="${line.intervention_date || ""}"></div>
+      <div class="field f-note" data-note-field ${raw(line.kind === "adjustment" || line.note ? "" : "hidden")}><label for="rc-l-note-${index}">${t("svc.note")}</label><input id="rc-l-note-${index}" data-l="note" maxlength="200" autocomplete="off" value="${line.note || ""}"></div>
+      <button type="button" class="iconbtn f-del" data-line-remove aria-label="${t("svc.remove")}">${raw(icon("trash"))}</button>
+    </div>`;
+}
+
+function lineAmount(row) {
+  const get = (key) => row.querySelector(`[data-l="${key}"]`).value;
+  const typed = toCents(get("amount"));
+  const qty = parseFloat(String(get("quantity")).replace(",", "."));
+  const price = toCents(get("unit_price"));
+  let cents = typed ?? (Number.isFinite(qty) && price !== null ? Math.round(qty * price) : null);
+  if (cents !== null && get("kind") === "discount" && cents > 0) cents = -cents;
+  return cents;
+}
+
+export async function openEntryForm(app, { entry = null, kind = "expense", propertyId = null, supplierId = null, detailed = false, onSaved = null } = {}) {
   const { i18n } = app;
   const { t } = i18n;
   kind = entry?.kind || kind;
@@ -214,9 +280,12 @@ export async function openEntryForm(app, { entry = null, kind = "expense", prope
   const groups = [...new Set(categories.map((c) => c.treatment))];
   const split = entry?.loan_split || {};
   const today = app.session.today;
+  const supplierChosen = entry?.supplier_id || supplierId || "";
+  const supplierCategory = suppliers.find((sp) => sp.id === supplierChosen)?.categories?.[0];
+  const initialLines = entry?.service_lines || [];
   const dialog = openDialog(app, {
-    title: t(entry ? (income ? "exf.titleEditIncome" : "exf.titleEdit") : (income ? "exf.titleNewIncome" : "exf.titleNew")),
-    subtitle: t(income ? "exf.subIncome" : "exf.sub"),
+    title: t(entry ? (income ? "exf.titleEditIncome" : "exf.titleEdit") : (income ? "exf.titleNewIncome" : supplierId ? "exf.titleInvoice" : "exf.titleNew")),
+    subtitle: !entry && supplierId ? t("exf.subInvoice", { name: suppliers.find((sp) => sp.id === supplierId)?.name || "" }) : t(income ? "exf.subIncome" : "exf.sub"),
     wide: true,
     body: html`
       <form class="form-grid" novalidate>
@@ -224,7 +293,7 @@ export async function openEntryForm(app, { entry = null, kind = "expense", prope
           <select id="rc-e-prop" name="property_id" ${raw(entry ? "disabled" : "")}>${props.map((p) => html`<option value="${p.id}" ${raw(p.id === chosen ? "selected" : "")}>${p.name}</option>`)}</select></div>
         <div class="field"><label for="rc-e-cat">${t("exf.category")}</label>
           <select id="rc-e-cat" name="category_id">${groups.map((g) => html`<optgroup label="${categories.find((c) => c.treatment === g).treatment_label}">
-            ${categories.filter((c) => c.treatment === g).map((c) => html`<option value="${c.id}" data-treatment="${c.treatment}" ${raw(c.id === (entry?.category_id || (income ? "other_income" : "other_expense")) ? "selected" : "")}>${c.label}</option>`)}
+            ${categories.filter((c) => c.treatment === g).map((c) => html`<option value="${c.id}" data-treatment="${c.treatment}" ${raw(c.id === (entry?.category_id || supplierCategory || (income ? "other_income" : "other_expense")) ? "selected" : "")}>${c.label}</option>`)}
           </optgroup>`)}</select>
           <span class="help" data-treatment-note></span></div>
         <div class="field wide"><label for="rc-e-label">${t("exf.label")}</label><input id="rc-e-label" name="label" required maxlength="140" autocomplete="off" value="${entry?.label || ""}" placeholder="${t(income ? "exf.labelPhIncome" : "exf.labelPh")}"></div>
@@ -250,9 +319,16 @@ export async function openEntryForm(app, { entry = null, kind = "expense", prope
           <p class="reading" data-split-help>${t("exf.splitHelp")}</p>
         </fieldset>
         ${suppliers.length ? html`<div class="field"><label for="rc-e-sup">${t("exf.supplier")}</label>
-          <select id="rc-e-sup" name="supplier_id"><option value="">—</option>${suppliers.map((s) => html`<option value="${s.id}" ${raw(s.id === entry?.supplier_id ? "selected" : "")}>${s.name}</option>`)}</select></div>` : ""}
+          <select id="rc-e-sup" name="supplier_id"><option value="">—</option>${suppliers.map((s) => html`<option value="${s.id}" ${raw(s.id === supplierChosen ? "selected" : "")}>${s.name}</option>`)}</select></div>` : ""}
         <div class="field"><label for="rc-e-inv">${t("exf.invoice")}</label><input id="rc-e-inv" name="invoice_number" maxlength="80" autocomplete="off" value="${entry?.invoice_number || ""}"></div>
         <div class="field"><label for="rc-e-stay">${t("exf.stay")}</label><select id="rc-e-stay" name="stay_id"><option value="">—</option></select><span class="help">${t("exf.stayHelp")}</span></div>
+        ${income ? "" : html`<div class="wide">
+          <label class="check-line"><input type="checkbox" name="detailed" ${raw(initialLines.length || detailed ? "checked" : "")}><span>${t("svc.detail")}<small>${t("svc.detailHelp")}</small></span></label>
+          <div class="svc-lines" data-lines ${raw(initialLines.length || detailed ? "" : "hidden")}>
+            <div data-line-rows>${(initialLines.length ? initialLines : [{}]).map((line, index) => lineRow(t, line, index))}</div>
+            <div class="svc-foot"><button type="button" class="btn ghost small" data-line-add>${raw(icon("plus"))}${t("svc.add")}</button><p class="reading" data-lines-total></p></div>
+          </div>
+        </div>`}
         <div class="wide">
           <label class="check-line"><input type="checkbox" name="has_period" ${raw(entry?.period_start ? "checked" : "")}><span>${t("exf.period")}<small>${t("exf.periodHelp")}</small></span></label>
           <div class="form-grid" data-period ${raw(entry?.period_start ? "" : "hidden")}>
@@ -293,6 +369,33 @@ export async function openEntryForm(app, { entry = null, kind = "expense", prope
   };
   form.stay_id.addEventListener("change", () => { form.stay_id.dataset.value = form.stay_id.value; });
 
+  let lineCount = Math.max(initialLines.length, 1);
+  const lineRows = () => [...dialog.querySelectorAll("[data-line-rows] .svc-line")];
+  const supplierRates = () => (suppliers.find((sp) => sp.id === form.supplier_id?.value)?.rates || []);
+  dialog.querySelector("[data-line-add]")?.addEventListener("click", () => {
+    dialog.querySelector("[data-line-rows]").insertAdjacentHTML("beforeend", markup(lineRow(t, { intervention_date: lineRows().at(-1)?.querySelector('[data-l="intervention_date"]').value || "" }, lineCount)));
+    lineCount += 1;
+    lineRows().at(-1)?.querySelector('[data-l="kind"]').focus();
+    refresh();
+  });
+  dialog.querySelector("[data-line-rows]")?.addEventListener("click", (event) => {
+    if (!event.target.closest("[data-line-remove]")) return;
+    event.target.closest(".svc-line").remove();
+    refresh();
+  });
+  // An indicative rate of the supplier pre-fills the unit price; it is never applied behind the person's back.
+  dialog.querySelector("[data-line-rows]")?.addEventListener("change", (event) => {
+    const row = event.target.closest(".svc-line");
+    if (!row || !["kind", "unit"].includes(event.target.dataset.l)) return;
+    const price = row.querySelector('[data-l="unit_price"]');
+    const rate = supplierRates().find((r) => r.kind === row.querySelector('[data-l="kind"]').value && r.unit === row.querySelector('[data-l="unit"]').value);
+    if (rate && !price.value) {
+      price.value = amountValue(rate.unit_price_cents);
+      price.title = t("svc.rateUsed");
+    }
+    refresh();
+  });
+
   const refresh = () => {
     const option = form.category_id.selectedOptions[0];
     const treatment = option?.dataset.treatment || "";
@@ -308,6 +411,25 @@ export async function openEntryForm(app, { entry = null, kind = "expense", prope
         ? t(known.reduce((a, b) => a + b, 0) === amount ? "exf.splitOk" : "exf.splitOff", { split: i18n.money(known.reduce((a, b) => a + b, 0)), total: i18n.money(amount) })
         : t("exf.splitHelp");
       helpEl.classList.toggle("bad", known.length === 3 && amount !== null && known.reduce((a, b) => a + b, 0) !== amount);
+    }
+    if (form.detailed) {
+      dialog.querySelector("[data-lines]").hidden = !form.detailed.checked;
+      const amounts = lineRows().map(lineAmount);
+      const totalEl = dialog.querySelector("[data-lines-total]");
+      for (const [index, row] of lineRows().entries()) {
+        const input = row.querySelector('[data-l="amount"]');
+        input.placeholder = amounts[index] !== null && !input.value ? amountValue(Math.abs(amounts[index])) : "";
+      }
+      for (const row of lineRows()) {
+        const note = row.querySelector("[data-note-field]");
+        note.hidden = row.querySelector('[data-l="kind"]').value !== "adjustment" && !row.querySelector('[data-l="note"]').value;
+      }
+      const sum = amounts.reduce((acc, value) => acc + (value || 0), 0);
+      const empty = amount === null && amounts.every((value) => value === null);
+      const ok = amount !== null && sum === amount;
+      totalEl.textContent = !form.detailed.checked ? "" : empty ? t("svc.totalHelp")
+        : t(ok ? "svc.totalOk" : "svc.totalOff", { lines: i18n.money(sum), total: i18n.money(amount ?? 0), diff: i18n.money(Math.abs((amount ?? 0) - sum)) });
+      totalEl.classList.toggle("bad", form.detailed.checked && !empty && !ok);
     }
     if (!entry) {
       const pay = form.payment.value;
@@ -343,6 +465,17 @@ export async function openEntryForm(app, { entry = null, kind = "expense", prope
       period_start: form.has_period.checked ? data.period_start : "", period_end: form.has_period.checked ? data.period_end : "",
     };
     if (form.supplier_id) body.supplier_id = data.supplier_id || "";
+    if (form.detailed?.checked) {
+      body.lines = lineRows().map((row) => {
+        const get = (key) => row.querySelector(`[data-l="${key}"]`).value.trim();
+        const line = { kind: get("kind"), label: get("label"), quantity: get("quantity"), unit: get("unit"),
+                       unit_price: cleanAmount(get("unit_price")), amount: cleanAmount(get("amount")), intervention_date: get("intervention_date"), note: get("note") };
+        if (!row.dataset.line.startsWith("n")) line.id = row.dataset.line;  // keeps the split between stays of an existing line
+        return line;
+      });
+    } else if (entry?.service_lines?.length) {
+      body.lines = [];
+    }
     if (treatment === "financing") {
       const parts = Object.fromEntries(["principal", "interest", "insurance"].map((k) => [k, cleanAmount(data[k])]));
       body.loan_split = Object.values(parts).some(Boolean) ? parts : null;

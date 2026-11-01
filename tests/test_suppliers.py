@@ -63,6 +63,9 @@ def test_detailed_invoice_is_one_expense(setup):
     entry = invoice(ledger, pid, sup)
     assert [line["amount"] for line in entry["lines"]] == [10000, 4000, 1000]
     assert expenses(data, pid) == 15000 + 4500 + 4500  # the invoice once, plus the October share of each commission
+    # Editing the invoice keeps its lines (stored in cents) and their identifiers.
+    kept = ledger.update_entry(entry["id"], {"label": "Facture F-018 (corrigée)", "amount": "150"})["entry"]
+    assert [(line["id"], line["amount"]) for line in kept["lines"]] == [("l1", 10000), ("l2", 4000), ("l3", 1000)]
     with pytest.raises(RCError) as wrong:
         ledger.create_entry({"property_id": pid, "kind": "expense", "category_id": "cleaning", "label": "x", "amount": "160",
                              "date": "2026-10-20", "lines": LINES})

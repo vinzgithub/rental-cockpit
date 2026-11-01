@@ -127,6 +127,27 @@ function fillStay(app, dialog, s) {
       ${canWrite && s.payout_state !== "received" && s.payout_state !== "none" ? html`<div class="actions"><button type="button" class="btn outline-accent" data-payout>${raw(icon("plus"))}${t("sjd.recordPayout")}</button></div>` : ""}
     </section>`;
 
+  // Costs that served the stay (shares of split invoices): analytical, already counted once as expenses.
+  const costs = s.costs?.length ? html`
+    <section>
+      <h3 class="section-title">${t("stc.title")}</h3>
+      <p class="reading">${raw(icon("info"))}<span>${t("stc.intro")}</span></p>
+      <div class="lines-wrap compact-table">
+        <table class="lines">
+          <thead><tr><th>${t("explain.date")}</th><th>${t("stc.cost")}</th><th class="amt">${t("stc.amount")}</th></tr></thead>
+          <tbody>${s.costs.map((c) => html`<tr>
+            <td class="num c-date">${i18n.dateShort(c.date)}</td>
+            <td class="c-item"><button type="button" class="linkbtn small inline" data-action="entry-open" data-value="${c.entry_id}">${c.label}</button>${c.detail ? html`<small>${c.detail}</small>` : ""}</td>
+            <td class="amt num c-share">${i18n.money(c.amount)}</td></tr>`)}</tbody>
+        </table>
+      </div>
+      <dl class="facts-list money-facts after-table">
+        <div><dt>${t("sjd.payout")}</dt><dd class="num">${money(i18n, s.expected_payout, unknown)}</dd></div>
+        <div><dt>${t("stc.total")}</dt><dd class="num">− ${i18n.money(s.costs_total)}</dd></div>
+        ${s.margin !== null && s.margin !== undefined ? html`<div><dt>${t("stc.margin")}</dt><dd class="num"><b>${i18n.money(s.margin)}</b></dd></div>` : ""}
+      </dl>
+    </section>` : "";
+
   const changes = s.history.length;
   dialog.querySelector(".dbody").innerHTML = markup(html`
     <div class="pill-row">${statePill(s)}${payoutPill(s)}</div>
@@ -147,6 +168,7 @@ function fillStay(app, dialog, s) {
     </section>
     ${breakdown}
     ${payments}
+    ${costs}
     <section>
       <h3 class="section-title">${t("sjd.about")}</h3>
       <dl class="facts-list">
