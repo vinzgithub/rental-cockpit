@@ -12,6 +12,7 @@ import { openImport, openImportHistory } from "./import-dialogs.js";
 import { openCategoryForm, openEntry, openEntryForm, toggleCategory } from "./entry-dialogs.js";
 import { openSupplier, openSupplierForm } from "./supplier-dialogs.js";
 import { openDocument, openInvoiceImport } from "./document-dialogs.js";
+import { confirmBackupDelete, confirmReaderDelete, createBackup, openReaderForm, openReaderPassword, openRestore } from "./admin-dialogs.js";
 import { esc, html, markup, opId, raw } from "./dom.js";
 import { makeI18n } from "./i18n.js";
 import { icon } from "./icons.js";
@@ -52,7 +53,7 @@ export class App {
     this.root = root;
     this.state = { screen: "synthese", mode: "activity", propertyId: "all", periodKey: "", loading: true, error: "", overview: null, account: null,
       stays: { view: "active", q: "", data: null }, entries: { view: "all", q: "", kind: "", year: "", data: null }, categories: null,
-      suppliers: { view: "active", q: "", data: null }, documents: { view: "all", q: "", data: null } };
+      suppliers: { view: "active", q: "", data: null }, documents: { view: "all", q: "", data: null }, admin: { users: null, backups: null } };
     this.searchTimer = null;
     this.auth = { error: "", busy: false, mfa: false, username: "" };
     this.session = null;
@@ -96,10 +97,10 @@ export class App {
       return;
     }
     if (!readPrefs().lang && this.session.default_locale && !navigator.language) this._setLang(this.session.default_locale);
-    if (!this.session.authenticated) {
+    if (!this.session.authenticated || this.session.must_change_password) {
       this.state.loading = false;
       this._render();
-      this.root.querySelector("#rc-u")?.focus();
+      this.root.querySelector(this.session.must_change_password ? "#rc-p" : "#rc-u")?.focus();
       return;
     }
     const prefs = readPrefs();
@@ -133,7 +134,9 @@ export class App {
 
   get isDemo() { return this.api.dataset === "demo"; }
   get canWrite() { return Boolean(this.session?.user?.is_admin); }
-  get showWelcome() { return this.session?.authenticated && !this.session.real.first_choice && !this.isDemo; }
+  /** Signed in with a password of their own (not a temporary one still to replace). */
+  get signedIn() { return Boolean(this.session?.authenticated && !this.session.must_change_password); }
+  get showWelcome() { return this.signedIn && !this.session.real.first_choice && !this.isDemo; }
 
   newOpId() { return opId(); }
 
@@ -211,6 +214,29 @@ export class App {
       if (err.status !== 401) this.toast(err.message, true);
     }
     this._render();
+    if (this.canWrite) await this.loadAdmin();
+  }
+
+  /** Reader accounts and backups (administrators). */
+  async loadAdmin() {
+    try {
+      const [users, backups] = await Promise.all([this.api.request("GET", "/api/users"), this.api.request("GET", "/api/backups")]);
+      this.state.admin = { users, backups };
+    } catch (err) {
+      if (err.status !== 401) this.toast(err.message, true);
+    }
+    this._render();
+  }
+
+  /** After a restore, everything shown comes back from the server. */
+  async afterRestore() {
+    this.state.stays = { ...this.state.stays, data: null };
+    this.state.entries = { ...this.state.entries, data: null };
+    this.state.suppliers = { ...this.state.suppliers, data: null };
+    this.state.documents = { ...this.state.documents, data: null };
+    this.state.propertyId = "all";
+    this.session = await this.api.request("GET", "/api/session");
+    await Promise.all([this.load(), this.loadAccount()]);
   }
 
   /** « Dépenses » list for the current view, filters and search. */
@@ -326,7 +352,9 @@ export class App {
       documents: this.state.documents,
       categories: this.state.categories,
       canWrite: this.canWrite,
-      periodOptions: this.session?.authenticated ? this.periodOptions() : [],
+      canAdmin: this.canWrite,
+      admin: this.state.admin,
+      periodOptions: this.signedIn ? this.periodOptions() : [],
       dataset: this.api.dataset,
       ready: READY,
     };
@@ -369,6 +397,27 @@ export class App {
         this.state.suppliers = { ...this.state.suppliers, view: value };
         this._render();
         await this.loadSuppliers();
+        break;
+      case "user-new":
+        openReaderForm(this);
+        break;
+      case "user-edit":
+        openReaderForm(this, this.state.admin.users.users.find((u) => String(u.id) === value));
+        break;
+      case "user-password":
+        openReaderPassword(this, this.state.admin.users.users.find((u) => String(u.id) === value));
+        break;
+      case "user-delete":
+        confirmReaderDelete(this, this.state.admin.users.users.find((u) => String(u.id) === value));
+        break;
+      case "backup-create":
+        await createBackup(this, target);
+        break;
+      case "backup-restore":
+        openRestore(this);
+        break;
+      case "backup-delete":
+        confirmBackupDelete(this, value);
         break;
       case "documents-view":
         this.state.documents = { ...this.state.documents, view: value };
@@ -497,7 +546,7 @@ export class App {
         writePrefs({ lang: value });
         this._setLang(value);
         this.state.overview = null;
-        if (this.session?.authenticated) await this.load();
+        if (this.signedIn) await this.load();
         else this._render();
         break;
       case "account":
@@ -559,6 +608,8 @@ export class App {
         await this.api.request("POST", "/api/auth/setup", { body: data });
       } else if (kind === "mfa") {
         await this.api.request("POST", "/api/auth/mfa", { body: data });
+      } else if (kind === "newpwd") {
+        await this.api.request("POST", "/api/account/password", { body: data });
       } else {
         const result = await this.api.request("POST", "/api/auth/login", { body: data });
         if (result.mfa_required) {
@@ -575,7 +626,7 @@ export class App {
       this.auth = { ...this.auth, busy: false, error: err.message };
       if (err.code === "mfa_expired") this.auth.mfa = false;
       this._render();
-      this.root.querySelector(kind === "setup" ? "#rc-u" : kind === "mfa" && this.auth.mfa ? "#rc-o" : "#rc-p")?.focus();
+      this.root.querySelector(kind === "setup" ? "#rc-u" : kind === "mfa" && this.auth.mfa ? "#rc-o" : kind === "newpwd" ? "#rc-n" : "#rc-p")?.focus();
     }
   }
 
@@ -773,7 +824,7 @@ export class App {
       this.pageEl.innerHTML = markup(html`<div class="root">${page}</div>`);
       return;
     }
-    if (!this.session.authenticated) {
+    if (!this.session.authenticated || this.session.must_change_password) {
       this.pageEl.innerHTML = markup(html`<div class="root"><div class="main">${renderAuth(this.viewModel())}</div></div>`);
       return;
     }

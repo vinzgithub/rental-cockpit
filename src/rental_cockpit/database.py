@@ -166,6 +166,76 @@ class Database:
                        (password_hash, now, user_id))
             return int(db.execute("SELECT session_version FROM users WHERE id = ?", (user_id,)).fetchone()[0])
 
+    # ------------------------------------------------------------ reader accounts (administration)
+
+    def list_users(self) -> list[dict[str, Any]]:
+        with self.connect() as db:
+            users = db.execute("SELECT id, username, display_name, role, must_change_password, totp_secret IS NOT NULL AS mfa, "
+                               "created_at, updated_at FROM users ORDER BY role, username COLLATE NOCASE").fetchall()
+            grants = db.execute("SELECT user_id, property_id, documents FROM grants").fetchall()
+        by_user: dict[int, dict[str, bool]] = {}
+        for row in grants:
+            by_user.setdefault(int(row["user_id"]), {})[row["property_id"]] = bool(row["documents"])
+        return [{"id": int(u["id"]), "username": u["username"], "display_name": u["display_name"], "role": u["role"],
+                 "must_change_password": bool(u["must_change_password"]), "mfa": bool(u["mfa"]),
+                 "created_at": u["created_at"], "updated_at": u["updated_at"], "grants": by_user.get(int(u["id"]), {})} for u in users]
+
+    def create_reader(self, username: str, display_name: str, password_hash: str, grants: dict[str, bool], now: str) -> int:
+        """A reader account with a temporary password, to change at the first sign-in."""
+        try:
+            with self.transaction() as db:
+                cursor = db.execute(
+                    "INSERT INTO users(username, display_name, password_hash, role, must_change_password, created_at, updated_at) "
+                    "VALUES (?, ?, ?, 'reader', 1, ?, ?)", (username, display_name, password_hash, now, now))
+                user_id = int(cursor.lastrowid)
+                db.executemany("INSERT INTO grants(user_id, property_id, documents) VALUES (?, ?, ?)",
+                               [(user_id, pid, int(docs)) for pid, docs in grants.items()])
+                return user_id
+        except sqlite3.IntegrityError as exc:
+            raise RCError("username_taken") from exc
+
+    def update_reader(self, user_id: int, display_name: str, grants: dict[str, bool], now: str) -> None:
+        """New name and rights; the reader's open sessions see them at their next request."""
+        with self.transaction() as db:
+            db.execute("UPDATE users SET display_name = ?, updated_at = ? WHERE id = ? AND role = 'reader'", (display_name, now, user_id))
+            db.execute("DELETE FROM grants WHERE user_id = ?", (user_id,))
+            db.executemany("INSERT INTO grants(user_id, property_id, documents) VALUES (?, ?, ?)",
+                           [(user_id, pid, int(docs)) for pid, docs in grants.items()])
+
+    def reset_password(self, user_id: int, password_hash: str, now: str) -> None:
+        """Temporary password set by an administrator: every session ends, a new password is asked at sign-in."""
+        with self.transaction() as db:
+            db.execute("UPDATE users SET password_hash = ?, must_change_password = 1, session_version = session_version + 1, "
+                       "updated_at = ? WHERE id = ?", (password_hash, now, user_id))
+
+    def delete_reader(self, user_id: int) -> bool:
+        with self.transaction() as db:
+            return db.execute("DELETE FROM users WHERE id = ? AND role = 'reader'", (user_id,)).rowcount == 1
+
+    def export_accounts(self) -> list[dict[str, Any]]:
+        """Accounts and rights for a backup: names and grants only, never a secret."""
+        return [{"username": u["username"], "display_name": u["display_name"], "role": u["role"],
+                 "grants": [{"property_id": pid, "documents": docs} for pid, docs in sorted(u["grants"].items())]}
+                for u in self.list_users()]
+
+    def restore_grants(self, accounts: list[dict[str, Any]], property_ids: set[str]) -> dict[str, list[str]]:
+        """After a restore: the rights of the readers that exist here, by name. Nothing else is created."""
+        applied, unknown = [], []
+        with self.transaction() as db:
+            for account in accounts:
+                if not isinstance(account, dict) or account.get("role") != "reader":
+                    continue
+                row = db.execute("SELECT id FROM users WHERE username = ? AND role = 'reader'", (str(account.get("username", "")),)).fetchone()
+                if row is None:
+                    unknown.append(str(account.get("username", ""))[:80])
+                    continue
+                db.execute("DELETE FROM grants WHERE user_id = ?", (row["id"],))
+                db.executemany("INSERT INTO grants(user_id, property_id, documents) VALUES (?, ?, ?)",
+                               [(row["id"], str(g.get("property_id")), int(bool(g.get("documents")))) for g in account.get("grants") or []
+                                if isinstance(g, dict) and str(g.get("property_id")) in property_ids])
+                applied.append(str(account["username"]))
+        return {"applied": applied, "unknown": unknown}
+
     def enable_totp(self, user_id: int, secret: str, step: int, code_hashes: list[str], now: str) -> int:
         """Turn on two-factor sign-in with fresh recovery codes; other sessions end."""
         with self.transaction() as db:

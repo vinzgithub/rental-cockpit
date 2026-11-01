@@ -231,6 +231,12 @@ function fillEntry(app, dialog, e) {
     confirm: t("sjx.confirm"),
     run: async () => reopen(await app.api.request("DELETE", `/api/payments/${button.dataset.paymentDelete}`, { body: body() }), t("sjp.deleted")),
   })));
+  keepFocusInside(dialog);
+}
+
+/** After the page of a dialog is redrawn, the keyboard focus stays in it (never lost on the page behind). */
+export function keepFocusInside(dialog) {
+  if (dialog.open && !dialog.contains(document.activeElement)) dialog.querySelector(".dhead [data-close]")?.focus();
 }
 
 // ------------------------------------------------------------------ form

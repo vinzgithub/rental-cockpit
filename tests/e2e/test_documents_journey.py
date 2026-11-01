@@ -97,7 +97,9 @@ def test_invoice_to_expense_duplicate_attach_and_detach(desktop, base_url, tmp_p
     page.locator("dialog[open] [data-detach]").click()
     page.locator("dialog[open] [data-confirm]").click()
     page.locator("dialog[open] .empty", has_text="Aucun justificatif joint").wait_for()
+    page.wait_for_function("() => document.querySelectorAll('dialog[open]').length === 1")  # the confirmation has closed
     page.keyboard.press("Escape")
+    page.locator("dialog[open]").wait_for(state="detached")
 
     # « À vérifier » leads to the documents to complete.
     page.locator('.sidebar [data-value="synthese"]').click()

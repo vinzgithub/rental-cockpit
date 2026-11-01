@@ -713,7 +713,7 @@ fieldset.pay-choice { display: grid; gap: 12px; }
 .form-grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .reading.bad { color: #f3a5af; }
 .cat-row.archived { opacity: 0.62; }
-.cat-row .row-actions { display: flex; gap: 2px; }
+.cat-row .row-actions, .user-row .row-actions, .backup-row .row-actions { display: flex; gap: 2px; }
 .keyrow small.muted, dd small.muted { color: var(--rc-faint); }
 @container content (min-width: 720px) {
   .entries-tools { grid-template-columns: minmax(180px, 230px) minmax(170px, 210px) minmax(150px, 180px) minmax(200px, 1fr); }
@@ -821,6 +821,16 @@ fieldset.split-block { display: grid; gap: 8px; }
 .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; }
 .link-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin-top: 10px; }
 .link-row select { min-height: 44px; padding: 8px 12px; border-radius: 11px; border: 1px solid var(--rc-border-strong); background: var(--rc-inset); color: var(--rc-text); font: inherit; font-size: 14px; min-width: 0; width: 100%; }
+/* Administration */
+.tip.ok { border-color: var(--rc-accent-line); background: var(--rc-accent-soft); color: var(--rc-text); }
+.tip.ok svg.i { color: var(--rc-accent); }
+.inline-field { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.inline-field input { flex: 1 1 220px; min-width: 0; }
+.grant-list { display: grid; gap: 8px; }
+.grant-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 16px; align-items: center; padding: 8px 12px; border-radius: 11px; background: var(--rc-inset); border: 1px solid var(--rc-border); }
+.user-row small, .backup-row small { overflow-wrap: anywhere; }
+.user-row .pill.tiny { margin: 6px 6px 0 0; }
+.backup-row b.mono { font-size: 13px; overflow-wrap: anywhere; }
 
 /* Dialogs live outside the page container: they follow their own width
    (kept last so it wins over the general rules above). */
@@ -855,6 +865,7 @@ fieldset.split-block { display: grid; gap: 8px; }
   .doc-row { grid-template-columns: auto minmax(0, 1fr); }
   .doc-row .doc-actions { grid-column: 1 / -1; justify-content: flex-start; }
   .link-row { grid-template-columns: minmax(0, 1fr); }
+  .grant-row { grid-template-columns: minmax(0, 1fr); }
   .keyrow.clickable .end-col { grid-column: 2; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: flex-start; }
   .pay-option { flex: 1 1 auto; justify-content: center; }
   dialog.rc .dfoot.stay-actions { display: grid; grid-template-columns: 1fr 1fr; }

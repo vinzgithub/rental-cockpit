@@ -27,7 +27,17 @@ export function renderAuth(v) {
         <button type="submit" class="btn primary" ${raw(auth.busy ? "disabled" : "")}>${raw(icon("shieldCheck"))}${t("auth.verify")}</button>
         <button type="button" class="linkbtn" data-action="auth-back">${t("auth.back")}</button>
       </form>`;
-  const form = auth.mfa ? mfaForm : setup ? html`
+  const newPassword = html`
+      <form class="stack" data-form="newpwd" novalidate>
+        <div><h1>${t("auth.newTitle")}</h1><p class="reading">${t("auth.newSub", { name: session.user?.name || "" })}</p></div>
+        <div class="field"><label for="rc-p">${t("auth.tempPassword")}</label><input id="rc-p" name="current" type="password" autocomplete="current-password" required></div>
+        <div class="field"><label for="rc-n">${t("pwd.new")}</label><input id="rc-n" name="new" type="password" autocomplete="new-password" required minlength="10" aria-describedby="rc-n-h"><span class="help" id="rc-n-h">${t("auth.passwordHelp")}</span></div>
+        <div class="field"><label for="rc-c">${t("auth.confirm")}</label><input id="rc-c" name="confirm" type="password" autocomplete="new-password" required minlength="10"></div>
+        ${error}
+        <button type="submit" class="btn primary" ${raw(auth.busy ? "disabled" : "")}>${raw(icon("check"))}${t("pwd.save")}</button>
+        <button type="button" class="linkbtn" data-action="logout">${t("auth.signout")}</button>
+      </form>`;
+  const form = session.must_change_password ? newPassword : auth.mfa ? mfaForm : setup ? html`
       <form class="stack" data-form="setup" novalidate>
         <div><h1>${t("auth.setupTitle")}</h1><p class="reading">${t("auth.setupSub")}</p></div>
         <div class="field"><label for="rc-u">${t("auth.username")}</label><input id="rc-u" name="username" autocomplete="username" required minlength="3" maxlength="40" aria-describedby="rc-u-h"><span class="help" id="rc-u-h">${t("auth.usernameHelp")}</span></div>

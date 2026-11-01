@@ -21,14 +21,14 @@ export class Api {
     this.onLoginRequired = null;
   }
 
-  async request(method, path, { query = {}, body = null, file = null } = {}) {
+  async request(method, path, { query = {}, body = null, file = null, fileType = "application/pdf" } = {}) {
     const url = new URL(path, window.location.origin);
     for (const [key, value] of Object.entries({ lang: this.lang, ...query })) {
       if (value !== undefined && value !== null) url.searchParams.set(key, value);
     }
     const headers = { Accept: "application/json" };
     if (method !== "GET") {
-      headers["Content-Type"] = file ? "application/pdf" : "application/json";
+      headers["Content-Type"] = file ? fileType : "application/json";
       headers["X-CSRF-Token"] = this.csrf;
     }
     let response;

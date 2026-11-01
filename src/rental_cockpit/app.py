@@ -28,6 +28,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from . import __version__
 from .account_routes import register_account_routes
+from .admin_routes import register_admin_routes
 from .config import Config, secret_key
 from .document_routes import register_document_routes
 from .engine import indicators
@@ -129,6 +130,9 @@ def create_app(config: Config | None = None) -> FastAPI:
             user = current_user(services, request)
         except RCError:
             return {**base, "authenticated": False, "setup_required": False, "mfa_pending": bool(request.session.get("mfa_uid"))}
+        if user["must_change_password"]:
+            # A temporary password given by an administrator: the person chooses their own before anything else.
+            return {**base, "authenticated": True, "setup_required": False, "user": public_user(user), "must_change_password": True}
         real = services.registries["real"].snapshot()
         demo = services.registries["demo"].data
         acc = access(services, user, "real")
@@ -317,6 +321,7 @@ def create_app(config: Config | None = None) -> FastAPI:
     register_entry_routes(app, services)
     register_supplier_routes(app, services)
     register_document_routes(app, services)
+    register_admin_routes(app, services)
 
     @app.exception_handler(Exception)
     async def on_unexpected(request: Request, err: Exception):  # pragma: no cover - defensive

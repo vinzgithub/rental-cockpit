@@ -124,6 +124,11 @@ MESSAGES: dict[str, tuple[str, str]] = {
     "storage_full": ("Espace disque insuffisant : rien n'a été enregistré. Libérez de l'espace puis recommencez.", "Not enough disk space: nothing was saved. Free some space and try again."),
     "storage_failed": ("L'enregistrement a échoué ({detail}) : l'état précédent a été conservé, rien n'a été modifié.", "Saving failed ({detail}): the previous state was kept, nothing was changed."),
     # Backup
+    "username_taken": ("Ce nom d'utilisateur existe déjà : choisissez-en un autre.", "This user name already exists: choose another one."),
+    "password_change_required": ("Choisissez d'abord votre propre mot de passe.", "Choose your own password first."),
+    "restore_expired": ("La vérification de la sauvegarde a expiré (30 minutes) : rien n'a été restauré. Envoyez-la à nouveau.", "The backup check expired (30 minutes): nothing was restored. Send it again."),
+    "restore_confirm": ("Pour remplacer vos données, tapez exactement REMPLACER. Rien n'a été restauré.", "To replace your data, type exactly REPLACE. Nothing was restored."),
+    "backup_too_large": ("Sauvegarde trop volumineuse ({limit} maximum). Rien n'a été restauré.", "Backup too large ({limit} maximum). Nothing was restored."),
     "backup_invalid": ("Sauvegarde invalide : {detail}. Rien n'a été restauré.", "Invalid backup: {detail}. Nothing was restored."),
     "backup_schema_newer": ("Cette sauvegarde vient d'une version plus récente (schéma {schema}) : mettez à jour Rental Cockpit avant de la restaurer.", "This backup comes from a newer version (schema {schema}): update Rental Cockpit before restoring it."),
     "restore_not_verified": ("Vérifiez d'abord la sauvegarde (copie de recette) avant de la restaurer.", "Check the backup first (test copy) before restoring it."),
