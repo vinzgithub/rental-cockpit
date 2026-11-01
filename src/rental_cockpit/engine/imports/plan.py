@@ -256,7 +256,9 @@ def _allowed(item: dict[str, Any]) -> tuple[str, ...]:
     if item.get("locked") or item["status"] in ("error", "unmapped"):
         return ()
     if item["status"] == "duplicate":
-        return ("complete", "import", "skip") if item.get("stay_id") else ("import", "skip")
+        # Completing is only offered when it brings something: a missing amount, the reference, a payout.
+        useful = item.get("stay_id") and (item["changes"] or item.get("payout"))
+        return ("complete", "import", "skip") if useful else ("import", "skip")
     if item["status"] == "same":
         return ("import", "skip") if item.get("payout") else ()
     return ("import", "skip")
@@ -332,6 +334,8 @@ def build(data: dict[str, Any], parsed: dict[str, Any], options: dict[str, Any],
             target = None  # a new stay next to the one entered by hand: the payout goes to the new one
         if with_payouts:
             _payout(index, item, target, today)
+        if item["decision"] == "complete" and not item["changes"] and not item["payout"]:
+            item["decision"] = "skip"  # the stay entered by hand already knows everything the line says
         if item["status"] == "same" and not item.get("locked"):
             # Nothing to change on the stay; the line still matters when it brings a payout.
             item["decision"] = "import" if item["payout"] else "skip"
@@ -363,7 +367,8 @@ def build(data: dict[str, Any], parsed: dict[str, Any], options: dict[str, Any],
     if known:
         notices.append({"code": "imp_file_known", "params": {"date": known[-1]["at"][:10]}})
     counts = {status: sum(1 for r in rows if r["status"] == status) for status in STATUSES}
-    counts["to_write"] = sum(1 for r in rows if r["decision"] != "skip" and r["status"] in ("new", "update", "duplicate"))
+    counts["to_write"] = sum(1 for r in rows if r["decision"] != "skip" and (
+        r["status"] in ("new", "update") or (r["status"] == "duplicate" and (r["decision"] == "import" or r["changes"]))))
     counts["payouts"] = sum(1 for r in rows if r["payout"] and r["decision"] != "skip")
     return {"rows": rows, "counts": counts, "errors": parsed["errors"], "notices": notices,
             "can_apply": not parsed["errors"] and counts["to_write"] + counts["payouts"] > 0}

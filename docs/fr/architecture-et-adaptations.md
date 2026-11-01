@@ -32,6 +32,7 @@ Navigateur ──HTTPS (proxy facultatif)──► Application Rental Cockpit (u
 | Compte | Mot de passe, double authentification, clés d'API | `src/rental_cockpit/account_routes.py` |
 | Lien Home Assistant | Résumé en lecture seule pour l'intégration RESTful | `src/rental_cockpit/ha_api.py` |
 | Séjours | API des séjours et des versements ; nuits, versement attendu, état du versement et part mois par mois calculés à la volée avec les règles des indicateurs | `src/rental_cockpit/stay_routes.py`, `engine/stays.py` |
+| Import | Lecteurs Airbnb et CSV (lecture seule), aperçu comparé au registre, écriture en une transaction, annulation du dernier import | `src/rental_cockpit/import_routes.py`, `engine/imports/` |
 | Dépannage | Réinitialiser un mot de passe, désactiver la double authentification depuis le serveur | `src/rental_cockpit/cli.py` |
 | Interface | Écrans, textes français/anglais, styles | `src/rental_cockpit/static/` |
 
@@ -51,7 +52,7 @@ Inventaire demandé par le cahier des charges (REP 01). Chaque élément est cla
 | Répartition d'un séjour par nuit, fenêtre arrivée → départ | Adapté | Répartition nuit par nuit au centime près (méthode du plus fort reste) |
 | Justificatifs PDF : contrôle de structure, refus du contenu actif, empreinte SHA-256, doublons binaires et métier, annulation de la dernière opération | À reprendre | Écran Documents |
 | Facture d'un prestataire de ménage : lignes ménage / linge / déplacement, ventilation par séjour égale au TTC, rapprochement des saisies manuelles | Adapté (règles) · à reprendre (écran) | Prestations génériques : n'importe quel prestataire, n'importe quel tarif ; message « 10 € de déplacement restent à affecter » |
-| Import CSV Airbnb : en-têtes vérifiés, ordre des dates détecté, lignes de versement ignorées, garde-fous anti-doublon | À reprendre | Écran Séjours, avec version du lecteur affichée |
+| Import CSV Airbnb : en-têtes vérifiés, ordre des dates détecté, lignes de versement ignorées, garde-fous anti-doublon | Repris (L2) | Séjours → Importer : aperçu sans écriture, doublons, contrôles, annulation du dernier import ; version du lecteur enregistrée avec chaque import ; CSV générique ajouté |
 | Lecteurs de factures propres à certains fournisseurs du projet d'origine | Retiré | Non publiés (PRE 06) ; un lecteur générique propose des champs « à vérifier » |
 | Fonctions propres au logement d'origine : suivi d'énergie et d'équipements, caméras, plan 3D, planification patrimoniale, assistance automatique, pont entre plusieurs installations | Retiré | Hors périmètre public |
 | Comptes, sessions, droits, démonstration séparée, explication de chaque indicateur | Nouveau | Voir ci-dessous |
@@ -106,7 +107,7 @@ Afficher toute l'interface dans Home Assistant reste possible, à condition d'au
 
 | Écran | Côté serveur | Côté interface |
 |---|---|---|
-| **Séjours** | Fait (L1) : création, modification, annulation avec montant conservé, rétablissement, versements. À venir (L2) : import Airbnb (lecteur repris, formats vérifiés uniquement) et CSV générique avec association des colonnes, prévisualisation sans écriture, annulation du dernier import | Fait : liste filtrable, fiche séjour. À venir : coûts affectés (L4), parcours d'import en trois étapes (L2) |
+| **Séjours** | Fait (L1) : création, modification, annulation avec montant conservé, rétablissement, versements. Fait (L2) : import Airbnb (lecteur repris, export français vérifié uniquement) et CSV générique avec association des colonnes et taux de commission, prévisualisation sans écriture, contrôle avant confirmation, annulation du dernier import | Fait : liste filtrable, fiche séjour, import en trois étapes, imports précédents. À venir : coûts affectés (L4) |
 | **Dépenses** | API écritures, paiements, archivage, filtres ; export CSV avec formules neutralisées | Tableau avec statuts explicites (« Paiement à confirmer », « Payée »…), saisie rapide, actions visibles |
 | **Prestataires** | API prestataires et tarifs indicatifs ; facture multi-prestations ; rapprochement des saisies existantes | « Répartir une facture » : détail des services, répartition par séjour, contrôle « 150 € affectés sur 150 € » |
 | **Documents** | Téléversement HTTP (8 Mio), contrôle PDF avec *pypdf* (ajouté à ce moment-là), empreinte, doublons binaires et métier, téléchargement après contrôle des droits | « Vérifier la facture » : fichier → vérification → enregistrement ; « Cette facture est déjà enregistrée » |

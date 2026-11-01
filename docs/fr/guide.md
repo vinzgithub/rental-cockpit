@@ -74,7 +74,25 @@ Dans la Synthèse, « 1 versement à confirmer » mène directement à la liste 
 
 ![Fiche d'un séjour](../images/fr/stay-detail.png)
 
-## 9. Protéger votre compte
+## 9. Importer un fichier
+
+Plutôt que de tout saisir, **Séjours → Importer** (ou **Ajouter → Un fichier de réservations**) :
+
+1. **Fichier** : choisissez *Airbnb* pour l'export « Historique des transactions » en français, tel qu'Airbnb le fournit, ou *Autre fichier CSV* (Booking.com, Abritel, tableur…), puis choisissez ou déposez le fichier.
+2. **Vérification** : rien n'est encore enregistré. Pour un CSV, vérifiez la colonne choisie pour chaque information grâce à l'exemple affiché ; indiquez la plateforme et, si le fichier n'a pas de commission, son taux. Rattachez chaque logement du fichier à l'un de vos biens. Chaque ligne dit ce qui se passera :
+   - *Nouveau* : le séjour sera créé ;
+   - *Mis à jour* : un séjour déjà importé change (le détail « avant → après » est affiché) ;
+   - *Doublon probable* : un séjour saisi à la main a les mêmes dates — par défaut, il est **complété** avec ce qu'il ne savait pas (référence, commission…), ce que vous saisissez est conservé ; vous pouvez aussi créer un autre séjour ou ignorer la ligne ;
+   - *Déjà à jour*, *Sans bien*, *Erreur* : rien ne sera écrit, et la raison est donnée.
+
+   Les remarques signalent ce qui mérite un coup d'œil : chevauchement, dates indisponibles, arrivée avant le début d'activité, versement déjà enregistré ou supérieur à l'attendu.
+3. **Résultat** : le nombre de séjours créés, mis à jour, complétés et de versements enregistrés. **Annuler cet import** remet tout comme avant, tant qu'aucun de ces séjours n'a été modifié ; c'est aussi possible plus tard depuis **Imports précédents**.
+
+Réimporter le même fichier ne crée rien en double : tout est *Déjà à jour*. Les choix (colonnes, biens, taux) sont mémorisés pour le fichier suivant. Les noms des voyageurs ne sont repris que si vous cochez l'option.
+
+![Aperçu d'un import Airbnb](../images/fr/import-preview.png)
+
+## 10. Protéger votre compte
 
 Dans **Réglages → Double authentification → Activer** :
 
@@ -86,7 +104,7 @@ Dans **Réglages → Double authentification → Activer** :
 
 ![Activation de la double authentification](../images/fr/mfa-setup.png)
 
-## 10. Home Assistant (facultatif)
+## 11. Home Assistant (facultatif)
 
 Dans **Réglages → Home Assistant et API → Créer une clé**, Rental Cockpit affiche une fois la ligne à coller dans `secrets.yaml`. L'adresse à indiquer dans Home Assistant est affichée juste au-dessus. La suite (capteurs, carte, automatisations) : [home-assistant.md](home-assistant.md).
 
@@ -96,4 +114,4 @@ Dans **Réglages → Home Assistant et API → Créer une clé**, Rental Cockpit
 
 La même Synthèse s'affiche en une colonne, le solde en premier, avec une barre de navigation en bas. Sur écran tactile, les commandes visent 44 × 44 pixels.
 
-<img src="../images/fr/overview-phone.png" alt="Synthèse sur téléphone" width="260"> <img src="../images/fr/stays-phone.png" alt="Séjours sur téléphone" width="260"> <img src="../images/fr/settings-phone.png" alt="Réglages sur téléphone" width="260">
+<img src="../images/fr/overview-phone.png" alt="Synthèse sur téléphone" width="260"> <img src="../images/fr/stays-phone.png" alt="Séjours sur téléphone" width="260"> <img src="../images/fr/import-phone.png" alt="Import sur téléphone" width="260"> <img src="../images/fr/settings-phone.png" alt="Réglages sur téléphone" width="260">

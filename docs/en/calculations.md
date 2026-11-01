@@ -59,6 +59,33 @@ A payout cannot exceed what is still expected: if the platform paid more, correc
 
 **Cancelling a stay** asks for any amount retained (cancellation fee) and the commission on it. The stay stays visible, with no night; only the retained amount counts, once, on the arrival date. The amounts from before the cancellation are kept: **Restore the stay** brings them back. Deleting a stay is reserved for an entry made by mistake, with no payout.
 
+## An imported stay
+
+An imported stay follows exactly the same rules as a stay entered by hand: the import only fills the same fields.
+
+**Airbnb export** (French "Historique des transactions"):
+
+| Airbnb column | Stay field |
+|---|---|
+| Code de confirmation | Reference |
+| Date de début / Date de fin | Arrival / departure (the file's number of nights must match) |
+| Revenus bruts | Gross amount (otherwise: Montant + Frais de service) |
+| Frais de service | Commission |
+| Montant | Net payout |
+| Taxes reversées par Airbnb | Tourist tax collected (never revenue) |
+| Date | Payout date, when it is already past |
+
+- **"Payout"** lines are transfers of amounts already on the booking lines: they are **never counted a second time**. Other line types (adjustments, resolutions…) are not bookings: they are counted in the preview, not imported.
+- One code on several lines makes one stay, whose amounts add up. If those lines disagree on the dates or the listing, the stay is refused rather than guessed.
+- The day/month order comes from the unambiguous dates (Airbnb writes MM/DD/YYYY); a file mixing both is refused.
+- When gross − service fee ≠ amount paid out, a remark says so.
+
+**CSV**: each column is chosen in the preview. Amounts in French or English format ("1 234,50", "1,234.50"). Without a commission column, a **rate** can be given: commission = gross × rate, rounded to the nearest cent (half a cent up). Example: 15% of €333.33 = €50.00; 3.5% of €333.33 = €11.67.
+
+**Payouts in the file**: recorded in the Cash reading on their date, once (same date and amount already recorded = skipped), never above the expected payout, and only when their date is past.
+
+**Stay entered by hand on the same dates** (probable duplicate): completing it only fills what it did not know. When the file states another gross amount or commission, the ones typed are kept and a remark says so; the file's net payout is then not taken either, so it does not contradict the amounts kept.
+
 ## Indicators
 
 | Indicator | Formula | Excludes |

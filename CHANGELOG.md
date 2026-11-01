@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.3.0 — not released yet
+
+Import (delivery L2): stays come from an Airbnb export or any CSV file, checked line by line before anything is saved.
+
+- "Import" button on the Stays screen, and "A bookings file" in the Add menu (so on a phone too). Administrators only.
+- Three-step wizard: file (Airbnb export or other CSV, chosen or dropped), check, result.
+- Airbnb reader for the French "Historique des transactions" export: required columns checked, day/month order taken from the unambiguous dates (a file mixing both is refused), "Payout" transfer lines and other line types ignored and counted, one confirmation code on several lines merged, conflicting lines and nights that do not match the dates refused.
+- Generic CSV: UTF-8 or Windows-1252, comma, semicolon or tab, decimal comma; each column suggested from its name and shown with an example value; arrival plus departure or number of nights; date order automatic or chosen; platform of the stays; commission rate when the file has no commission (rounded to the cent). The choices are remembered for files with the same columns.
+- Each listing of the file is attached to a property; the choice is remembered.
+- Preview with nothing written: new stay, update of a stay already imported (field by field), probable duplicate of a stay entered by hand (completed with what it does not know, or a new stay, or skipped), reference already on another property, up to date, no property, error. Overlaps with existing stays, inside the file and with unavailable dates, arrivals before the activity start, negative amounts, dates outside 2000–2100 and payouts above what is expected are flagged.
+- Payouts dated in the file are recorded once, never above the expected amount; a cancelled stay is never changed by an import.
+- Guests' names are not kept unless asked.
+- The confirmation is refused if the stays changed since the preview; the new preview is shown.
+- The last import can be undone (here or in "Previous imports") as long as its stays were not changed; updated and completed stays get their previous values back.
+- The stay page says which file created it.
+- Large files: 5 MiB and 20,000 lines at most; a file of that size is checked in under a second and written in one go, with one journal line for the whole file.
+- New automated tests: readers, preview, apply, re-import, duplicates, undo, API (rights, CSRF, demo separation, limits) and three browser journeys.
+
 ## 0.2.0 — not released yet
 
 Stays (delivery L1): real fictional stays can be entered and show up correctly in the Overview.

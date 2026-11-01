@@ -74,7 +74,25 @@ In the Overview, "1 payout to confirm" leads straight to the list of stays to ch
 
 ![A stay page](../images/en/stay-detail.png)
 
-## 9. Protect your account
+## 9. Import a file
+
+Rather than typing everything, **Stays → Import** (or **Add → A bookings file**):
+
+1. **File**: choose *Airbnb* for the French "Historique des transactions" export, as Airbnb provides it, or *Other CSV file* (Booking.com, Abritel, spreadsheet…), then choose or drop the file.
+2. **Check**: nothing is saved yet. For a CSV, check the column chosen for each piece of information against the example shown; state the platform and, when the file has no commission, its rate. Attach each listing of the file to one of your properties. Each line says what will happen:
+   - *New*: the stay will be created;
+   - *Updated*: a stay already imported changes (the "before → after" detail is shown);
+   - *Probable duplicate*: a stay entered by hand has the same dates — by default it is **completed** with what it did not know (reference, commission…), what you typed is kept; you can also create another stay or skip the line;
+   - *Up to date*, *No property*, *Error*: nothing will be written, and the reason is given.
+
+   Remarks point at what deserves a look: overlap, unavailable dates, arrival before the activity start, payout already recorded or above what is expected.
+3. **Result**: the number of stays created, updated, completed and of payouts recorded. **Undo this import** puts everything back as it was, as long as none of these stays was changed; it can also be done later from **Previous imports**.
+
+Importing the same file again creates nothing twice: everything is *Up to date*. The choices (columns, properties, rate) are remembered for the next file. Guests' names are only taken when you tick the option.
+
+![Preview of an Airbnb import](../images/en/import-preview.png)
+
+## 10. Protect your account
 
 In **Settings → Two-factor sign-in → Turn on**:
 
@@ -86,7 +104,7 @@ At the next sign-in, the code is asked after the password. The other browsers si
 
 ![Turning on two-factor sign-in](../images/en/mfa-setup.png)
 
-## 10. Home Assistant (optional)
+## 11. Home Assistant (optional)
 
 In **Settings → Home Assistant and API → Create a key**, Rental Cockpit shows once the line to paste into `secrets.yaml`. The address to enter in Home Assistant is shown just above. What comes next (sensors, card, automations): [home-assistant.md](home-assistant.md).
 
@@ -96,4 +114,4 @@ In **Settings → Home Assistant and API → Create a key**, Rental Cockpit show
 
 The same Overview shows in one column, balance first, with a navigation bar at the bottom. On touch screens, controls aim at 44 × 44 pixels.
 
-<img src="../images/en/overview-phone.png" alt="Overview on a phone" width="260"> <img src="../images/en/stays-phone.png" alt="Stays on a phone" width="260"> <img src="../images/en/settings-phone.png" alt="Settings on a phone" width="260">
+<img src="../images/en/overview-phone.png" alt="Overview on a phone" width="260"> <img src="../images/en/stays-phone.png" alt="Stays on a phone" width="260"> <img src="../images/en/import-phone.png" alt="Import on a phone" width="260"> <img src="../images/en/settings-phone.png" alt="Settings on a phone" width="260">

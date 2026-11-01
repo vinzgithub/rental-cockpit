@@ -153,7 +153,9 @@ function fillStay(app, dialog, s) {
         <div><dt>${t("stays.guests")}</dt><dd>${s.guests ? i18n.plural(s.guests, "props.guest", "props.guests") : "—"}</dd></div>
         <div><dt>${t("sjd.ref")}</dt><dd>${s.external_ref || "—"}</dd></div>
         ${s.note ? html`<div><dt>${t("sjd.note")}</dt><dd class="pre">${s.note}</dd></div>` : ""}
-        <div><dt>${t("sjd.trace")}</dt><dd>${t("sjd.created", { date: i18n.dateShort((s.created_at || "").slice(0, 10)) })}${changes ? ` · ${i18n.plural(changes, "sjd.changedOnce", "sjd.changedMany")}` : ""}</dd></div>
+        <div><dt>${t("sjd.trace")}</dt><dd>${s.imported
+          ? t("sjd.imported", { date: i18n.dateShort(s.imported.at.slice(0, 10)), file: s.imported.file_name || t(`imp.fileKind.${s.imported.kind}`) })
+          : t("sjd.created", { date: i18n.dateShort((s.created_at || "").slice(0, 10)) })}${changes ? ` · ${i18n.plural(changes, "sjd.changedOnce", "sjd.changedMany")}` : ""}</dd></div>
       </dl>
     </section>`);
 

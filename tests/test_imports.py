@@ -302,6 +302,16 @@ def test_stay_entered_by_hand_is_completed_not_doubled(two):
     assert len([s for s in data["stays"].values() if s["start"] == "2026-09-28"]) == 1
 
 
+def test_duplicate_that_brings_nothing_is_skipped(two):
+    data, ledger, gite, studio = two
+    ledger.create_stay({"property_id": gite, "start": "2026-12-20", "end": "2026-12-23", "external_ref": "MAIN-1",
+                        "amounts": {"gross": "300", "commission": "45", "payout": "255"}})
+    _, built = preview(data, AIRBNB, mapped(gite, studio))
+    row = by_ref(built)["HMTEST0002"]
+    assert (row["status"], row["decision"], row["changes"], row["choices"]) == ("duplicate", "skip", [], ["import", "skip"])
+    assert built["counts"]["to_write"] == 2
+
+
 def test_duplicate_can_be_imported_as_a_new_stay_or_skipped(two):
     data, ledger, gite, studio = two
     ledger.create_stay({"property_id": gite, "start": "2026-09-28", "end": "2026-10-04"})
@@ -487,7 +497,10 @@ def test_api_preview_apply_remember_and_undo(client):
     assert record["counts"]["created"] == 3
     again = client.post("/api/imports/apply", json=body(AIRBNB, kind="airbnb", options=options, op_id="op-imp")).json()
     assert again["replayed"] is True
-    assert len(client.get("/api/stays", params={"view": "all"}).json()["stays"]) == 3
+    stays = client.get("/api/stays", params={"view": "all"}).json()["stays"]
+    assert len(stays) == 3
+    detail = client.get(f"/api/stays/{stays[0]['id']}").json()
+    assert detail["source"] == "airbnb" and detail["imported"]["file_name"] == "essai.csv"
     # The listings are remembered: the next preview needs no choice and finds everything up to date.
     later = client.post("/api/imports/preview", json=body(AIRBNB, kind="airbnb")).json()
     assert later["property_map"] == {GITE: gite, STUDIO: studio}
