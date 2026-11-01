@@ -39,6 +39,12 @@ La démonstration (données fictives) est visible par tout compte connecté et m
 - **Un import, une ligne de journal** (auteur, date, nombre de séjours et de versements), pour ne pas chasser les entrées plus anciennes du journal.
 - **Annulation** du dernier import seulement, et seulement si aucun de ses séjours n'a été modifié depuis : rien de ce qui a été saisi après n'est effacé.
 
+## Exports CSV
+
+- Les exports des dépenses et des séjours ne contiennent que les biens que le compte peut voir, avec les filtres affichés à l'écran. Un lecteur peut exporter ses biens ; il ne peut rien modifier.
+- **Formules neutralisées** : un texte qui commencerait par `=`, `+`, `-`, `@`, une tabulation ou un retour chariot est écrit précédé d'une apostrophe. Un libellé saisi ou importé ne peut donc jamais devenir une formule dans le tableur d'un comptable. Les montants sont produits par l'application et écrits comme de simples nombres.
+- Le fichier n'est ni conservé sur le serveur ni mis en cache (`Cache-Control: no-store`).
+
 ## Navigateur
 
 - Politique de sécurité du contenu stricte : `default-src 'self'`, aucun script ni style en ligne ou externe, aucun affichage dans un cadre par défaut (`frame-ancestors 'none'`).

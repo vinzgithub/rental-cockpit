@@ -39,6 +39,12 @@ The demo (fictional data) can be viewed by any signed-in account and changed by 
 - **One import, one journal line** (author, date, number of stays and payouts), so older journal entries are not pushed out.
 - **Undo** of the last import only, and only if none of its stays was changed since: nothing entered afterwards is erased.
 
+## CSV exports
+
+- The exports of the expenses and the stays only contain the properties the account can see, with the filters shown on screen. A reader can export their properties; they cannot change anything.
+- **Formulas neutralised**: a text that would start with `=`, `+`, `-`, `@`, a tab or a carriage return is written with a leading apostrophe. A label typed or imported can never become a formula in an accountant's spreadsheet. Amounts are produced by the application and written as plain numbers.
+- The file is neither kept on the server nor cached (`Cache-Control: no-store`).
+
 ## Browser
 
 - Strict Content-Security-Policy: `default-src 'self'`, no inline or external script or style, no framing by default (`frame-ancestors 'none'`).

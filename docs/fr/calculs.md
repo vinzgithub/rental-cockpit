@@ -86,6 +86,37 @@ Un séjour importé suit exactement les mêmes règles qu'un séjour saisi : l'i
 
 **Séjour saisi à la main aux mêmes dates** (doublon probable) : le compléter ne remplit que ce qu'il ne savait pas. Si le fichier annonce un autre montant brut ou une autre commission, ceux saisis sont conservés et une remarque le signale ; le versement net du fichier n'est alors pas repris, pour ne pas contredire les montants conservés.
 
+## Une dépense ou une recette hors séjour
+
+Une écriture a un montant TTC, une date (celle de la facture) et une **catégorie**. Le **traitement** de la catégorie dit où elle compte :
+
+| Traitement | Compté dans | Exemples |
+|---|---|---|
+| Exploitation | Dépenses (ou Recettes) et solde avant financement | Ménage, linge, réparation, énergie, assurance du bien, abonnement, frais de plateforme |
+| Investissement | Investissements, à part | Équipement, travaux d'amélioration |
+| Financement | Remboursements d'emprunt, hors solde d'exploitation | Mensualité : capital + intérêts + assurance emprunteur |
+| Impôts et taxes | Impôts et taxes, à part | Taxe foncière |
+| Information seulement | Aucun total | Dépense gardée pour mémoire |
+
+**Les trois lectures.** En *Activité*, l'écriture compte à sa date, ou jour par jour sur sa **période couverte** si elle en a une (une assurance annuelle de 240 € du 1er novembre 2026 au 1er novembre 2027 compte 19,80 € en novembre : 30 jours de 0,66 €, le reste des centimes étant réparti au plus fort reste). En *Factures*, elle compte à sa date. En *Trésorerie*, seuls ses **paiements** comptent, à leur date et pour leur montant.
+
+**Règlement.** L'état vient toujours des paiements enregistrés :
+
+| État | Quand |
+|---|---|
+| Payée (Reçue) | Les paiements couvrent tout le montant |
+| Partiellement payée (reçue) | Une partie est réglée |
+| À payer (À recevoir) | Rien n'est réglé et l'écriture est connue comme due |
+| Paiement à confirmer | Rien n'est réglé et on ne sait pas si elle l'est : listée dans *À vérifier* |
+
+Un paiement ne dépasse jamais le reste dû, et le montant d'une écriture ne peut pas descendre sous ce qui est déjà réglé.
+
+Exemple (c'est le scénario des tests) : réparation de 300 € datée du 10 octobre 2026, à payer, puis paiement de 100 € le 12 octobre. En octobre : *Activité* et *Factures* comptent 300 € de dépenses ; *Trésorerie* compte 100 € ; il reste 200 € à payer.
+
+**Mensualités.** Une série mensuelle crée une écriture par mois, à la même date (le 31 devient le dernier jour d'un mois plus court). Chaque échéance se règle à part. Une échéance datée après aujourd'hui est *prévue* : elle n'est pas encore dans « À payer » de l'écran Dépenses. Si capital, intérêts et assurance sont saisis, leur somme doit égaler l'échéance ; la Synthèse les détaille sous **Remboursements d'emprunt**. Exemple : 500 € = 350 € de capital + 120 € d'intérêts + 30 € d'assurance ; en octobre, solde avant financement inchangé, solde après financement diminué de 500 €.
+
+**Archiver** retire une écriture de tous les totaux sans l'effacer ; ses paiements sont conservés. **Supprimer** n'est possible que pour une écriture sans paiement ni justificatif.
+
 ## Les indicateurs
 
 | Indicateur | Formule | Exclut |
@@ -101,8 +132,8 @@ Un séjour importé suit exactement les mêmes règles qu'un séjour saisi : l'i
 | **Nuitées** | Nuits des séjours non annulés dans la période | Jour de départ, séjours annulés |
 | **Taux d'occupation** | Nuitées ÷ nuits disponibles | Périodes d'indisponibilité, jours avant le début d'activité |
 | **Revenu moyen par nuit** (Activité) | Recettes des séjours ÷ nuitées | Ajustements, autres recettes |
-| **À payer** | Dépenses − paiements enregistrés | |
-| **À recevoir** | Versement attendu des séjours − sommes reçues | Séjours au montant inconnu (listés à vérifier) |
+| **À payer** | Dépenses datées avant la fin de la période − paiements enregistrés | Écritures archivées |
+| **À recevoir** | Versement attendu des séjours + recettes hors séjours − sommes reçues | Séjours au montant inconnu (listés à vérifier), séjours provisoires |
 
 **Évolutions.** Le pourcentage affiché sous un indicateur compare la période avec la précédente (mois précédent, année précédente, ou même durée juste avant), calculée avec la même lecture et les mêmes règles. Sans valeur de référence, aucun pourcentage n'est affiché.
 

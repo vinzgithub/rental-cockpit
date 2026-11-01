@@ -51,7 +51,7 @@ Cliquez sur **Comment est calculé ce montant ?** sous le solde. La fenêtre mon
 
 ## 6. Ce qui reste à vérifier
 
-La carte **À vérifier** liste ce qui empêche un résultat d'être définitif. Dans la démonstration : des dépenses de ménage du mois précédent dont le paiement n'est pas encore confirmé.
+La carte **À vérifier** liste ce qui empêche un résultat d'être définitif. Dans la démonstration : des dépenses de ménage du mois précédent dont le paiement n'est pas encore confirmé. Un clic ouvre ces dépenses dans l'écran **Dépenses**, vue *Paiement à confirmer*.
 
 ## 7. Passer à vos données
 
@@ -92,7 +92,29 @@ Réimporter le même fichier ne crée rien en double : tout est *Déjà à jour*
 
 ![Aperçu d'un import Airbnb](../images/fr/import-preview.png)
 
-## 10. Protéger votre compte
+## 10. Saisir une dépense et la régler
+
+**Dépenses → Ajouter une dépense** (ou **Ajouter → Une dépense**) : choisissez le bien, la catégorie — son traitement s'affiche dessous : exploitation, investissement, financement, impôts —, le libellé, le montant TTC et la date de la facture. Indiquez ensuite le **règlement** :
+
+- *Déjà payée* : un paiement du montant total est enregistré à la date indiquée ;
+- *À payer* : le montant compte dans « Reste à payer » ;
+- *Je ne sais pas encore* : la dépense apparaît dans **Paiement à confirmer**. Rien n'est supposé payé.
+
+Quand l'argent part, ouvrez la dépense puis **Enregistrer un paiement** : un paiement partiel est possible, jamais au-delà du reste dû. La lecture Trésorerie compte chaque paiement à sa date.
+
+Pour un **emprunt**, choisissez la catégorie *Remboursement d'emprunt*, saisissez la décomposition capital / intérêts / assurance (vérifiée en direct) et cochez **Répéter chaque mois** : une écriture par mois est créée, chacune réglée à part. Les échéances dont la date n'est pas encore venue sont *Prévues*, regroupées sous « À venir » et hors de « À payer ». Dans la Synthèse, elles comptent en **Remboursements d'emprunt**, hors solde d'exploitation.
+
+Pour une **assurance annuelle** ou un abonnement payé d'avance, cochez **Couvre une période** : la lecture Activité la répartit jour par jour.
+
+Une recette hors séjour (remboursement, location ponctuelle) s'ajoute avec **Ajouter une recette** et suit les mêmes règles, en « À recevoir ».
+
+Une écriture faite par erreur se **supprime** tant qu'elle n'a pas de paiement ; sinon, **Archivez-la** : elle sort de tous les totaux et reste consultable. Les catégories se créent, se renomment et s'archivent dans **Réglages → Catégories**. **Exporter** télécharge la liste affichée au format CSV, pour un tableur ou votre comptable.
+
+![Liste des dépenses](../images/fr/expenses-desktop.png)
+
+![Fiche d'une dépense réglée en partie](../images/fr/expense-detail.png)
+
+## 11. Protéger votre compte
 
 Dans **Réglages → Double authentification → Activer** :
 
@@ -104,7 +126,7 @@ Dans **Réglages → Double authentification → Activer** :
 
 ![Activation de la double authentification](../images/fr/mfa-setup.png)
 
-## 11. Home Assistant (facultatif)
+## 12. Home Assistant (facultatif)
 
 Dans **Réglages → Home Assistant et API → Créer une clé**, Rental Cockpit affiche une fois la ligne à coller dans `secrets.yaml`. L'adresse à indiquer dans Home Assistant est affichée juste au-dessus. La suite (capteurs, carte, automatisations) : [home-assistant.md](home-assistant.md).
 
@@ -114,4 +136,4 @@ Dans **Réglages → Home Assistant et API → Créer une clé**, Rental Cockpit
 
 La même Synthèse s'affiche en une colonne, le solde en premier, avec une barre de navigation en bas. Sur écran tactile, les commandes visent 44 × 44 pixels.
 
-<img src="../images/fr/overview-phone.png" alt="Synthèse sur téléphone" width="260"> <img src="../images/fr/stays-phone.png" alt="Séjours sur téléphone" width="260"> <img src="../images/fr/import-phone.png" alt="Import sur téléphone" width="260"> <img src="../images/fr/settings-phone.png" alt="Réglages sur téléphone" width="260">
+<img src="../images/fr/overview-phone.png" alt="Synthèse sur téléphone" width="260"> <img src="../images/fr/stays-phone.png" alt="Séjours sur téléphone" width="260"> <img src="../images/fr/import-phone.png" alt="Import sur téléphone" width="260"> <img src="../images/fr/expenses-phone.png" alt="Dépenses sur téléphone" width="260"> <img src="../images/fr/settings-phone.png" alt="Réglages sur téléphone" width="260">

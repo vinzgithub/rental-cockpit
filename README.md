@@ -4,11 +4,11 @@
 
 ### Your holiday let, every figure explained
 
-**Overview · Stays · Airbnb and CSV import · Three readings · Explained indicators · To check · Two-factor sign-in · Home Assistant**
+**Overview · Stays · Airbnb and CSV import · Expenses and payments · Three readings · Explained indicators · To check · Two-factor sign-in · Home Assistant**
 
 [**Français**](README.fr.md) · **English**
 
-![Version](https://img.shields.io/badge/version-0.3.0%20preview-126caa) ![Docker](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-2496ED) ![Licence](https://img.shields.io/badge/licence-to%20be%20decided-lightgrey)
+![Version](https://img.shields.io/badge/version-0.4.0%20preview-126caa) ![Docker](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-2496ED) ![Licence](https://img.shields.io/badge/licence-to%20be%20decided-lightgrey)
 
 <br>
 
@@ -42,7 +42,7 @@
 </table>
 
 > [!NOTE]
-> **Version 0.3.0, preview.** The Overview, **stays** (entry, **Airbnb and CSV import**, cancellation, payouts received), the demo, accounts, two-factor sign-in and the Home Assistant link are ready. **Expenses**, **suppliers** and **documents** come in the next versions: with your own data, expenses cannot be entered yet.
+> **Version 0.4.0, preview.** The Overview, **stays** (entry, **Airbnb and CSV import**, cancellation, payouts received), **expenses and payments** (partial payments, loan instalments, categories, CSV export), the demo, accounts, two-factor sign-in and the Home Assistant link are ready. **Suppliers** (splitting an invoice between stays) and **PDF documents** come in the next versions.
 
 ---
 
@@ -120,6 +120,30 @@ No black box: you can redo every calculation by hand.
 </td>
 </tr>
 </table>
+
+---
+
+## 💳 Expenses and payments, nothing assumed paid
+
+<img src="docs/images/en/expenses-desktop.png" alt="List of expenses with their payment status, the totals to pay and to receive, the instalments to come" width="100%">
+
+<table>
+<tr>
+<td width="38%" valign="top"><img src="docs/images/en/expenses-phone.png" alt="Expenses on a phone: totals and cards with the payment status"></td>
+<td width="62%" valign="top">
+
+- **Expenses and income outside stays**: cleaning, repairs, insurance, subscriptions, refunds… each in a category whose **treatment** is stated (operations, investment, financing, taxes).
+- **Explicit payment status**: *Paid*, *Partly paid*, *To pay* or *Payment to confirm* — nothing is assumed paid.
+- **Partial payments**, never above what is left; the Cash reading counts each payment on its date.
+- **Loan instalments**: principal, interest and insurance checked to the cent, outside the operating balance; **monthly repetition** up to 36 months, future instalments staying *Coming up*.
+- **Period covered**: an annual insurance is spread day by day in the Activity reading.
+- **Categories** you can adapt in Settings; **CSV export** ready for a spreadsheet or an accountant.
+
+</td>
+</tr>
+</table>
+
+<img src="docs/images/en/overview-settle.png" alt="Overview: loan repayments broken down, balance after financing, left to pay and to receive" width="100%">
 
 ---
 
@@ -272,6 +296,7 @@ Upgrade: `docker compose pull && docker compose up -d`.
 - Rights checked on the server for every request: a reader only sees the properties granted to them
 - Strict Content-Security-Policy: no external script, font or tracker — Rental Cockpit never calls the Internet
 - Read-only API keys, shown once and kept as a hash
+- Imports checked before writing; CSV exports protected against formula injection
 - Unprivileged container, read-only filesystem
 
 <table>
@@ -305,7 +330,7 @@ Until the built-in backup arrives, a copy of the volume is enough: the command i
 | ✅ | **0.1.1** | Fixes from the independent audit: menu without empty screens, My data / Demo switch, explanations readable on a phone |
 | ✅ | **0.2.0** | Stays: entry, cancellation and restoration, payouts received, each stay's share of the Overview |
 | ✅ | **0.3.0** | Airbnb and CSV import: preview with nothing written, duplicates, commissions, checks, undo of the last import |
-| 🔜 | **0.4.0** | Expenses and payments: partial payments, to pay, loan, categories |
+| ✅ | **0.4.0** | Expenses and payments: partial payments, to pay / to receive, loan instalments, categories, CSV export |
 | 🔜 | **0.5.0 – 0.6.0** | Suppliers and invoice splitting; PDF documents |
 | 🎯 | **1.0** | Checked backup, reader accounts, full acceptance run, first stable version |
 
