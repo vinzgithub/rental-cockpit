@@ -51,6 +51,15 @@ La démonstration (données fictives) est visible par tout compte connecté et m
 - Créer, modifier, archiver un prestataire, détailler, répartir ou rapprocher une facture : administrateurs seulement, avec le jeton CSRF, le numéro de révision et l'identifiant d'opération habituels.
 - Un rapprochement est entièrement vérifié avant toute écriture (même bien, montants, paiements) : en cas de refus, rien n'a changé.
 
+## Justificatifs PDF
+
+- **Contrôle du fichier** : structure PDF réelle (pas l'extension), 8 Mio et 200 pages au plus, ouverture sans mot de passe (un PDF qui limite seulement l'impression est accepté), refus de tout script, action de lancement, envoi de formulaire ou fichier intégré. Le PDF est seulement analysé, jamais exécuté ; une analyse qui dure plus de 20 secondes est abandonnée, et les limites de décompression de la bibliothèque pypdf s'appliquent.
+- **Aperçu sans écriture** : le fichier vérifié attend en mémoire, pour le seul compte qui l'a envoyé, 10 minutes au plus (12 fichiers et 64 Mio en tout). Rien n'est écrit sur le disque avant la confirmation.
+- **Stockage privé** : l'original est écrit une seule fois sous son empreinte SHA-256, dans `documents/` (`demo-documents/` pour la démonstration) du dossier de données, dossier 0700 et fichiers 0600, écriture exclusive et synchronisée, liens symboliques refusés. Ce dossier n'est jamais servi comme fichiers statiques.
+- **Consultation** : uniquement par l'API, après contrôle de la session et des droits. Le fichier est relu et comparé à son empreinte avant chaque envoi : un fichier modifié ou absent n'est jamais servi, l'erreur le dit. En-têtes : `Content-Type: application/pdf`, `X-Content-Type-Options: nosniff`, `Cache-Control: no-store, private`.
+- **Droits** : l'accès aux PDF d'un bien est une autorisation distincte de l'accès au bien. Un lecteur sans cette autorisation voit qu'une dépense a un justificatif, jamais son contenu ni son nom. Envoyer, joindre, détacher, décrire ou supprimer : administrateurs seulement, avec le jeton CSRF.
+- **Cohérence** : la dépense, le justificatif et la ligne de journal sont enregistrés dans une même transaction ; si elle échoue, le fichier nouvellement écrit est retiré. Un fichier laissé par une interruption est supprimé au démarrage suivant. Le journal garde l'action et le début de l'empreinte, jamais le contenu du PDF.
+
 ## Navigateur
 
 - Politique de sécurité du contenu stricte : `default-src 'self'`, aucun script ni style en ligne ou externe, aucun affichage dans un cadre par défaut (`frame-ancestors 'none'`).

@@ -8,7 +8,7 @@
 
 **Français** · [**English**](README.md)
 
-![Version](https://img.shields.io/badge/version-0.5.0%20pr%C3%A9version-126caa) ![Docker](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-2496ED) ![Licence](https://img.shields.io/badge/licence-%C3%A0%20d%C3%A9finir-lightgrey)
+![Version](https://img.shields.io/badge/version-0.6.0%20pr%C3%A9version-126caa) ![Docker](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-2496ED) ![Licence](https://img.shields.io/badge/licence-%C3%A0%20d%C3%A9finir-lightgrey)
 
 <br>
 
@@ -42,7 +42,7 @@
 </table>
 
 > [!NOTE]
-> **Version 0.5.0, préversion.** La Synthèse, les **séjours** (saisie, **import Airbnb et CSV**, annulation, versements reçus), les **dépenses et règlements** (paiements partiels, mensualités d'emprunt, catégories, export CSV), les **prestataires** (tarifs, factures détaillées réparties entre les séjours, rapprochement), la démonstration, les comptes, la double authentification et le lien avec Home Assistant sont prêts. Les **justificatifs PDF** arrivent dans la prochaine version.
+> **Version 0.6.0, préversion.** La Synthèse, les **séjours** (saisie, **import Airbnb et CSV**, annulation, versements reçus), les **dépenses et règlements** (paiements partiels, mensualités d'emprunt, catégories, export CSV), les **prestataires** (tarifs, factures détaillées réparties entre les séjours, rapprochement), les **justificatifs PDF** (vérifiés, privés, doublons détectés), la démonstration, les comptes, la double authentification et le lien avec Home Assistant sont prêts. La **version 1.0** ajoutera la sauvegarde et la restauration vérifiées et les comptes lecteurs.
 
 ---
 
@@ -167,6 +167,29 @@ Pas de boîte noire : vous pouvez refaire chaque calcul à la main.
 </table>
 
 <img src="docs/images/fr/invoice-split.png" alt="Répartition des prestations d'une facture entre les séjours, séjour proposé selon la date d'intervention" width="100%">
+
+---
+
+## 📎 Justificatifs PDF, privés et vérifiés
+
+<img src="docs/images/fr/invoice-import.png" alt="Créer une dépense depuis une facture PDF : prestataire, numéro, montant et date proposés et marqués « À vérifier »" width="100%">
+
+<table>
+<tr>
+<td width="38%" valign="top"><img src="docs/images/fr/documents-phone.png" alt="Justificatifs sur téléphone : factures complètes et à compléter"></td>
+<td width="62%" valign="top">
+
+- **Créer une dépense depuis une facture** : le PDF est lu, la date, le montant TTC, le numéro et le prestataire sont **proposés**, marqués « À vérifier ». Rien n'est deviné, rien n'est enregistré avant votre confirmation.
+- **Ajouter un justificatif à une dépense** : la dépense ne change pas. Détacher non plus.
+- **Fichier vérifié, jamais exécuté** : vrai PDF, 8 Mio au plus, ni mot de passe, ni script, ni fichier intégré.
+- **Doublons** : le même fichier, même renommé, ou la même référence chez le même prestataire est refusé, avec un lien vers la dépense existante. Un montant seul ne suffit jamais.
+- **Stockage privé** sous l'empreinte SHA-256, consultation et téléchargement seulement après contrôle des droits — l'accès aux PDF d'un bien s'accorde à part.
+
+</td>
+</tr>
+</table>
+
+<img src="docs/images/fr/invoice-duplicate.png" alt="Le même PDF envoyé une seconde fois : « Cette facture existe déjà », avec un lien vers la dépense existante" width="100%">
 
 ---
 
@@ -355,7 +378,7 @@ En attendant la sauvegarde intégrée, une copie du volume suffit : la commande 
 | ✅ | **0.3.0** | Import Airbnb et CSV : aperçu sans écriture, doublons, commissions, contrôles, annulation du dernier import |
 | ✅ | **0.4.0** | Dépenses et règlements : paiements partiels, à payer / à recevoir, mensualités d'emprunt, catégories, export CSV |
 | ✅ | **0.5.0** | Prestataires : tarifs indicatifs, factures détaillées réparties entre les séjours, rapprochement, marge par séjour |
-| 🔜 | **0.6.0** | Justificatifs PDF contrôlés, liés aux dépenses |
+| ✅ | **0.6.0** | Justificatifs PDF : contrôlés, privés, doublons détectés, joints aux dépenses ou à l'origine d'une dépense |
 | 🎯 | **1.0** | Sauvegarde vérifiée, comptes lecteurs, recette complète, première version stable |
 
 📖 [Feuille de route détaillée](docs/fr/feuille-de-route.md)

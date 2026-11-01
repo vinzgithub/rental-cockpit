@@ -138,7 +138,30 @@ La fiche d'un séjour affiche enfin ses **coûts affectés** et sa **marge aprè
 
 ![Coûts affectés et marge d'un séjour](../images/fr/stay-costs.png)
 
-## 12. Protéger votre compte
+## 12. Justificatifs PDF
+
+Deux entrées, selon ce que vous avez sous la main :
+
+- **Créer une dépense depuis une facture** (écran **Justificatifs**, bouton de l'écran **Dépenses**, ou **Ajouter → Une facture PDF**) : choisissez ou déposez le PDF. Le serveur le vérifie, puis lit son texte et propose la date, le montant TTC, le numéro de facture et le prestataire s'il fait partie de vos prestataires. Chaque valeur proposée porte « À vérifier » ; ce qui n'a pas été trouvé reste vide, et un PDF scanné sans texte se saisit à la main. Choisissez le bien, la catégorie et le règlement, puis **Créer la dépense** : la dépense et son justificatif sont enregistrés ensemble.
+- **Ajouter un justificatif à cette dépense** (fiche d'une dépense) : le PDF est joint sans rien changer à la dépense. Il reprend son prestataire, son numéro, sa date et son montant.
+
+**Vérifications.** Le fichier doit être un vrai PDF (pas seulement porter l'extension), de 8 Mio et 200 pages au plus. Il doit s'ouvrir sans mot de passe et ne contenir ni script ni fichier intégré. Rien n'est enregistré avant votre confirmation, et la vérification expire après 10 minutes.
+
+**Doublons.** Le même fichier, même renommé, ou une facture du même prestataire avec le même numéro est un doublon certain : la création est refusée et **Ouvrir la dépense** mène à l'existante. Même prestataire, même date et même montant sans numéro pour les distinguer : doublon probable, vous confirmez après vérification. Un montant seul ne suffit jamais. Un même PDF peut justifier plusieurs dépenses du bien : il est alors joint sans copie.
+
+L'écran **Justificatifs** liste tous les PDF (vue **À compléter** : non joints à une dépense, ou sans prestataire ou montant). La fiche d'un justificatif permet de l'**ouvrir**, de le **télécharger** (octets identiques à l'original), de le **joindre** à une autre dépense du bien, de le **détacher** (la dépense ne change pas, le justificatif reste reconnu) ou, s'il n'est joint à rien, de le **supprimer**.
+
+![Justificatifs](../images/fr/documents-desktop.png)
+
+![Créer une dépense depuis une facture : champs proposés « À vérifier »](../images/fr/invoice-import.png)
+
+![Le même fichier envoyé une seconde fois](../images/fr/invoice-duplicate.png)
+
+![Justificatif joint à une dépense](../images/fr/expense-documents.png)
+
+![Fiche d'un justificatif](../images/fr/document-page.png)
+
+## 13. Protéger votre compte
 
 Dans **Réglages → Double authentification → Activer** :
 
@@ -150,7 +173,7 @@ Dans **Réglages → Double authentification → Activer** :
 
 ![Activation de la double authentification](../images/fr/mfa-setup.png)
 
-## 13. Home Assistant (facultatif)
+## 14. Home Assistant (facultatif)
 
 Dans **Réglages → Home Assistant et API → Créer une clé**, Rental Cockpit affiche une fois la ligne à coller dans `secrets.yaml`. L'adresse à indiquer dans Home Assistant est affichée juste au-dessus. La suite (capteurs, carte, automatisations) : [home-assistant.md](home-assistant.md).
 
@@ -160,4 +183,4 @@ Dans **Réglages → Home Assistant et API → Créer une clé**, Rental Cockpit
 
 La même Synthèse s'affiche en une colonne, le solde en premier, avec une barre de navigation en bas. Sur écran tactile, les commandes visent 44 × 44 pixels.
 
-<img src="../images/fr/overview-phone.png" alt="Synthèse sur téléphone" width="260"> <img src="../images/fr/stays-phone.png" alt="Séjours sur téléphone" width="260"> <img src="../images/fr/import-phone.png" alt="Import sur téléphone" width="260"> <img src="../images/fr/expenses-phone.png" alt="Dépenses sur téléphone" width="260"> <img src="../images/fr/suppliers-phone.png" alt="Fiche d'un prestataire sur téléphone" width="260"> <img src="../images/fr/settings-phone.png" alt="Réglages sur téléphone" width="260">
+<img src="../images/fr/overview-phone.png" alt="Synthèse sur téléphone" width="260"> <img src="../images/fr/stays-phone.png" alt="Séjours sur téléphone" width="260"> <img src="../images/fr/import-phone.png" alt="Import sur téléphone" width="260"> <img src="../images/fr/expenses-phone.png" alt="Dépenses sur téléphone" width="260"> <img src="../images/fr/suppliers-phone.png" alt="Fiche d'un prestataire sur téléphone" width="260"> <img src="../images/fr/documents-phone.png" alt="Justificatifs sur téléphone" width="260"> <img src="../images/fr/settings-phone.png" alt="Réglages sur téléphone" width="260">

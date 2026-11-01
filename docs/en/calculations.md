@@ -138,6 +138,23 @@ Example (it is the test scenario): stay A from 28 September to 4 October 2026 (�
 
 After the split: stay A, costs €100, margin 510 − 100 = **€410**; stay B, costs €50, margin 255 − 50 = **€205**.
 
+## A document
+
+A document (PDF) **counts in no total**: the expense does. Attaching a PDF to an expense, detaching it or deleting it creates, changes or removes no expense, in any reading. An expense with a document cannot be deleted, only archived (or detached from its document first).
+
+**Duplicates.** Before an expense is saved from an invoice, on every property:
+
+| Case | Rule | Effect |
+|---|---|---|
+| Same file | Same SHA-256 fingerprint, whatever the file name | Certain: refused, link to the existing expense |
+| Same reference | Same supplier and same invoice number ("F-018", "f 018" and "F018" are the same number) | Certain: refused, link to the existing expense |
+| Similar | Same supplier, same date and same amount, one of the two invoices without a number | Probable: saved only after "I checked: this is another invoice" |
+| Amount only | Same amount, nothing else in common | Never a duplicate |
+
+An invoice with another number, even with the same amount on the same date, is not a duplicate.
+
+**To complete.** A document is listed in *To check* while it is attached to no expense or lacks the supplier or the amount.
+
 ## Indicators
 
 | Indicator | Formula | Excludes |
