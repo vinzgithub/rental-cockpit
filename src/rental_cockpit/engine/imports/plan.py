@@ -12,6 +12,7 @@ changed afterwards.
 from __future__ import annotations
 
 import hashlib
+from bisect import bisect_left
 from copy import deepcopy
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
@@ -37,7 +38,7 @@ MESSAGES: dict[str, tuple[str, str]] = {
     "imp_dates_ambiguous": ("Toutes les dates sont ambiguës : ordre {order} utilisé. Vérifiez quelques séjours dans l'aperçu.", "Every date is ambiguous: order {order} used. Check a few stays in the preview."),
     "imp_csv_mapping": ("Choisissez au moins la colonne d'arrivée, et celle du départ ou du nombre de nuits.", "Choose at least the arrival column, and the departure or nights column."),
     "imp_no_code": ("code de confirmation vide", "empty confirmation code"),
-    "imp_bad_dates": ("date d'arrivée ou de départ illisible", "unreadable arrival or departure date"),
+    "imp_bad_dates": ("date d'arrivée ou de départ illisible, ou hors des années 2000 à 2100", "arrival or departure date unreadable, or outside the years 2000 to 2100"),
     "imp_dates_order": ("le départ n'est pas après l'arrivée", "the departure is not after the arrival"),
     "imp_nights_mismatch": ("{file} nuits indiquées, {dates} d'après les dates", "{file} nights stated, {dates} from the dates"),
     "imp_no_listing": ("logement vide", "empty listing"),
@@ -47,6 +48,7 @@ MESSAGES: dict[str, tuple[str, str]] = {
     "imp_ref_twice": ("la référence {ref} figure déjà ligne {line}", "reference {ref} is already on line {line}"),
     "imp_amounts_differ": ("brut − frais de service ≠ montant versé : vérifiez ce séjour", "gross − service fee ≠ amount paid: check this stay"),
     "imp_overlap": ("chevauche « {label} » ({start} → {end})", "overlaps \"{label}\" ({start} → {end})"),
+    "imp_unavailable": ("dates marquées indisponibles sur ce bien ({start} → {end})", "dates marked unavailable on this property ({start} → {end})"),
     "imp_before_activity": ("arrivée avant le début d'activité du bien ({date})", "arrival before the property's activity start ({date})"),
     "imp_overlap_file": ("chevauche la ligne {line} du même fichier ({start} → {end})", "overlaps line {line} of the same file ({start} → {end})"),
     "imp_received_above": ("déjà reçu {received}, plus que le nouveau montant attendu ({expected}) : vérifiez les versements", "already received {received}, more than the new expected amount ({expected}): check the payouts"),
@@ -92,8 +94,46 @@ def fingerprint(content: bytes) -> str:
     return hashlib.sha256(content).hexdigest()
 
 
-def _stays_of(data: dict[str, Any], pid: str) -> list[dict[str, Any]]:
-    return [s for s in data.get("stays", {}).values() if s["property_id"] == pid]
+class _Index:
+    """Stays and payouts of the registry, looked up once: a 20,000-line file stays quick to check."""
+
+    def __init__(self, data: dict[str, Any]) -> None:
+        self.by_ref: dict[str, list[dict[str, Any]]] = {}
+        self.by_dates: dict[tuple[str, str, str], list[dict[str, Any]]] = {}
+        live: dict[str, list[dict[str, Any]]] = {}
+        for stay in data.get("stays", {}).values():
+            if stay.get("external_ref"):
+                self.by_ref.setdefault(stay["external_ref"], []).append(stay)
+            if stay["status"] != "cancelled":
+                self.by_dates.setdefault((stay["property_id"], stay["start"], stay["end"]), []).append(stay)
+                live.setdefault(stay["property_id"], []).append(stay)
+        # Per property, stays sorted by arrival with the latest departure so far: overlaps by bisection.
+        self.sorted: dict[str, tuple[list[str], list[dict[str, Any]], list[str]]] = {}
+        for pid, stays in live.items():
+            stays.sort(key=lambda s: (s["start"], s["end"]))
+            reach, latest = [], ""
+            for stay in stays:
+                latest = max(latest, stay["end"])
+                reach.append(latest)
+            self.sorted[pid] = ([s["start"] for s in stays], stays, reach)
+        self.payouts: dict[str, list[tuple[str, int]]] = {}
+        for payment in data.get("payments", {}).values():
+            for link in payment["links"]:
+                if link["type"] == "stay":
+                    self.payouts.setdefault(link["id"], []).append((payment["date"], link["amount"]))
+
+    def overlapping(self, pid: str, start: str, end: str) -> list[dict[str, Any]]:
+        starts, stays, reach = self.sorted.get(pid, ([], [], []))
+        found = []
+        index = bisect_left(starts, end) - 1  # stays arriving before this departure
+        while index >= 0 and reach[index] > start:
+            if stays[index]["end"] > start:
+                found.append(stays[index])
+            index -= 1
+        return sorted(found, key=lambda s: s["start"])
+
+    def received(self, stay_id: str) -> int:
+        return sum(amount for _, amount in self.payouts.get(stay_id, []))
 
 
 def _property_for(row: dict[str, Any], options: dict[str, Any], properties: dict[str, Any]) -> str | None:
@@ -155,10 +195,11 @@ def commission_rate(value: Any) -> Decimal | None:
     return rate if 0 <= rate <= 100 else None
 
 
-def _match(data: dict[str, Any], item: dict[str, Any], pid: str, properties: dict[str, Any]) -> dict[str, Any] | None:
+def _match(index: _Index, item: dict[str, Any], pid: str, properties: dict[str, Any]) -> dict[str, Any] | None:
     """Status of a line against the registry; returns the stay it would change, if any."""
     ref = item["external_ref"]
-    same_ref = next((s for s in _stays_of(data, pid) if ref and s.get("external_ref") == ref), None)
+    with_ref = index.by_ref.get(ref, []) if ref else []
+    same_ref = next((s for s in with_ref if s["property_id"] == pid), None)
     if same_ref is not None:
         if same_ref["status"] == "cancelled":
             item["warnings"].append({"code": "imp_cancelled_kept", "params": {}})
@@ -167,33 +208,33 @@ def _match(data: dict[str, Any], item: dict[str, Any], pid: str, properties: dic
         item["changes"] = _changes(same_ref, item)
         merged = {**(same_ref.get("amounts") or {}), **{k: v for k, v in (item["amounts"] or {}).items() if v is not None}}
         expected = expected_payout({**same_ref, "amounts": merged})
-        received = sum(link["amount"] for p in data.get("payments", {}).values() for link in p["links"]
-                       if link["type"] == "stay" and link["id"] == same_ref["id"])
+        received = index.received(same_ref["id"])
         if item["changes"] and expected is not None and received > expected:
             item["warnings"].append({"code": "imp_received_above", "params": {
                 "received": received, "expected": expected}})
         item.update(status="update" if item["changes"] else "same", stay_id=same_ref["id"],
                     decision="import" if item["changes"] else "skip")
         return same_ref
-    elsewhere = next((s for s in data.get("stays", {}).values() if ref and s["property_id"] != pid and s.get("external_ref") == ref), None)
+    elsewhere = next((s for s in with_ref if s["property_id"] != pid), None)
     if elsewhere is not None:
         # The listing is probably attached to the wrong property: nothing is written unless the person insists.
         item["warnings"].append({"code": "imp_ref_elsewhere", "params": {
             "ref": ref, "property": properties.get(elsewhere["property_id"], {}).get("name", "—")}})
         item.update(status="duplicate", stay_id=None, decision="skip", twin_label=ref)
         return None
-    twin = next((s for s in _stays_of(data, pid) if s["status"] != "cancelled" and s["start"] == item["start"]
-                 and s["end"] == item["end"]), None)
+    twin = next(iter(index.by_dates.get((pid, item["start"], item["end"]), [])), None)
     if twin is not None:
         item.update(status="duplicate", stay_id=twin["id"], decision="complete",
                     twin_label=twin.get("guest_label") or twin.get("external_ref") or twin["start"])
         item["changes"] = _fills(twin, item)
         return twin
     item.update(status="new", decision="import")
-    for other in _stays_of(data, pid):
-        if other["status"] != "cancelled" and other["start"] < item["end"] and item["start"] < other["end"]:
-            item["warnings"].append({"code": "imp_overlap", "params": {
-                "label": other.get("guest_label") or other.get("external_ref") or "—", "start": other["start"], "end": other["end"]}})
+    for other in index.overlapping(pid, item["start"], item["end"])[:3]:
+        item["warnings"].append({"code": "imp_overlap", "params": {
+            "label": other.get("guest_label") or other.get("external_ref") or "—", "start": other["start"], "end": other["end"]}})
+    for block in properties[pid].get("unavailable", []):
+        if block["start"] < item["end"] and item["start"] < block["end"]:
+            item["warnings"].append({"code": "imp_unavailable", "params": {"start": block["start"], "end": block["end"]}})
     return None
 
 
@@ -208,18 +249,14 @@ def _allowed(item: dict[str, Any]) -> tuple[str, ...]:
     return ("import", "skip")
 
 
-def _payout(data: dict[str, Any], item: dict[str, Any], target: dict[str, Any] | None, today: date) -> None:
+def _payout(index: _Index, item: dict[str, Any], target: dict[str, Any] | None, today: date) -> None:
     """Payout from the file (date of the transaction): recorded once, never above what is expected."""
     if not (item.get("paid_on") and item.get("paid_amount")) or item["paid_on"] > today.isoformat():
         return
     if target is None:
         item["payout"] = {"date": item["paid_on"], "amount": item["paid_amount"]}
         return
-    links = [link for p in data.get("payments", {}).values() for link in p["links"]
-             if link["type"] == "stay" and link["id"] == target["id"]]
-    dates = {(p["date"], link["amount"]) for p in data.get("payments", {}).values() for link in p["links"]
-             if link["type"] == "stay" and link["id"] == target["id"]}
-    if (item["paid_on"], item["paid_amount"]) in dates:
+    if (item["paid_on"], item["paid_amount"]) in index.payouts.get(target["id"], []):
         item["warnings"].append({"code": "imp_payout_exists", "params": {}})
         return
     if item["status"] == "duplicate":  # completing only fills what the stay does not know
@@ -227,7 +264,7 @@ def _payout(data: dict[str, Any], item: dict[str, Any], target: dict[str, Any] |
     else:
         known = {k: v for k, v in (item["amounts"] or {}).items() if v is not None}
     expected = expected_payout({**target, "amounts": {**(target.get("amounts") or {}), **known}})
-    if expected is not None and sum(link["amount"] for link in links) + item["paid_amount"] > expected:
+    if expected is not None and index.received(target["id"]) + item["paid_amount"] > expected:
         item["warnings"].append({"code": "imp_payout_too_high", "params": {}})
         return
     item["payout"] = {"date": item["paid_on"], "amount": item["paid_amount"]}
@@ -240,6 +277,7 @@ def build(data: dict[str, Any], parsed: dict[str, Any], options: dict[str, Any],
     decisions = options.get("decisions") or {}
     keep_names = bool(options.get("keep_names"))
     with_payouts = options.get("create_payouts", True) is not False
+    index = _Index(data)
     rows = []
     planned: dict[str, list[dict[str, Any]]] = {}
     for row in parsed["rows"]:
@@ -269,7 +307,7 @@ def build(data: dict[str, Any], parsed: dict[str, Any], options: dict[str, Any],
             rows.append(item)
             continue
         prop = properties[pid]
-        target = _match(data, item, pid, properties)
+        target = _match(index, item, pid, properties)
         start_limit = prop.get("activity_start")
         if start_limit and item["start"] < start_limit and item["status"] in ("new", "duplicate"):
             item["warnings"].append({"code": "imp_before_activity", "params": {"date": start_limit}})
@@ -280,20 +318,25 @@ def build(data: dict[str, Any], parsed: dict[str, Any], options: dict[str, Any],
         if item["status"] == "duplicate" and item["decision"] == "import":
             target = None  # a new stay next to the one entered by hand: the payout goes to the new one
         if with_payouts:
-            _payout(data, item, target, today)
+            _payout(index, item, target, today)
         if item["status"] == "same" and not item.get("locked"):
             # Nothing to change on the stay; the line still matters when it brings a payout.
             item["decision"] = "import" if item["payout"] else "skip"
             if item["payout"] and choice in ("import", "skip"):
                 item["decision"] = choice
         if item["decision"] != "skip" and item["status"] in ("new", "duplicate") and target is None:
-            # Two lines of the same file on the same nights: shown before anything is written.
-            for other in planned.get(pid, []):
-                if other["start"] < item["end"] and item["start"] < other["end"]:
-                    item["warnings"].append({"code": "imp_overlap_file", "params": {
-                        "line": other["lines"][0], "start": other["start"], "end": other["end"]}})
             planned.setdefault(pid, []).append(item)
         rows.append(item)
+
+    # Two new stays of the same file on the same nights: shown before anything is written.
+    for items in planned.values():
+        longest = None
+        for item in sorted(items, key=lambda i: (i["start"], i["lines"][0])):
+            if longest is not None and item["start"] < longest["end"]:
+                item["warnings"].append({"code": "imp_overlap_file", "params": {
+                    "line": longest["lines"][0], "start": longest["start"], "end": longest["end"]}})
+            if longest is None or item["end"] > longest["end"]:
+                longest = item
 
     for item in rows:
         item["choices"] = list(_allowed(item))
@@ -323,6 +366,7 @@ def apply(ledger: Ledger, plan: dict[str, Any], meta: dict[str, Any]) -> dict[st
               "file_name": meta.get("file_name", "")[:120], "sha256": meta["sha256"], "created": [], "updated": [],
               "payments": [], "counts": {}, "undone_at": None}
     created = updated = completed = payouts = 0
+    ledger.bulk = True
     for row in plan["rows"]:
         if row["decision"] == "skip" or row["status"] in ("error", "unmapped"):
             continue
@@ -364,11 +408,17 @@ def apply(ledger: Ledger, plan: dict[str, Any], meta: dict[str, Any]) -> dict[st
             })["payment"]
             record["payments"].append(payment["id"])
             payouts += 1
+    ledger.bulk = False
     # Recording a payment changes nothing to a stay's revision: the undo check below still holds.
     record["counts"] = {"created": created, "updated": updated, "completed": completed, "payouts": payouts}
     ledger.data.setdefault("imports", {})[import_id] = record
     ledger.audit("import.apply", import_id, detail=f"{meta['kind']}:{created}+{updated}+{completed}+{payouts}")
-    return {"import": deepcopy(record)}
+    return {"import": summary(record)}
+
+
+def summary(record: dict[str, Any]) -> dict[str, Any]:
+    """What the interface shows of an import (the full record, with every stay, stays in the registry)."""
+    return {k: record.get(k) for k in ("id", "at", "kind", "reader", "file_name", "counts", "undone_at")}
 
 
 def last_import(data: dict[str, Any]) -> dict[str, Any] | None:
@@ -420,6 +470,6 @@ def undo(ledger: Ledger, import_id: str) -> dict[str, Any]:
         ledger._history(stay, before, ("start", "end", "guests", "amounts", "external_ref", "guest_label"))
     record["undone_at"] = ledger.clock()
     record["undone_by"] = ledger.actor
-    ledger.audit("import.undo", import_id)
-    return {"import": deepcopy(record)}
+    ledger.audit("import.undo", import_id, detail=f"{len(record['created'])}+{len(record['updated'])}+{len(record['payments'])}")
+    return {"import": summary(record)}
 

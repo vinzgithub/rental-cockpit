@@ -80,6 +80,8 @@ def parse(content: bytes, mapping: dict[str, str] | None = None, date_order: str
         "kind": "csv", "reader": READER_VERSION, "encoding": table["encoding"], "delimiter": table["delimiter"],
         "headers": headers, "mapping": used, "suggested": suggest(headers), "signature": signature(headers),
         "rows": [], "errors": [], "warnings": list(table["warnings"]), "ignored": {"transfers": 0, "other": {}}, "listings": [],
+        # First value of each column, shown next to the column choice so the person can check it.
+        "samples": {h: next((clean(raw.get(h), 40) for _, raw in table["rows"] if clean(raw.get(h))), "") for h in headers},
     }
     if "start" not in used or not ({"end", "nights"} & set(used)):
         result["errors"].append(_error("imp_csv_mapping"))

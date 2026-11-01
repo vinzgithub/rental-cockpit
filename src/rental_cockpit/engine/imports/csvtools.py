@@ -16,6 +16,7 @@ from datetime import date
 from typing import Any
 
 from .. import money
+from ..dates import MAX_YEAR, MIN_YEAR
 
 MAX_FILE_BYTES = 5 * 1024 * 1024
 MAX_ROWS = 20000
@@ -118,22 +119,23 @@ def infer_order(values: list[str], default: str = "DMY") -> tuple[str, list[dict
 
 
 def parse_day(value: Any, order: str) -> date | None:
+    """A day of the file, or ``None`` when it cannot be read or is outside the years the registry accepts."""
     text = clean(value, 50)
     if not text:
         return None
     try:
-        return date.fromisoformat(text[:10])
+        day = date.fromisoformat(text[:10])
     except ValueError:
-        pass
-    parts = slash_parts(text)
-    if not parts:
-        return None
-    first, second, year = parts
-    month, day = (first, second) if order == "MDY" else (second, first)
-    try:
-        return date(year, month, day)
-    except ValueError:
-        return None
+        parts = slash_parts(text)
+        if not parts:
+            return None
+        first, second, year = parts
+        month, dom = (first, second) if order == "MDY" else (second, first)
+        try:
+            day = date(year, month, dom)
+        except ValueError:
+            return None
+    return day if MIN_YEAR <= day.year <= MAX_YEAR else None
 
 
 def parse_int(value: Any) -> int | None:

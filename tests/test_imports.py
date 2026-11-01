@@ -7,6 +7,7 @@ with the columns of the real exports and invented codes, names and amounts.
 from __future__ import annotations
 
 import base64
+import time
 from datetime import date
 from pathlib import Path
 
@@ -61,7 +62,9 @@ def run(ledger, content, options, kind="airbnb", **kwargs):
     parsed, built = preview(ledger.data, content, options, kind=kind, **kwargs)
     meta = {"kind": parsed["kind"], "reader": parsed["reader"], "sha256": plan.fingerprint(content), "file_name": "essai.csv",
             "channel": options.get("channel")}
-    return built, plan.apply(ledger, built, meta)["import"]
+    summary = plan.apply(ledger, built, meta)["import"]
+    assert set(summary) == {"id", "at", "kind", "reader", "file_name", "counts", "undone_at"}
+    return built, ledger.data["imports"][summary["id"]]
 
 
 def mapped(gite, studio, **extra):
@@ -177,12 +180,35 @@ def test_arrival_before_activity_start_is_skipped_unless_chosen(two):
 def test_overlaps_with_the_registry_and_inside_the_file(two):
     data, ledger, gite, studio = two
     ledger.create_stay({"property_id": gite, "start": "2026-10-01", "end": "2026-10-03", "guest_label": "Famille Test"})
+    ledger.update_property(gite, {"unavailable": [{"start": "2026-09-27", "end": "2026-09-29", "label": "Travaux"}]})
     _, built = preview(data, AIRBNB, mapped(gite, studio))
-    assert "imp_overlap" in codes(by_ref(built)["HMTEST0001"]["warnings"])
+    assert codes(by_ref(built)["HMTEST0001"]["warnings"]) == ["imp_overlap", "imp_unavailable"]
     content = "Arrivée;Départ;Montant brut\n01/11/2026;05/11/2026;400\n03/11/2026;06/11/2026;300\n".encode()
     _, inside = preview(data, content, {"property_id": gite}, kind="csv")
     second = inside["rows"][1]
     assert second["status"] == "new" and codes(second["warnings"]) == ["imp_overlap_file"]
+
+
+def test_dates_outside_the_accepted_years_are_errors(two):
+    data, _, gite, _ = two
+    content = "Arrivée;Départ\n01/11/2150;05/11/2150\n01/11/1999;03/11/1999\n".encode()
+    _, built = preview(data, content, {"property_id": gite}, kind="csv", date_order="DMY")
+    assert [codes(r["errors"]) for r in built["rows"]] == [["imp_bad_dates"], ["imp_bad_dates"]]
+
+
+def test_large_file_is_checked_and_written_quickly(two):
+    data, ledger, gite, _ = two
+    lines = ["Arrivée;Départ;Référence;Montant brut;Commission"]
+    day = date(2020, 1, 1)
+    for n in range(3000):
+        start = day.toordinal() + 2 * n
+        lines.append(f"{date.fromordinal(start):%d/%m/%Y};{date.fromordinal(start + 2):%d/%m/%Y};R{n:05d};300;45")
+    content = ("\n".join(lines) + "\n").encode()
+    begin = time.perf_counter()
+    _, record = run(ledger, content, {"property_id": gite}, kind="csv")
+    _, again = preview(data, content, {"property_id": gite}, kind="csv")
+    assert record["counts"]["created"] == 3000 and again["counts"]["same"] == 3000
+    assert time.perf_counter() - begin < 10
 
 
 def test_negative_amount_is_an_error(two):
@@ -198,7 +224,11 @@ def test_negative_amount_is_an_error(two):
 
 def test_apply_creates_stays_and_payouts_that_feed_the_figures(two):
     data, ledger, gite, studio = two
+    journal = len(data.get("audit", []))
     _, record = run(ledger, AIRBNB, mapped(gite, studio))
+    # One line in the journal for the whole file, not one per stay or payout.
+    assert [e["action"] for e in data["audit"][journal:]] == ["import.apply"]
+    assert ledger.bulk is False
     assert record["counts"] == {"created": 3, "updated": 0, "completed": 0, "payouts": 2}
     stays = {s["external_ref"]: s for s in data["stays"].values()}
     assert set(stays) == {"HMTEST0001", "HMTEST0002", "HMTEST0003"}
@@ -444,7 +474,11 @@ def test_api_preview_apply_remember_and_undo(client):
     assert ready["can_apply"] is True and ready["counts"]["to_write"] == 3
     error = next(r for r in ready["rows"] if r["status"] == "error")
     assert error["errors"] == ["2 nuits indiquées, 3 d'après les dates"] and error["status_label"] == "Erreur"
-    applied = client.post("/api/imports/apply", json=body(AIRBNB, kind="airbnb", options=options, op_id="op-imp"))
+    stale = client.post("/api/imports/apply", json=body(AIRBNB, kind="airbnb", options=options, op_id="op-old",
+                                                        expect={"to_write": 2, "payouts": 2}))
+    assert stale.status_code == 409 and stale.json()["code"] == "preview_stale"
+    expect = {k: ready["counts"][k] for k in ("to_write", "payouts")}
+    applied = client.post("/api/imports/apply", json=body(AIRBNB, kind="airbnb", options=options, op_id="op-imp", expect=expect))
     assert applied.status_code == 200, applied.text
     record = applied.json()["import"]
     assert record["counts"]["created"] == 3
@@ -487,6 +521,7 @@ def test_api_csv_mapping_rate_and_channel_are_remembered(client):
     content = "Arrivée;Départ;Montant brut;Dossier\n01/11/2026;04/11/2026;300;X-1\n".encode()
     first = client.post("/api/imports/preview", json=body(content, kind="csv")).json()
     assert first["mapping"] == {"start": "Arrivée", "end": "Départ", "gross": "Montant brut"}  # « Dossier » is not guessed
+    assert first["samples"] == {"Arrivée": "01/11/2026", "Départ": "04/11/2026", "Montant brut": "300", "Dossier": "X-1"}
     assert first["property_map"] == {} and first["property_id"] == ""
     options = {"property_id": gite, "mapping": {**first["mapping"], "external_ref": "Dossier"}, "commission_rate": "15", "channel": "booking"}
     applied = client.post("/api/imports/apply", json=body(content, kind="csv", options=options, op_id="op-1"))
@@ -512,7 +547,7 @@ def test_api_rejects_unreadable_and_oversized_files(client):
     empty = client.post("/api/imports/preview", json={"content": "", "kind": "airbnb"})
     assert empty.json()["code"] == "import_file"
     huge = client.post("/api/imports/preview", content=b"x" * (plan_max() + 1), headers={"Content-Type": "application/json"})
-    assert huge.json()["code"] == "upload_too_large"
+    assert huge.status_code == 413 and huge.json()["code"] == "upload_too_large"
     binary = client.post("/api/imports/preview", json=body(b"\x00\x01\x02PK\x03\x04", kind="csv"))
     assert binary.status_code == 400 and binary.json()["code"] == "import_file"
 

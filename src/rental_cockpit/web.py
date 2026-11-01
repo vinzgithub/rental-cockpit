@@ -23,7 +23,8 @@ STATIC = Path(__file__).parent / "static"
 DATASETS = ("real", "demo")
 MAX_JSON_BYTES = 1024 * 1024
 STATUS = {"forbidden": 403, "forbidden_property": 403, "forbidden_documents": 403, "login_required": 401,
-          "csrf_failed": 403, "not_found": 404, "login_locked": 429, "stale_revision": 409}
+          "csrf_failed": 403, "not_found": 404, "login_locked": 429, "stale_revision": 409,
+          "preview_stale": 409, "upload_too_large": 413}
 
 MFA_PENDING_SECONDS = 300
 

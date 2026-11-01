@@ -131,6 +131,7 @@ def _view(parsed: dict[str, Any], built: dict[str, Any], options: dict[str, Any]
         "delimiter": DELIMITERS.get(parsed["delimiter"], (parsed["delimiter"],) * 2)[0 if fr else 1],
         "date_order": parsed.get("date_order", ""), "headers": parsed["headers"], "mapping": parsed.get("mapping", {}),
         "suggested": parsed.get("suggested", {}), "signature": parsed.get("signature", ""), "listings": parsed["listings"],
+        "samples": parsed.get("samples", {}),
         "property_map": options.get("property_map", {}), "property_id": options.get("property_id", ""),
         "commission_rate": options.get("commission_rate", ""), "channel": options.get("channel", "airbnb"),
         "keep_names": bool(options.get("keep_names")), "create_payouts": options.get("create_payouts", True) is not False,
@@ -189,6 +190,10 @@ def register_import_routes(app: FastAPI, services: Services) -> None:
                     raise RCError("import_nothing")
                 options = _options(payload, parsed, work, acc)
                 built = plan.build(work, parsed, options, services.today(), sha)
+                expect = payload.get("expect")
+                if isinstance(expect, dict) and any(built["counts"].get(k) != expect.get(k) for k in ("to_write", "payouts")):
+                    # Someone changed the stays between the preview and the confirmation: show the new preview first.
+                    raise RCError("preview_stale")
                 result = plan.apply(ledger, built, {"kind": parsed["kind"], "reader": parsed["reader"], "sha256": sha,
                                                     "file_name": str(payload.get("file_name") or ""),
                                                     "channel": options.get("channel", "other")})
@@ -217,7 +222,7 @@ def register_import_routes(app: FastAPI, services: Services) -> None:
         last = plan.last_import(data)
         items = sorted(data.get("imports", {}).values(), key=lambda i: (i["at"], i.get("seq", 0)), reverse=True)[:50]
         return {
-            "imports": [{k: i.get(k) for k in ("id", "at", "kind", "reader", "file_name", "counts", "undone_at")} for i in items],
+            "imports": [plan.summary(i) for i in items],
             "last_id": last["id"] if last else None,
             "blockers": plan.undo_blockers(data, last) if last else [],
         }
