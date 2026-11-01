@@ -356,7 +356,8 @@ class Ledger:
     def update_category(self, category_id: str, payload: dict[str, Any]) -> dict[str, Any]:
         category = self._get("categories", category_id)
         if "label" in payload:
-            category["label"] = clean_text(payload.get("label"), "label", 60)
+            # A built-in category goes back to its own name when the label is emptied; a custom one needs a name.
+            category["label"] = clean_text(payload.get("label"), "label", 60, required=not category.get("builtin"))
         if "archived" in payload:
             category["archived"] = bool(payload["archived"])
         if "treatment" in payload and not category.get("builtin"):

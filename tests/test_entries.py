@@ -276,6 +276,10 @@ def test_api_categories(client):
     assert [t["id"] for t in listing["treatments"]["income"]] == ["operating_income", "information"]
     wrong = client.post("/api/categories", json={"kind": "income", "treatment": "financing", "label": "x", "op_id": "op-4"})
     assert wrong.status_code == 400
+    nameless = client.patch(f"/api/categories/{custom['id']}", json={"label": " ", "op_id": "op-5"})
+    assert nameless.status_code == 400
+    reset = client.patch("/api/categories/energy", json={"label": "", "op_id": "op-6"}, params={"lang": "fr"})
+    assert next(c for c in reset.json()["categories"] if c["id"] == "energy")["label"] == "Énergie"
 
 
 def test_api_exports(client):
