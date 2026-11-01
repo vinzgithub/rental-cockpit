@@ -52,6 +52,10 @@ CHANNELS = ("airbnb", "abritel", "booking", "direct", "other")
 PAYMENT_DECLARED = ("unknown", "unpaid")
 SERVICE_KINDS = ("cleaning", "linen", "travel", "other", "discount", "tax", "adjustment")
 SERVICE_UNITS = ("hour", "flat", "set", "unit", "km", "trip")
+SERVICE_KIND_LABELS = {
+    "cleaning": ("Ménage", "Cleaning"), "linen": ("Linge", "Linen"), "travel": ("Déplacement", "Travel"), "other": ("Autre", "Other"),
+    "discount": ("Remise", "Discount"), "tax": ("Taxe", "Tax"), "adjustment": ("Ajustement", "Adjustment"),
+}
 
 LABELS: dict[str, dict[str, tuple[str, str]]] = {
     "stay_status": {

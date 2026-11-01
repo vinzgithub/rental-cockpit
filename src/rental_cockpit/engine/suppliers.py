@@ -14,12 +14,9 @@ from typing import Any
 
 from .entries import paid_by_entry, state_of
 from .ledger import allocation_remaining
-from .schema import category_label
+from .schema import SERVICE_KIND_LABELS, category_label
 
-KIND_LABELS = {
-    "cleaning": ("Ménage", "Cleaning"), "linen": ("Linge", "Linen"), "travel": ("Déplacement", "Travel"), "other": ("Autre", "Other"),
-    "discount": ("Remise", "Discount"), "tax": ("Taxe", "Tax"), "adjustment": ("Ajustement", "Adjustment"),
-}
+KIND_LABELS = SERVICE_KIND_LABELS
 UNIT_LABELS = {
     "hour": ("heure", "hour"), "flat": ("forfait", "flat fee"), "set": ("lot", "set"), "unit": ("unité", "unit"),
     "km": ("km", "km"), "trip": ("déplacement", "trip"),

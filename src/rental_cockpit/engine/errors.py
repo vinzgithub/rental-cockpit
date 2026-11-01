@@ -141,14 +141,14 @@ class RCError(Exception):
         return render(self.code, self.params, lang)
 
     def as_dict(self, lang: str = "fr") -> dict[str, Any]:
-        return {"code": self.code, "message": self.message(lang), "params": _plain(self.params)}
+        return {"code": self.code, "message": self.message(lang), "params": _plain(self.params, lang)}
 
 
 def render(code: str, params: dict[str, Any] | None = None, lang: str = "fr") -> str:
     fr, en = MESSAGES.get(code, UNKNOWN)
     template = fr if lang == "fr" else en
     try:
-        return template.format(**(params or {}))
+        return template.format(**_plain(params or {}, lang))
     except (KeyError, IndexError, ValueError):
         return template
 
@@ -161,5 +161,10 @@ def from_value_error(exc: ValueError, field: str | None = None) -> RCError:
     return RCError(code, field=field or "")
 
 
-def _plain(params: dict[str, Any]) -> dict[str, Any]:
-    return {key: value if isinstance(value, (str, int, float, bool, type(None))) else str(value) for key, value in params.items()}
+def _plain(params: dict[str, Any], lang: str = "fr") -> dict[str, Any]:
+    """Parameters as plain values; a (French, English) pair becomes the reader's language."""
+    def one(value: Any) -> Any:
+        if isinstance(value, tuple) and len(value) == 2 and all(isinstance(v, str) for v in value):
+            return value[0] if lang == "fr" else value[1]
+        return value if isinstance(value, (str, int, float, bool, type(None))) else str(value)
+    return {key: one(value) for key, value in params.items()}

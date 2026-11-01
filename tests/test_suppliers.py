@@ -94,6 +94,12 @@ def test_split_between_stays_adds_no_charge(setup):
     with pytest.raises(RCError) as removed:
         ledger.update_entry(entry["id"], {"amount": "140", "lines": kept})
     assert removed.value.code == "allocation_line_removed" and removed.value.params["what"] == "Déplacement"
+    # A line without a label is named by its kind, in the reader's language.
+    bare = invoice(ledger, pid, sup, lines=[{**line, "label": ""} for line in LINES])
+    ledger.set_allocations(bare["id"], {"allocations": [{"line_id": "l3", "stay_id": a, "amount": "10"}]})
+    with pytest.raises(RCError) as unnamed:
+        ledger.update_entry(bare["id"], {"amount": "140", "lines": [{**line, "label": ""} for line in kept]})
+    assert "« Déplacement »" in unnamed.value.message("fr") and '"Travel"' in unnamed.value.message("en")
 
 
 def test_part_left_to_split_is_listed_to_check(setup):

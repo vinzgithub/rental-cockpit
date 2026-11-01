@@ -35,6 +35,7 @@ from .schema import (
     EXPENSE_TREATMENTS,
     INCOME_TREATMENTS,
     PAYMENT_DECLARED,
+    SERVICE_KIND_LABELS,
     SERVICE_KINDS,
     SERVICE_UNITS,
     STAY_SOURCES,
@@ -719,7 +720,7 @@ class Ledger:
                 kept = {line["id"] for line in entry["lines"]}
                 for line in before.get("lines") or []:
                     if line["id"] not in kept and any(a.get("line_id") == line["id"] for a in entry.get("allocations") or []):
-                        raise RCError("allocation_line_removed", what=line.get("label") or line["kind"])
+                        raise RCError("allocation_line_removed", what=line.get("label") or SERVICE_KIND_LABELS.get(line["kind"], line["kind"]))
         category = self.data["categories"][entry["category_id"]]
         if "loan_split" in payload:
             entry["loan_split"] = self._loan_split(payload, category, entry["amount"])
@@ -780,7 +781,7 @@ class Ledger:
             for line_id, line in lines.items():
                 used = sum(r["amount"] for r in result if r["line_id"] == line_id)
                 if used > abs(line["amount"]):
-                    raise RCError("allocation_exceeds", what=line.get("label") or line["kind"], total=money.format_cents(abs(line["amount"])))
+                    raise RCError("allocation_exceeds", what=line.get("label") or SERVICE_KIND_LABELS.get(line["kind"], line["kind"]), total=money.format_cents(abs(line["amount"])))
         if sum(r["amount"] for r in result) > entry["amount"]:
             raise RCError("allocation_exceeds", what=entry["label"], total=money.format_cents(entry["amount"]))
         return result
