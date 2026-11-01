@@ -205,7 +205,7 @@ def commission_rate(value: Any) -> Decimal | None:
         rate = Decimal(text)
     except InvalidOperation:
         return None
-    return rate if 0 <= rate <= 100 else None
+    return rate if rate.is_finite() and 0 <= rate <= 100 else None
 
 
 def _match(index: _Index, item: dict[str, Any], pid: str, properties: dict[str, Any]) -> dict[str, Any] | None:
@@ -383,8 +383,21 @@ def apply(ledger: Ledger, plan: dict[str, Any], meta: dict[str, Any]) -> dict[st
     record = {"id": import_id, "seq": len(ledger.data.get("imports", {})) + 1, "at": ledger.clock(), "by": ledger.actor, "kind": meta["kind"], "reader": meta["reader"],
               "file_name": meta.get("file_name", "")[:120], "sha256": meta["sha256"], "created": [], "updated": [],
               "payments": [], "counts": {}, "undone_at": None}
-    created = updated = completed = payouts = 0
     ledger.bulk = True
+    try:
+        counts = _write(ledger, plan, record, import_id, source, meta)
+    finally:
+        ledger.bulk = False
+    # Recording a payment changes nothing to a stay's revision: the undo check below still holds.
+    record["counts"] = counts
+    ledger.data.setdefault("imports", {})[import_id] = record
+    ledger.audit("import.apply", import_id, detail="{}:{created}+{updated}+{completed}+{payouts}".format(meta["kind"], **counts))
+    return {"import": summary(record)}
+
+
+def _write(ledger: Ledger, plan: dict[str, Any], record: dict[str, Any], import_id: str, source: str,
+           meta: dict[str, Any]) -> dict[str, int]:
+    created = updated = completed = payouts = 0
     for row in plan["rows"]:
         if row["decision"] == "skip" or row["status"] in ("error", "unmapped"):
             continue
@@ -426,12 +439,7 @@ def apply(ledger: Ledger, plan: dict[str, Any], meta: dict[str, Any]) -> dict[st
             })["payment"]
             record["payments"].append(payment["id"])
             payouts += 1
-    ledger.bulk = False
-    # Recording a payment changes nothing to a stay's revision: the undo check below still holds.
-    record["counts"] = {"created": created, "updated": updated, "completed": completed, "payouts": payouts}
-    ledger.data.setdefault("imports", {})[import_id] = record
-    ledger.audit("import.apply", import_id, detail=f"{meta['kind']}:{created}+{updated}+{completed}+{payouts}")
-    return {"import": summary(record)}
+    return {"created": created, "updated": updated, "completed": completed, "payouts": payouts}
 
 
 def summary(record: dict[str, Any]) -> dict[str, Any]:

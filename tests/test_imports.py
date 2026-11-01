@@ -438,7 +438,7 @@ def test_commission_rate_when_the_file_has_no_commission(two):
     _, built = preview(data, content, {"property_id": gite, "commission_rate": "3,5"}, kind="csv")
     assert [r["amounts"]["commission"] for r in built["rows"]] == [1050, 1167]  # 11.67 € rounded half up from 11.666…
     assert "imp_commission_rate" in codes(built["rows"][0]["warnings"])
-    assert plan.commission_rate("120") is None and plan.commission_rate("abc") is None
+    assert [plan.commission_rate(v) for v in ("120", "abc", "NaN", "Infinity", "-1")] == [None] * 5
     _, record = run(ledger, content, {"property_id": gite, "commission_rate": "15", "channel": "booking"}, kind="csv")
     stay = data["stays"][record["created"][0]["id"]]
     assert (stay["source"], stay["channel"], stay["amounts"]["commission"]) == ("csv", "booking", 4500)
@@ -566,6 +566,16 @@ def test_api_rejects_unreadable_and_oversized_files(client):
     assert huge.status_code == 413 and huge.json()["code"] == "upload_too_large"
     binary = client.post("/api/imports/preview", json=body(b"\x00\x01\x02PK\x03\x04", kind="csv"))
     assert binary.status_code == 400 and binary.json()["code"] == "import_file"
+
+
+def test_api_ignores_malformed_choices(client):
+    gite, _ = properties(client)
+    content = "Arrivée;Départ;Montant brut\n01/11/2026;04/11/2026;300\n".encode()
+    odd = {"property_id": gite, "decisions": ["skip"], "mapping": "Arrivée", "property_map": None, "commission_rate": "NaN"}
+    result = client.post("/api/imports/preview", json=body(content, kind="csv", options=odd))
+    assert result.status_code == 200, result.text
+    assert result.json()["can_apply"] is True and result.json()["commission_rate"] == ""
+    assert client.post("/api/imports/preview", json=body(content, kind="csv", options="x")).status_code == 200
 
 
 def plan_max() -> int:

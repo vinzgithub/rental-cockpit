@@ -32,8 +32,14 @@ CSV_CHANNELS = CHANNELS  # an English Airbnb export read as CSV is still Airbnb
 DELIMITERS = {",": ("virgule", "comma"), ";": ("point-virgule", "semicolon"), "\t": ("tabulation", "tab")}
 
 
+def _dict(value: Any) -> dict[str, Any]:
+    """Choices sent by the page: anything that is not an object is treated as « no choice »."""
+    return value if isinstance(value, dict) else {}
+
+
 async def _payload(request: Request) -> dict[str, Any]:
-    if int(request.headers.get("content-length") or 0) > MAX_BODY:
+    length = request.headers.get("content-length") or "0"
+    if not length.isdigit() or int(length) > MAX_BODY:
         raise RCError("upload_too_large", limit="5 Mio")
     body = await request.body()
     if len(body) > MAX_BODY:
@@ -44,6 +50,10 @@ async def _payload(request: Request) -> dict[str, Any]:
         raise RCError("choice_invalid", field="body") from exc
     if not isinstance(payload, dict):
         raise RCError("choice_invalid", field="body")
+    options = _dict(payload.get("options"))
+    for key in ("property_map", "decisions", "mapping"):
+        options[key] = {str(k): str(v) for k, v in _dict(options.get(key)).items() if isinstance(v, (str, int))}
+    payload["options"] = options
     return payload
 
 
