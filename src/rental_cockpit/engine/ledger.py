@@ -685,6 +685,9 @@ class Ledger:
             paid = self.entry_paid(entry["id"])
             if paid > entry["amount"]:
                 raise RCError("entry_amount_below_paid", paid=money.format_cents(paid))
+            replaced = self.replaced_total(entry)
+            if replaced > entry["amount"]:
+                raise RCError("reconcile_exceeds", matched=money.format_cents(replaced), total=money.format_cents(entry["amount"]))
         if "date" in payload:
             entry["date"] = iso(read_date(payload["date"], "date"))
         if "period_start" in payload or "period_end" in payload:
@@ -731,12 +734,16 @@ class Ledger:
             raise RCError("entry_has_payments")
         if any(entry_id in (d.get("entry_ids") or []) for d in self.data.get("documents", {}).values()):
             raise RCError("entry_has_documents")
+        if entry.get("replaces"):
+            raise RCError("entry_reconciled")
         del self.data["entries"][entry_id]
         self.audit("entry.delete", entry_id)
         return {"deleted": entry_id}
 
     def set_entry_archived(self, entry_id: str, archived: bool) -> dict[str, Any]:
         entry = self._get("entries", entry_id)
+        if archived and entry.get("replaces"):
+            raise RCError("entry_reconciled")  # the entries it replaced would leave every total too
         before = deepcopy(entry)
         entry["archived"] = bool(archived)
         self._history(entry, before, ("archived",))
@@ -780,6 +787,81 @@ class Ledger:
         self._history(entry, before, ("allocations",))
         self.audit("entry.allocate", entry["id"])
         return {"entry": deepcopy(entry), "remaining": allocation_remaining(entry)}
+
+    # Reconciliation: a supplier's invoice replaces the entries typed by hand
+    # for the same services (« Ménage de départ » after each stay, then the
+    # monthly invoice). The invoice stays the only expense: the entries it
+    # replaces leave every total, and their payments move to the invoice, so
+    # nothing is counted twice and nothing paid is lost. It can be undone.
+
+    def replaced_total(self, entry: dict[str, Any]) -> int:
+        return sum(self.data["entries"][r["id"]]["amount"] for r in entry.get("replaces", []) if r["id"] in self.data["entries"])
+
+    def reconcile(self, invoice_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        invoice = self._get("entries", invoice_id)
+        self._check_revision(invoice, payload)
+        if invoice["kind"] != "expense" or invoice.get("archived") or invoice.get("superseded_by"):
+            raise RCError("reconcile_invalid")
+        self.property(invoice["property_id"])
+        ids = [str(i) for i in payload.get("entry_ids") or []]
+        if not ids or len(set(ids)) != len(ids):
+            raise RCError("reconcile_invalid")
+        entries = []
+        for entry_id in ids:
+            entry = self._get("entries", entry_id)
+            if (entry_id == invoice_id or entry["property_id"] != invoice["property_id"] or entry["kind"] != "expense"
+                    or entry.get("archived") or entry.get("superseded_by") or entry.get("replaces") or entry.get("lines")):
+                raise RCError("reconcile_invalid")
+            entries.append(entry)
+        # Every check before the first change: nothing is half done, even outside a transaction.
+        matched = self.replaced_total(invoice) + sum(e["amount"] for e in entries)
+        if matched > invoice["amount"]:
+            raise RCError("reconcile_exceeds", matched=money.format_cents(matched), total=money.format_cents(invoice["amount"]))
+        paid = self.entry_paid(invoice_id) + sum(self.entry_paid(e["id"]) for e in entries)
+        if paid > invoice["amount"]:
+            raise RCError("reconcile_paid_exceeds", paid=money.format_cents(paid), total=money.format_cents(invoice["amount"]))
+        before = deepcopy(invoice)
+        replaces = list(invoice.get("replaces") or [])
+        for entry in entries:
+            moved = []
+            for payment in self.data["payments"].values():
+                for link in payment["links"]:
+                    if link["type"] == "entry" and link["id"] == entry["id"]:
+                        link["id"] = invoice_id
+                        moved.append({"payment": payment["id"], "amount": link["amount"]})
+            entry_before = deepcopy(entry)
+            entry["superseded_by"] = invoice_id
+            self._history(entry, entry_before, ("superseded_by",))
+            replaces.append({"id": entry["id"], "payments": moved})
+        invoice["replaces"] = replaces
+        self._history(invoice, before, ("replaces",))
+        self.audit("entry.reconcile", invoice_id, detail=",".join(ids))
+        return {"entry": deepcopy(invoice)}
+
+    def unreconcile(self, invoice_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        """Undo one replacement: the entry typed by hand comes back with its payments."""
+        invoice = self._get("entries", invoice_id)
+        self._check_revision(invoice, payload)
+        entry_id = str(payload.get("entry_id") or "")
+        item = next((r for r in invoice.get("replaces", []) if r["id"] == entry_id), None)
+        if item is None:
+            raise RCError("not_found")
+        before = deepcopy(invoice)
+        for moved in item["payments"]:
+            payment = self.data["payments"].get(moved["payment"])
+            link = next((one for one in (payment or {}).get("links", []) if one["type"] == "entry" and one["id"] == invoice_id
+                         and one["amount"] == moved["amount"]), None)
+            if link is not None:
+                link["id"] = entry_id
+        entry = self.data["entries"].get(entry_id)
+        if entry is not None:
+            entry_before = deepcopy(entry)
+            entry["superseded_by"] = ""
+            self._history(entry, entry_before, ("superseded_by",))
+        invoice["replaces"] = [r for r in invoice["replaces"] if r["id"] != entry_id]
+        self._history(invoice, before, ("replaces",))
+        self.audit("entry.unreconcile", invoice_id, detail=entry_id)
+        return {"entry": deepcopy(invoice)}
 
     # ----------------------------------------------------------------- payments
 

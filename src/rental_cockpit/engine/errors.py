@@ -92,6 +92,10 @@ MESSAGES: dict[str, tuple[str, str]] = {
     "entry_has_payments": ("Cette écriture a des paiements : supprimez-les d'abord, ou archivez-la pour la retirer des totaux.", "This entry has payments: delete them first, or archive it to remove it from the totals."),
     "entry_has_documents": ("Un justificatif est rattaché à cette écriture : archivez-la plutôt que de la supprimer.", "A document is attached to this entry: archive it rather than delete it."),
     "series_months": ("Le nombre de mois doit être compris entre 2 et 36.", "The number of months must be between 2 and 36."),
+    "reconcile_invalid": ("Ces écritures ne peuvent pas être rapprochées : choisissez des dépenses saisies à la main, du même bien, ni archivées ni déjà remplacées.", "These entries cannot be reconciled: choose expenses typed by hand, of the same property, neither archived nor already replaced."),
+    "reconcile_exceeds": ("Les saisies remplacées ({matched}) dépassent le montant de la facture ({total}). Rien n'a été enregistré.", "The replaced entries ({matched}) exceed the invoice amount ({total}). Nothing was saved."),
+    "reconcile_paid_exceeds": ("Avec les paiements des saisies remplacées, la facture serait réglée au-delà de son montant ({paid} pour {total}). Rien n'a été enregistré.", "With the payments of the replaced entries, the invoice would be paid beyond its amount ({paid} for {total}). Nothing was saved."),
+    "entry_reconciled": ("Cette facture remplace des saisies : annulez d'abord le rapprochement.", "This invoice replaces entries: undo the reconciliation first."),
     "superseded": ("Cette dépense a été remplacée par une facture lors d'un rapprochement : modifiez la facture.", "This expense was replaced by an invoice during reconciliation: edit the invoice."),
     "duplicate_operation": ("Opération déjà enregistrée (double clic détecté) : aucune seconde écriture n'a été créée.", "Operation already saved (double click detected): no second entry was created."),
     # Documents

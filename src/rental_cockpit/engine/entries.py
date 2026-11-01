@@ -85,6 +85,7 @@ def summary(data: dict[str, Any], entry: dict[str, Any], lang: str, paid: int | 
         "state": state, "state_label": _t(STATE_LABELS[entry["kind"]][state], lang),
         "paid": paid, "remaining": max(entry["amount"] - paid, 0),
         "loan_split": entry.get("loan_split"), "lines": len(entry.get("lines") or []),
+        "replaces": len(entry.get("replaces") or []), "allocated": sum(a["amount"] for a in entry.get("allocations") or []),
         "series": entry.get("series"), "archived": bool(entry.get("archived")), "superseded": bool(entry.get("superseded_by")),
         "upcoming": bool(today and entry["date"] > today.isoformat()),
         "origin": (entry.get("origin") or {}).get("type", "manual"),
@@ -113,10 +114,22 @@ def detail(data: dict[str, Any], entry: dict[str, Any], lang: str, today: date |
                         for a in entry.get("allocations") or []],
         "history": [{"at": h["at"], "by": h["by"], "fields": sorted(h.get("changes", {}))} for h in entry.get("history", [])][-20:],
         "created_at": entry.get("created_at"),
-        "deletable": not payments and not linked_docs,
+        "deletable": not payments and not linked_docs and not entry.get("replaces"),
         "documents": len(linked_docs),
+        # Detailed invoice: what can be split between stays, and the entries typed by hand it replaces.
+        "split": split_rows(data, entry, lang) if entry["kind"] == "expense" else [],
+        "replaces": [{"id": r["id"], "label": data["entries"].get(r["id"], {}).get("label", "—"),
+                      "date": data["entries"].get(r["id"], {}).get("date", ""), "amount": data["entries"].get(r["id"], {}).get("amount", 0),
+                      "payments": sum(m["amount"] for m in r["payments"])} for r in entry.get("replaces") or []],
+        "superseded_by": ({"id": entry["superseded_by"], "label": data["entries"].get(entry["superseded_by"], {}).get("label", "—")}
+                          if entry.get("superseded_by") else None),
     })
     return result
+
+
+def split_rows(data: dict[str, Any], entry: dict[str, Any], lang: str) -> list[dict[str, Any]]:
+    from .suppliers import split_rows as rows  # local import: suppliers builds on this module
+    return rows(data, entry, lang)
 
 
 def matches(item: dict[str, Any], view: str) -> bool:

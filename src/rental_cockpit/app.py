@@ -46,6 +46,7 @@ from .security import (
     verify_password,
 )
 from .stay_routes import register_stay_routes
+from .supplier_routes import register_supplier_routes
 from .web import (
     MFA_PENDING_SECONDS,
     STATIC,
@@ -313,6 +314,7 @@ def create_app(config: Config | None = None) -> FastAPI:
     register_stay_routes(app, services)
     register_import_routes(app, services)
     register_entry_routes(app, services)
+    register_supplier_routes(app, services)
 
     @app.exception_handler(Exception)
     async def on_unexpected(request: Request, err: Exception):  # pragma: no cover - defensive
