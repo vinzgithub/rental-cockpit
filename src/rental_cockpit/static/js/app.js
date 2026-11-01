@@ -327,6 +327,9 @@ export class App {
         if (value === "depenses" && target.dataset.view && ENTRY_VIEWS.includes(target.dataset.view)) {
           this.state.entries = { ...this.state.entries, view: target.dataset.view, q: "", kind: "", year: "", data: null };
         }
+        if (value === "depenses" && target.dataset.q) {
+          this.state.entries = { ...this.state.entries, view: "all", q: target.dataset.q.slice(0, 80), kind: "", year: "", data: null };
+        }
         this._render();
         this.root.querySelector(".main")?.scrollTo({ top: 0 });
         if (value === "reglages") await this.loadAccount();

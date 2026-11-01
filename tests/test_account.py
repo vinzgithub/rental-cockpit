@@ -61,7 +61,12 @@ def test_mfa_setup_requires_password_and_a_valid_first_code(admin):
     assert admin.get("/api/account").json()["mfa"]["enabled"] is False
 
 
-def test_sign_in_asks_for_a_code_and_each_code_works_once(app, admin):
+def test_sign_in_asks_for_a_code_and_each_code_works_once(app, admin, monkeypatch):
+    # The clock is held in the middle of the next 30 s step (never in the past, the
+    # session cookie would look signed in the future): crossing into another step
+    # during the test would make the « already used » code a fresh one.
+    frozen = (int(time.time() // TOTP_PERIOD) + 1.5) * TOTP_PERIOD
+    monkeypatch.setattr(time, "time", lambda: frozen)
     secret, codes = enable_mfa(admin)
     assert admin.get("/api/account").json()["mfa"] == {"enabled": True, "recovery_left": 10}
     # The password alone does not open the session.

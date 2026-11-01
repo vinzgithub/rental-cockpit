@@ -35,6 +35,9 @@ export async function openSupplier(app, supplierId) {
     wide: true,
     labelledby: "rc-supplier-title",
   });
+  dialog.addEventListener("click", (event) => {
+    if (event.target.closest('[data-action="go"]')) dialog.close();
+  });
   await fillSupplier(app, dialog, supplierId);
 }
 
@@ -74,13 +77,16 @@ async function fillSupplier(app, dialog, supplierId) {
         : html`<div class="empty">${raw(icon("info"))}<span>${t("sup.noRate")}</span></div>`}
     </section>
     <section>
-      <h3 class="section-title">${t("sup.invoices")} <span class="count">(${entries.entries.length})</span></h3>
+      <h3 class="section-title">${t("sup.invoices")} <span class="count">(${entries.entries.length + (entries.more || 0)})</span></h3>
       ${entries.entries.length ? html`<div class="rows">${entries.entries.slice(0, 30).map((e) => html`
         <button type="button" class="keyrow clickable" data-action="entry-open" data-value="${e.id}">
           <span class="tile">${raw(icon("receipt"))}</span>
           <span><b>${e.label}</b><small class="num">${i18n.dateShort(e.date)} · ${e.category}${e.lines ? ` · ${i18n.plural(e.lines, "sup.lineOne", "sup.lineMany")}` : ""}</small></span>
           <span class="end-col"><b class="num">${i18n.money(e.amount)}</b>${entryStatePill(e, t)}</span>
-        </button>`)}</div>` : html`<div class="empty">${raw(icon("receipt"))}<span>${t("sup.noInvoiceYet")}</span></div>`}
+        </button>`)}</div>
+        <button type="button" class="linkbtn" data-action="go" data-value="depenses" data-q="${s.name}">${entries.entries.length + (entries.more || 0) > 30
+          ? t("sup.seeAllMore", { n: entries.entries.length + (entries.more || 0) }) : t("sup.seeAll")}${raw(icon("chevronRight"))}</button>`
+        : html`<div class="empty">${raw(icon("receipt"))}<span>${t("sup.noInvoiceYet")}</span></div>`}
     </section>
     <section>
       <h3 class="section-title">${t("sjd.about")}</h3>

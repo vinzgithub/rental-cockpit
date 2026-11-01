@@ -522,8 +522,8 @@ dialog.rc .dfoot { display: flex; gap: 10px; justify-content: flex-end; flex-wra
 .meta-line svg.i { width: 17px; height: 17px; color: var(--rc-accent); }
 .codebox { display: flex; align-items: center; gap: 6px; padding: 4px 4px 4px 14px; border-radius: 11px; border: 1px solid var(--rc-border-strong); background: var(--rc-inset); min-width: 0; }
 .codebox code { flex: 1; min-width: 0; overflow-wrap: anywhere; word-break: break-all; font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: 13px; color: var(--rc-text); user-select: all; }
-.keyrow { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 12px; border-radius: 13px; background: var(--rc-inset); border: 1px solid var(--rc-border); }
-.keyrow b { display: block; font-size: 14.5px; }
+.keyrow { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px; border-radius: 13px; background: var(--rc-inset); border: 1px solid var(--rc-border); }
+.keyrow b { display: block; font-size: 14.5px; overflow-wrap: anywhere; }
 .keyrow small { display: block; color: var(--rc-faint); font-size: 12.5px; margin-top: 2px; }
 .keyrow .tile { width: 40px; height: 40px; }
 .keyrow .tile svg.i { width: 20px; height: 20px; color: var(--rc-accent); }
@@ -755,6 +755,7 @@ fieldset.pay-choice { display: grid; gap: 12px; }
 .keyrow.clickable { width: 100%; text-align: left; color: inherit; font: inherit; cursor: pointer; }
 .keyrow.clickable:hover { border-color: var(--rc-accent-line); }
 .keyrow .end-col { display: grid; justify-items: end; gap: 4px; }
+.keyrow .end-col b { overflow-wrap: normal; white-space: nowrap; }
 .keyrow.pick { grid-template-columns: auto minmax(0, 1fr) auto; cursor: pointer; }
 .keyrow.pick input { width: 20px; height: 20px; accent-color: var(--rc-accent); }
 .keyrow.pick:has(input:checked) { border-color: var(--rc-accent-line); background: var(--rc-accent-soft); }
