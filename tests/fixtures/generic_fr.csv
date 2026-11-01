@@ -1,0 +1,4 @@
+Arrivée;Départ;Référence;Client;Nombre de voyageurs;Montant brut;Commission;Montant net;Date de paiement
+28/09/2026;04/10/2026;BK-001;Client Test;2;600,00;90,00;510,00;05/10/2026
+20/12/2026;23/12/2026;BK-002;Client Test 2;3;300,00;45,00;255,00;
+13/10/2026;13/10/2026;BK-003;Client Test 3;1;100,00;;;

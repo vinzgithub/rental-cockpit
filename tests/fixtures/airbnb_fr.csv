@@ -1,0 +1,7 @@
+﻿Date,Arrivée au plus tard le,Type,Code de confirmation,Date de réservation,Date de début,Date de fin,Nuits,Voyageur,Logement,Détails,Code de référence,Devise,Montant,Versé,Frais de service,Frais de Versement sur carte bancaire,Frais de ménage,Revenus bruts,Taxes reversées par Airbnb,Année des revenus
+10/05/2026,10/04/2026,Payout,,,,,,,,Virement vers le compte ****0000,,EUR,,510.00,,,,,,
+10/05/2026,,Réservation,HMTEST0001,08/25/2026,09/28/2026,10/04/2026,6,Voyageur Test,Gîte d'essai (annonce),,,EUR,510.00,,90.00,,60.00,600.00,,2026
+,,Réservation,HMTEST0002,10/20/2026,12/20/2026,12/23/2026,3,Autre Voyageur,Gîte d'essai (annonce),,,EUR,255.00,,45.00,,40.00,300.00,,2026
+10/16/2026,,Réservation,HMTEST0003,09/30/2026,10/13/2026,10/15/2026,2,Troisième Voyageur,Studio d'essai (annonce),,,EUR,170.00,,30.00,,25.00,200.00,,2026
+10/20/2026,,Ajustement de la résolution,HMTEST0001,,,,,Voyageur Test,Gîte d'essai (annonce),Geste commercial,,EUR,-20.00,,,,,,,2026
+,,Réservation,HMTEST0004,10/01/2026,11/02/2026,11/05/2026,2,Quatrième Voyageur,Gîte d'essai (annonce),,,EUR,300.00,,40.00,,,340.00,,2026
