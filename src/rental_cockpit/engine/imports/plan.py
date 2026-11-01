@@ -414,6 +414,7 @@ def _write(ledger: Ledger, plan: dict[str, Any], record: dict[str, Any], import_
         elif row["status"] in ("update", "duplicate"):
             stay = ledger.data["stays"][stay_id]
             before = deepcopy({k: stay.get(k) for k in ("start", "end", "guests", "amounts", "external_ref", "guest_label")})
+            revision_before = int(stay.get("revision") or 0)
             fields: dict[str, Any] = {}
             if row["status"] == "update":
                 for change in row["changes"]:
@@ -427,7 +428,8 @@ def _write(ledger: Ledger, plan: dict[str, Any], record: dict[str, Any], import_
                 fields["amounts"] = amounts
             if fields:
                 result = ledger.update_stay(stay_id, fields)["stay"]
-                record["updated"].append({"id": stay_id, "before": before, "revision": result["revision"]})
+                record["updated"].append({"id": stay_id, "before": before, "revision_before": revision_before,
+                                          "revision": result["revision"]})
                 updated += row["status"] == "update"
                 completed += row["status"] == "duplicate"
         if row.get("payout") and stay_id:
@@ -487,6 +489,7 @@ def undo(ledger: Ledger, import_id: str) -> dict[str, Any]:
         data["payments"].pop(payment_id, None)
     for item in record["created"]:
         data["stays"].pop(item["id"], None)
+    restored = {}
     for item in record["updated"]:
         stay = data["stays"].get(item["id"])
         if stay is None:
@@ -494,8 +497,14 @@ def undo(ledger: Ledger, import_id: str) -> dict[str, Any]:
         before = deepcopy(stay)
         stay.update(deepcopy(item["before"]))
         ledger._history(stay, before, ("start", "end", "guests", "amounts", "external_ref", "guest_label"))
+        restored[item["id"]] = (item.get("revision_before"), int(stay.get("revision") or 0))
     record["undone_at"] = ledger.clock()
     record["undone_by"] = ledger.actor
+    # The stays are back where the previous import left them: that import can be undone in turn.
+    previous = last_import(data)
+    for entry in (previous["created"] + previous["updated"]) if previous else []:
+        if entry["id"] in restored and entry["revision"] == restored[entry["id"]][0]:
+            entry["revision"] = restored[entry["id"]][1]
     ledger.audit("import.undo", import_id, detail=f"{len(record['created'])}+{len(record['updated'])}+{len(record['payments'])}")
     return {"import": summary(record)}
 

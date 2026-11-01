@@ -378,6 +378,20 @@ def test_undo_puts_back_what_an_update_changed(two):
     assert stay["amounts"]["gross"] == 30000 and len(data["stays"]) == 3
 
 
+def test_undoing_two_imports_in_a_row(two):
+    data, ledger, gite, studio = two
+    ledger.create_stay({"property_id": gite, "start": "2026-12-20", "end": "2026-12-23", "amounts": {"gross": "300"}})
+    _, first = run(ledger, AIRBNB, mapped(gite, studio))  # creates two stays, completes the one typed by hand
+    changed = edited("EUR,255.00,,45.00,,40.00,300.00", "EUR,275.00,,45.00,,40.00,320.00")
+    _, second = run(ledger, changed, mapped(gite, studio))
+    plan.undo(ledger, second["id"])
+    assert plan.undo_blockers(data, first) == []
+    plan.undo(ledger, first["id"])
+    hand = next(iter(data["stays"].values()))
+    assert len(data["stays"]) == 1 and hand["external_ref"] == "" and hand["amounts"]["gross"] == 30000
+    assert hand["amounts"]["commission"] is None and data["payments"] == {}
+
+
 def test_undo_is_refused_once_a_stay_was_changed(two):
     data, ledger, gite, studio = two
     _, record = run(ledger, AIRBNB, mapped(gite, studio))
