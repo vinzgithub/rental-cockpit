@@ -714,6 +714,12 @@ class Ledger:
             lines = payload["lines"] if "lines" in payload else [{**line, "amount_cents": line["amount"], "amount": None}
                                                                  for line in entry.get("lines") or []]
             entry["lines"] = self._lines({"lines": lines}, entry["amount"])
+            if "allocations" not in payload:
+                # A service already split between stays cannot disappear from the invoice silently.
+                kept = {line["id"] for line in entry["lines"]}
+                for line in before.get("lines") or []:
+                    if line["id"] not in kept and any(a.get("line_id") == line["id"] for a in entry.get("allocations") or []):
+                        raise RCError("allocation_line_removed", what=line.get("label") or line["kind"])
         category = self.data["categories"][entry["category_id"]]
         if "loan_split" in payload:
             entry["loan_split"] = self._loan_split(payload, category, entry["amount"])

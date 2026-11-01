@@ -38,7 +38,9 @@ export async function openSplit(app, entry, onDone) {
   const { t } = i18n;
   let stays = [];
   try {
-    stays = (await app.api.get("/api/stays", { view: "all", property_id: entry.property_id })).stays.filter((s) => s.status !== "cancelled");
+    // Cancelled stays are not offered, unless a share already went to one (it must not move silently).
+    const used = new Set(entry.allocations.map((a) => a.stay_id));
+    stays = (await app.api.get("/api/stays", { view: "all", property_id: entry.property_id })).stays.filter((s) => s.status !== "cancelled" || used.has(s.id));
   } catch (err) {
     app.toast(err.message, true);
     return;

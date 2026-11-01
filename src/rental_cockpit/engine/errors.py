@@ -70,6 +70,8 @@ MESSAGES: dict[str, tuple[str, str]] = {
     "adjustment_note_required": ("Un ajustement doit être justifié par une note.", "An adjustment must be explained with a note."),
     "allocation_exceeds": ("La ventilation dépasse le montant de {what} ({total}). Rien n'a été enregistré.", "The allocation exceeds the amount of {what} ({total}). Nothing was saved."),
     "allocation_stay_property": ("Une prestation ne peut être affectée qu'à un séjour du même bien.", "A service can only be allocated to a stay of the same property."),
+    "allocation_line_removed": ("La prestation « {what} » est répartie entre des séjours : modifiez d'abord la répartition, puis retirez la prestation. Rien n'a été enregistré.",
+                                "The service \"{what}\" is split between stays: change the split first, then remove the service. Nothing was saved."),
     "allocation_line_required": ("Cette dépense est détaillée en prestations : choisissez la prestation à affecter.", "This expense is broken down into services: choose which service to allocate."),
     "loan_split_mismatch": ("Capital + intérêts + assurance ({split}) doit être égal à la mensualité ({total}).", "Principal + interest + insurance ({split}) must equal the instalment ({total})."),
     "loan_split_category": ("La décomposition capital/intérêts/assurance est réservée aux remboursements d'emprunt.", "The principal/interest/insurance breakdown is only for loan repayments."),

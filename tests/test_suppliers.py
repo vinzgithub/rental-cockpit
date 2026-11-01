@@ -89,6 +89,11 @@ def test_split_between_stays_adds_no_charge(setup):
     with pytest.raises(RCError) as over:
         ledger.set_allocations(entry["id"], {"allocations": [{"line_id": "l3", "stay_id": a, "amount": "11"}]})
     assert over.value.code == "allocation_exceeds"
+    # A service already split cannot leave the invoice behind the person's back.
+    kept = [line for line in LINES if line["id"] != "l3"]
+    with pytest.raises(RCError) as removed:
+        ledger.update_entry(entry["id"], {"amount": "140", "lines": kept})
+    assert removed.value.code == "allocation_line_removed" and removed.value.params["what"] == "Déplacement"
 
 
 def test_part_left_to_split_is_listed_to_check(setup):
@@ -200,6 +205,11 @@ def test_api_supplier_invoice_split_and_reconcile(client):
         {"line_id": "l1", "stay_id": stay["id"], "amount": "100"}, {"line_id": "l2", "stay_id": stay["id"], "amount": "40"},
         {"line_id": "l3", "stay_id": stay["id"], "amount": "10"}]}, "op-a")["detail"]
     assert sum(r["remaining"] for r in split["split"]) == 0
+    # Removing a service already split is refused, and nothing changes.
+    refused = client.patch(f"/api/entries/{detail['id']}", params={"lang": "fr"},
+                           json={"amount": "140", "lines": LINES[:2], "revision": split["revision"], "op_id": "op-x"})
+    assert refused.status_code == 400 and refused.json()["code"] == "allocation_line_removed" and "Déplacement" in refused.json()["message"]
+    assert [line["id"] for line in client.get(f"/api/entries/{detail['id']}").json()["service_lines"]] == ["l1", "l2", "l3"]
     stay_detail = client.get(f"/api/stays/{stay['id']}").json()
     assert (stay_detail["costs_total"], stay_detail["margin"]) == (15000, 36000)
     candidates = client.get(f"/api/entries/{detail['id']}/candidates").json()["candidates"]
