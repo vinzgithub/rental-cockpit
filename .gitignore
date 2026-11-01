@@ -13,3 +13,4 @@ data/
 *.db-shm
 .secret_key
 *.rcbackup
+node_modules/

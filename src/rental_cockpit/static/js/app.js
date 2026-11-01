@@ -825,7 +825,7 @@ export class App {
       return;
     }
     if (!this.session.authenticated || this.session.must_change_password) {
-      this.pageEl.innerHTML = markup(html`<div class="root"><div class="main">${renderAuth(this.viewModel())}</div></div>`);
+      this.pageEl.innerHTML = markup(html`<div class="root"><main class="main" id="rc-main">${renderAuth(this.viewModel())}</main></div>`);
       return;
     }
     const active = document.activeElement;
