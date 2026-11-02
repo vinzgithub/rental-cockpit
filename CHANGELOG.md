@@ -13,7 +13,7 @@ Version 1.0 (delivery L6): reader accounts, checked backup and restore, an acces
 - Performance: the Overview no longer scans every payment for each expense (22 s → 0.2 s with 10,000 entries and 2,000 stays) and the stays list adds up the payouts once (1.4 s → 0.06 s); a regression test keeps it so.
 - Layout: no horizontal scrolling on any screen from 360 to 1,440 pixels wide (checked by a test at nine widths); the stays table appears from 1,080 pixels, cards below; the expense filters keep their full labels.
 - Incidents: a full disk while storing a PDF is refused with an explanation and nothing recorded; full disk, interruption and expired tokens are covered by tests.
-- Docker: the CI smoke test also runs a command-line backup in the read-only, unprivileged container, and starts the ARM64 image under emulation.
+- Docker: the CI smoke test also runs a command-line backup in the read-only, unprivileged container, then the documented restore with the application stopped, and starts the ARM64 image under emulation.
 - Documentation: backup and restore guide, acceptance matrix T01–T12 with performance measurements, guide chapters on readers and backups, screenshots with the full menu.
 
 ## 0.6.0 — not released yet

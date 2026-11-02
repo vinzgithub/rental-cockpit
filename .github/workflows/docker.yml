@@ -53,6 +53,18 @@ jobs:
           docker exec rc sh -c 'ls /data/backups/rental-cockpit-sauvegarde-*.zip'
           docker logs rc
 
+      - name: Restore with the application stopped (documented procedure)
+        run: |
+          docker stop rc
+          docker run --rm --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges:true \
+            -v rc-test-data:/data rental-cockpit:test \
+            sh -c 'python -m rental_cockpit.cli restore "$(ls /data/backups/rental-cockpit-sauvegarde-*.zip | head -n 1)" --yes' | tee restore.log
+          grep -q "Same totals as the backup." restore.log
+          docker start rc
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8080/healthz && break; sleep 1; done
+          curl -fsS http://127.0.0.1:8080/healthz
+          docker exec rc sh -c 'ls /data/backups/avant-restauration-*.zip'
+
       - name: Sign in to the GitHub Container Registry
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
         uses: docker/login-action@v3
