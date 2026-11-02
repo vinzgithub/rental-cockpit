@@ -44,16 +44,20 @@ Ces étapes sont exécutées par les tests automatiques : `test_command_line_bac
 
 1. **Avant toute mise à jour**, créez une sauvegarde et téléchargez-la.
 2. Si la nouvelle version pose problème, **revenez à la version précédente de l'image** (par exemple `image: ghcr.io/vinzgithub/rental-cockpit:1.0.0` dans `docker-compose.yml`). Revenir au code ne ramène pas les données : une base convertie par une version plus récente n'est jamais ouverte par une plus ancienne.
-3. Arrêtez l'application, puis restaurez la sauvegarde avec l'application arrêtée :
+3. Arrêtez l'application, puis restaurez la sauvegarde avec l'application arrêtée, depuis le dossier qui contient `docker-compose.yml` :
 
 ```bash
 docker compose stop
-docker compose run --rm -v "$PWD/rental-cockpit-sauvegarde-AAAAMMJJ-HHMMSS.zip:/tmp/sauvegarde.zip:ro" \
-  rental-cockpit python -m rental_cockpit.cli restore /tmp/sauvegarde.zip
+# 1. Vérification seule : rien n'est modifié
+docker compose run --rm -T rental-cockpit python -m rental_cockpit.cli restore - < rental-cockpit-sauvegarde-AAAAMMJJ-HHMMSS.zip
+# 2. Si le contenu affiché est le bon : la même commande avec --yes
+docker compose run --rm -T rental-cockpit python -m rental_cockpit.cli restore - --yes < rental-cockpit-sauvegarde-AAAAMMJJ-HHMMSS.zip
 docker compose start
 ```
 
-La commande affiche le contenu vérifié. Elle demande de taper REMPLACER, enregistre les données remplacées dans `backups/avant-restauration-….zip`, restaure, puis dit si les totaux sont identiques.
+La sauvegarde est transmise par l'entrée standard (`-` et `<`) : le conteneur, qui ne tourne pas en administrateur, n'a pas besoin du droit de lire un fichier de votre machine. La première commande vérifie la sauvegarde et affiche son contenu (date, version, nombres, biens) sans rien modifier. La seconde enregistre les données remplacées dans `backups/avant-restauration-….zip`, restaure, puis dit si les totaux sont identiques.
+
+Pour une sauvegarde déjà présente dans le dossier de données, `restore /data/backups/<fichier>.zip`, sans `-T` ni `<`, demande de taper REMPLACER.
 
 Quand une version change le format des données, Rental Cockpit écrit aussi, avant de les convertir, une copie complète de la base dans `backups/pre-migration-….db`. Ce filet de sécurité supplémentaire ne remplace pas une sauvegarde téléchargée.
 

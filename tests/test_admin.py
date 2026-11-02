@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import io
 import json
+import sys
 import zipfile
 from datetime import date
 
@@ -210,9 +211,27 @@ def test_command_line_backup_and_restore_after_a_failed_update(tmp_path, monkeyp
     services.registries["real"].mutate(lambda data: data["entries"].clear(), "2026-11-01T00:00:00+00:00")
     for pdf in (tmp_path / "documents").glob("*.pdf"):
         pdf.unlink()
-    assert cli.main(["restore", str(archive), "--yes"]) == 0
+    # A file the container cannot read: refused with the standard-input procedure as the way out.
+    assert cli.main(["restore", str(tmp_path / "absent.zip"), "--yes"]) == 1
+    assert "Cannot read" in capsys.readouterr().err
+    # Typing anything but the confirmation word restores nothing.
+    monkeypatch.setattr("builtins.input", lambda prompt: "non")
+    assert cli.main(["restore", str(archive)]) == 1
+    assert "Nothing was restored." in capsys.readouterr().out
+    assert client.get("/api/entries").json()["entries"] == []
+    # The documented Docker procedure: the backup on standard input, checked first, then restored with --yes.
+    def stdin():
+        monkeypatch.setattr(sys, "stdin", io.TextIOWrapper(io.BytesIO(archive.read_bytes())))
+    stdin()
+    assert cli.main(["restore", "-"]) == 1
+    out = capsys.readouterr().out
+    assert "checked" in out and "run the same command again with --yes" in out
+    assert client.get("/api/entries").json()["entries"] == []
+    stdin()
+    assert cli.main(["restore", "-", "--yes"]) == 0
     out = capsys.readouterr().out
     assert "Same totals as the backup." in out and "avant-restauration" in out
+    assert not (tmp_path / "restore-staging" / "cli").exists()
     restarted = TestClient(create_app(Config(data_dir=tmp_path)))
     token = restarted.get("/api/session").json()["csrf"]
     restarted.post("/api/auth/login", json={"username": "admin", "password": PASSWORD}, headers={"X-CSRF-Token": token})

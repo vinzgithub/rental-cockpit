@@ -44,16 +44,20 @@ These steps are run by the automated tests: `test_command_line_backup_and_restor
 
 1. **Before any update**, create a backup and download it.
 2. If the new version causes trouble, **go back to the previous image version** (for example `image: ghcr.io/vinzgithub/rental-cockpit:1.0.0` in `docker-compose.yml`). Going back in code does not bring the data back: a database converted by a newer version is never opened by an older one.
-3. Stop the application, then restore the backup while it is stopped:
+3. Stop the application, then restore the backup while it is stopped, from the folder that holds `docker-compose.yml`:
 
 ```bash
 docker compose stop
-docker compose run --rm -v "$PWD/rental-cockpit-sauvegarde-YYYYMMDD-HHMMSS.zip:/tmp/backup.zip:ro" \
-  rental-cockpit python -m rental_cockpit.cli restore /tmp/backup.zip
+# 1. Check only: nothing is changed
+docker compose run --rm -T rental-cockpit python -m rental_cockpit.cli restore - < rental-cockpit-sauvegarde-YYYYMMDD-HHMMSS.zip
+# 2. If the content shown is the right one: the same command with --yes
+docker compose run --rm -T rental-cockpit python -m rental_cockpit.cli restore - --yes < rental-cockpit-sauvegarde-YYYYMMDD-HHMMSS.zip
 docker compose start
 ```
 
-The command shows the checked content. It asks you to type REMPLACER (or REPLACE), saves the data it replaces in `backups/avant-restauration-….zip`, restores, then says whether the totals are the same.
+The backup is passed on standard input (`-` and `<`): the container, which does not run as an administrator, does not need the right to read a file of your machine. The first command checks the backup and shows its content (date, version, counts, properties) without changing anything. The second saves the data it replaces in `backups/avant-restauration-….zip`, restores, then says whether the totals are the same.
+
+For a backup already in the data folder, `restore /data/backups/<file>.zip`, without `-T` or `<`, asks you to type REMPLACER (or REPLACE).
 
 When a version changes the data format, Rental Cockpit also writes, before converting, a full copy of the database in `backups/pre-migration-….db`. This extra safety net does not replace a downloaded backup.
 
