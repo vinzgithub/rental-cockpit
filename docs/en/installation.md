@@ -49,7 +49,7 @@ docker compose pull
 docker compose up -d
 ```
 
-Copy the data volume before an upgrade (see below). When a new version changes the data format, Rental Cockpit also writes a full copy of the database to `backups/` before converting it. A database written by a newer version is never opened by an older one.
+Make a backup before an upgrade (**Settings → Backup and restore**, see [backup.md](backup.md)). When a new version changes the data format, Rental Cockpit also writes a full copy of the database to `backups/` before converting it. A database written by a newer version is never opened by an older one.
 
 ### Building the image yourself
 
@@ -86,6 +86,7 @@ Keep **one process** (`--workers 1`, the default): the application is the only a
 | `RENTAL_COCKPIT_FRAME_ANCESTORS` | Origins allowed to show the app in a frame (Home Assistant dashboard) | none |
 | `TZ` | Time zone used for "today" | the system's |
 | `FORWARDED_ALLOW_IPS` | Address of your reverse proxy, if any | — |
+| `RENTAL_COCKPIT_MAX_BACKUP_MB` | Largest backup that can be sent for a restore, in MiB | `2048` |
 
 ## The data folder
 
@@ -93,10 +94,11 @@ Keep **one process** (`--workers 1`, the default): the application is the only a
 |---|---|
 | `rental_cockpit.db` | Accounts, rights, API keys (hashes), real registry and demo registry (SQLite) |
 | `.secret_key` | Session signing key, created on first start (mode 0600) |
-| `backups/` | Automatic copies of the database made before each data format migration (`pre-migration-v1-to-v2-….db`) |
-| `documents/` | Private PDF documents (from the Documents screen on) |
+| `backups/` | ZIP backups made from Settings or the command line, backups made before a restore (`avant-restauration-….zip`) and copies of the database made before each data format migration (`pre-migration-….db`) |
+| `documents/` | Private PDF documents, named by their SHA-256 fingerprint (rights 0700 / 0600) |
+| `demo-documents/` | Fictional PDFs of the demo |
 
-**Manual backup** until the built-in backup exists: stop the app, copy the whole folder, start again.
+**Backup**: use **Settings → Backup and restore**, or `python -m rental_cockpit.cli backup`; everything is explained in [backup.md](backup.md). A raw copy of the folder, with the app stopped, is still possible:
 
 ```bash
 docker compose stop
@@ -120,8 +122,8 @@ Each command signs out every browser of the account.
 
 ## Uninstalling
 
-`docker compose down` stops the application **without deleting** the data volume. To erase everything permanently: `docker compose down -v` (cannot be undone).
+`docker compose down` stops the application **without deleting** the data volume: registries, PDFs and backups stay. To erase everything permanently: `docker compose down -v` (cannot be undone) — make a backup first.
 
 ## Network exposure
 
-Keep Rental Cockpit on your local network, or behind an HTTPS reverse proxy with `RENTAL_COCKPIT_COOKIE_SECURE=true` and two-factor sign-in turned on. Do not open a port on your router without reading [security.md](security.md). Behind a reverse proxy, allow 8 MiB requests for file imports (for example `client_max_body_size 8m;` with nginx).
+Keep Rental Cockpit on your local network, or behind an HTTPS reverse proxy with `RENTAL_COCKPIT_COOKIE_SECURE=true` and two-factor sign-in turned on. Do not open a port on your router without reading [security.md](security.md). Behind a reverse proxy, allow 8 MiB requests for file imports and documents (for example `client_max_body_size 8m;` with nginx), more to restore a backup from the browser.

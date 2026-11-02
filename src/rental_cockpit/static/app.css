@@ -517,6 +517,7 @@ dialog.rc .dfoot { display: flex; gap: 10px; justify-content: flex-end; flex-wra
 .settings-grid { display: grid; gap: var(--rc-gap); align-items: start; }
 @container content (min-width: 900px) { .settings-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
 .card > .reading + .actions, .card > .reading + .field, .card > dl + .actions { margin-top: 16px; }
+.card > .tip + .actions, .card > .actions + .meta-line, .card > .actions + .section-title, .card > .reading + .tip { margin-top: 14px; }
 .card .reading { margin-bottom: 14px; }
 .actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .meta-line { display: flex; gap: 8px; align-items: center; color: var(--rc-muted); font-size: 13.5px; margin: -4px 0 14px; }
@@ -602,11 +603,11 @@ fieldset.amounts legend { padding: 0 6px; color: var(--rc-text); font-weight: 60
 @container content (min-width: 640px) {
   .stays-tools { grid-template-columns: minmax(200px, 260px) minmax(220px, 1fr); }
 }
-@container content (min-width: 900px) {
+@container content (min-width: 1080px) {
   .stays-list { display: table; }
   .stays-list-cards { display: none; }
 }
-@container content (max-width: 899px) {
+@container content (max-width: 1079px) {
   .stays-card { background: none; border: 0; padding: 0; }
 }
 
@@ -717,8 +718,8 @@ fieldset.pay-choice { display: grid; gap: 12px; }
 .cat-row.archived { opacity: 0.62; }
 .cat-row .row-actions, .user-row .row-actions, .backup-row .row-actions { display: flex; gap: 2px; }
 .keyrow small.muted, dd small.muted { color: var(--rc-faint); }
-@container content (min-width: 720px) {
-  .entries-tools { grid-template-columns: minmax(180px, 230px) minmax(170px, 210px) minmax(150px, 180px) minmax(200px, 1fr); }
+@container content (min-width: 900px) {
+  .entries-tools { grid-template-columns: minmax(180px, 230px) minmax(230px, 250px) minmax(205px, 215px) minmax(200px, 1fr); }
   .entries-tools .search { grid-column: auto; }
 }
 @container content (min-width: 900px) {

@@ -161,7 +161,31 @@ The **Documents** screen lists every PDF (**To complete** view: not attached to 
 
 ![A document's page](../images/en/document-page.png)
 
-## 13. Protect your account
+## 13. Give a reader access
+
+An accountant, a partner or a relative can view your properties without being able to change anything. **Settings → Accounts and access → Add a reader**:
+
+1. choose their user name and, if you like, a display name;
+2. keep the proposed **temporary password** (or **Another**), copy it and pass it on to the person: it will not be shown again;
+3. tick the **properties** they can view and, property by property, access to their **PDF documents**.
+
+At their first sign-in, the reader must choose their own password before seeing anything. The pencil changes their access (straight away), the key gives them a new temporary password (their sessions end), the bin deletes their account without touching the data.
+
+A reader sees the Overview, stays, expenses, suppliers and exports **of their properties only**. Without access to the PDFs, they see that an expense has a document, never the file.
+
+![Accounts and access, backup and restore](../images/en/settings-accounts.png)
+
+## 14. Back up and restore
+
+**Settings → Backup and restore → Create a backup** writes a checked ZIP file and downloads it: properties, stays, expenses, payments, suppliers, PDF documents and readers' rights, never a password. Keep it away from this machine: it holds private data.
+
+**Restore a backup** first checks it in a test copy (files, PDFs, totals) and shows what it holds next to your current data. Nothing changes before you type **REPLACE**; your current data are then saved on the server, then replaced, and Rental Cockpit says whether the totals are the same.
+
+All the details, the command line and what to do after an update that went wrong: [backup.md](backup.md).
+
+![Restore a backup: check and comparison before replacing](../images/en/backup-restore.png)
+
+## 15. Protect your account
 
 In **Settings → Two-factor sign-in → Turn on**:
 
@@ -173,7 +197,7 @@ At the next sign-in, the code is asked after the password. The other browsers si
 
 ![Turning on two-factor sign-in](../images/en/mfa-setup.png)
 
-## 14. Home Assistant (optional)
+## 16. Home Assistant (optional)
 
 In **Settings → Home Assistant and API → Create a key**, Rental Cockpit shows once the line to paste into `secrets.yaml`. The address to enter in Home Assistant is shown just above. What comes next (sensors, card, automations): [home-assistant.md](home-assistant.md).
 

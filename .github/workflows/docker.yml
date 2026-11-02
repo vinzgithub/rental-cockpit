@@ -49,6 +49,8 @@ jobs:
           test "$(docker exec rc id -u)" = "10001"
           docker exec rc python -m rental_cockpit.cli --help > /dev/null
           docker exec rc test -f /data/rental_cockpit.db
+          docker exec rc python -m rental_cockpit.cli backup
+          docker exec rc sh -c 'ls /data/backups/rental-cockpit-sauvegarde-*.zip'
           docker logs rc
 
       - name: Sign in to the GitHub Container Registry
@@ -83,3 +85,10 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           provenance: true
           sbom: true
+
+      - name: ARM64 image starts (emulated)
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        run: |
+          image="$(echo '${{ steps.meta.outputs.tags }}' | head -n 1)"
+          docker run --rm --platform linux/arm64 --entrypoint python "$image" -c \
+            "import platform, rental_cockpit, pypdf; print(platform.machine(), rental_cockpit.__version__, pypdf.__version__)" | tee /dev/stderr | grep -q aarch64
