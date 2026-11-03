@@ -272,7 +272,8 @@ TEXT = {
                      "excludes": ("C'est le mouvement d'argent de la période, pas un bénéfice fiscal.", "This is the money movement of the period, not a taxable profit.")},
     # « Performance locative » (per night): what the rental produced.
     "stay_revenue": {"label": ("Recettes des nuitées", "Revenue from nights"),
-                     "formula": ("Montant brut des séjours, réparti nuit par nuit, + ajustements des séjours", "Gross amount of stays, spread night by night, + stay adjustments"),
+                     "formula": ("Montant brut des séjours, réparti nuit par nuit, + ajustements des séjours ; un séjour annulé compte son montant conservé, une fois, au mois d'arrivée",
+                                 "Gross amount of stays, spread night by night, + stay adjustments; a cancelled stay counts its retained amount once, in the month of arrival"),
                      "excludes": ("Commissions (montrées à part), taxes de séjour, recettes hors séjours (indemnisations, primes…).",
                                   "Commissions (shown apart), tourist taxes, income outside stays (compensations, bonuses…).")},
     "commissions": {"label": ("Commissions", "Commissions"), "formula": ("Commissions et frais de service des plateformes, répartis comme les séjours", "Platform commissions and service fees, spread like the stays"),
