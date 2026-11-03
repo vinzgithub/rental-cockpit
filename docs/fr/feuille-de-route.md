@@ -9,7 +9,7 @@ Rental Cockpit avance par **livraisons** courtes et utilisables. Chaque livraiso
 | **L1** — Séjours | 0.2.0 | Créer, modifier, annuler, rétablir et supprimer des séjours ; canal de réservation ; versements reçus ; fiche séjour avec sa part dans la Synthèse ; migration du format de données avec copie automatique | En validation |
 | **L2** — Import | 0.3.0 | Import Airbnb (lecteur repris et adapté) et CSV générique : prévisualisation sans écriture, doublons détectés, commissions (taux pour un CSV), contrôles avant confirmation, validation en une fois, annulation du dernier import | En validation |
 | **L3** — Dépenses et règlements | 0.4.0 | Dépenses et recettes hors séjours, paiements partiels, à payer / à recevoir, mensualités d'emprunt (série mensuelle, capital / intérêts / assurance), période couverte, catégories, exports CSV, Synthèse « au-delà de l'exploitation » | En validation |
-| **L4** — Prestataires | 0.5.0 | Prestataires et tarifs, facture à plusieurs prestations répartie entre séjours | À venir |
+| **L4** — Prestataires | 0.5.0 | Prestataires et tarifs indicatifs, facture détaillée en prestations, répartition entre les séjours (séjour proposé selon la date d'intervention), rapprochement réversible avec les saisies faites à la main, coûts et marge par séjour | En validation |
 | **L5** — Justificatifs | 0.6.0 | PDF contrôlés, doublons, lien avec les dépenses, téléchargement après contrôle des droits | À venir |
 | **L6** — Version 1.0 | 1.0.0 | Sauvegarde et restauration vérifiées, comptes lecteurs, passe accessibilité et mobile, essai ARM64, recette complète | À venir |
 

@@ -7,7 +7,7 @@ def test_menu_only_lists_working_screens(desktop, base_url):
     desktop.goto(base_url + "/")
     desktop.locator(".kpi").first.wait_for()
     labels = [text.strip() for text in desktop.locator(".sidebar .navbtn").all_text_contents()]
-    assert labels == ["Synthèse", "Séjours", "Dépenses", "Réglages"]
+    assert labels == ["Synthèse", "Séjours", "Dépenses", "Prestataires", "Réglages"]
 
 
 def test_demo_and_own_data_are_one_click_apart(desktop, base_url):

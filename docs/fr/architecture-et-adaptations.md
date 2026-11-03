@@ -34,6 +34,7 @@ Navigateur ──HTTPS (proxy facultatif)──► Application Rental Cockpit (u
 | Séjours | API des séjours et des versements ; nuits, versement attendu, état du versement et part mois par mois calculés à la volée avec les règles des indicateurs | `src/rental_cockpit/stay_routes.py`, `engine/stays.py` |
 | Import | Lecteurs Airbnb et CSV (lecture seule), aperçu comparé au registre, écriture en une transaction, annulation du dernier import | `src/rental_cockpit/import_routes.py`, `engine/imports/` |
 | Dépenses | API des écritures, des règlements et des catégories ; état du règlement, reste dû et séries mensuelles calculés depuis les paiements ; exports CSV | `src/rental_cockpit/entry_routes.py`, `engine/entries.py`, `engine/exports.py` |
+| Prestataires | API des prestataires et de leurs tarifs ; prestations d'une facture, répartition entre les séjours, rapprochement réversible avec les saisies faites à la main (validé entièrement avant toute écriture), coûts et marge d'un séjour | `src/rental_cockpit/supplier_routes.py`, `engine/suppliers.py`, `engine/ledger.py` |
 | Dépannage | Réinitialiser un mot de passe, désactiver la double authentification depuis le serveur | `src/rental_cockpit/cli.py` |
 | Interface | Écrans, textes français/anglais, styles | `src/rental_cockpit/static/` |
 

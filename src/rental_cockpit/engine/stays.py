@@ -176,6 +176,13 @@ def detail(data: dict[str, Any], stay: dict[str, Any], today: date, lang: str) -
         "source": stay.get("source", "manual"),
         "imported": _imported(data, stay),
     })
+    # Costs that served the stay (analytical: they were already counted once as expenses).
+    from .suppliers import stay_costs  # local import: suppliers builds on the entries module
+    costs = stay_costs(data, stay, lang)
+    result["costs"] = costs
+    result["costs_total"] = sum(c["amount"] for c in costs)
+    expected = result.get("expected_payout")
+    result["margin"] = expected - result["costs_total"] if expected is not None and stay["status"] != "cancelled" else None
     return result
 
 

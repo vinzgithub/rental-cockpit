@@ -19,6 +19,7 @@ from starlette.concurrency import run_in_threadpool
 from .engine import entries as entry_views
 from .engine import exports
 from .engine import stays as stay_views
+from .engine import suppliers as supplier_views
 from .engine.errors import RCError
 from .engine.ledger import Ledger
 from .engine.schema import EXPENSE_TREATMENTS, INCOME_TREATMENTS, TREATMENTS, category_label, label
@@ -27,7 +28,7 @@ from .stay_routes import _matches as stay_matches
 from .stay_routes import _search as stay_search
 from .web import Services, access, current_user, dataset_of, lang_of, public_property, read_json, require_csrf, scope, utc_now
 
-ENTRY_FIELDS = ("property_id", "kind", "category_id", "label", "amount", "amount_cents", "date", "period_start", "period_end",
+ENTRY_FIELDS = ("property_id", "kind", "category_id", "label", "amount", "amount_cents", "date", "period_start", "period_end", "lines",
                 "supplier_id", "stay_id", "invoice_number", "loan_split", "payment_declared", "note", "paid", "paid_date",
                 "payment_method", "revision", "updated_at")
 MAX_ROWS = 500
@@ -94,6 +95,7 @@ def register_entry_routes(app: FastAPI, services: Services) -> None:
         view = params.get("view") if params.get("view") in entry_views.VIEWS else "all"
         kind = params.get("kind") if params.get("kind") in ("expense", "income") else ""
         category = str(params.get("category_id") or "")
+        supplier = str(params.get("supplier_id") or "")
         year = str(params.get("year") or "")[:4]
         query = str(params.get("q") or "")[:80]
         data = registry.snapshot()
@@ -101,7 +103,8 @@ def register_entry_routes(app: FastAPI, services: Services) -> None:
         today = services.today()
         items = [entry_views.summary(data, e, lang, paid.get(e["id"], 0), today) for e in data.get("entries", {}).values() if e["property_id"] in selected]
         items = [i for i in items if entry_views.search(i, query) and (not kind or i["kind"] == kind)
-                 and (not category or i["category_id"] == category) and (not year or i["date"].startswith(year))]
+                 and (not category or i["category_id"] == category) and (not year or i["date"].startswith(year))
+                 and (not supplier or i["supplier_id"] == supplier)]
         counts = {key: sum(1 for i in items if entry_views.matches(i, key)) for key in entry_views.VIEWS}
         shown = [i for i in items if entry_views.matches(i, view)]
         if view in ("to_pay", "to_confirm", "to_receive"):
@@ -126,7 +129,8 @@ def register_entry_routes(app: FastAPI, services: Services) -> None:
             "totals": entry_views.totals(shown), "years": years,
             "properties": sorted(visible, key=lambda p: (p["archived"], p["name"].casefold())),
             "categories": _categories(data, lang),
-            "suppliers": sorted(({"id": s["id"], "name": s["name"], "archived": bool(s.get("archived")), "categories": s.get("categories", [])}
+            "suppliers": sorted(({"id": s["id"], "name": s["name"], "archived": bool(s.get("archived")), "categories": s.get("categories", []),
+                                  "rates": s.get("rates", [])}
                                  for s in data.get("suppliers", {}).values()), key=lambda s: (s["archived"], s["name"].casefold())),
         }
 
@@ -189,6 +193,29 @@ def register_entry_routes(app: FastAPI, services: Services) -> None:
     @app.delete("/api/entries/{entry_id}")
     async def delete_entry(request: Request, entry_id: str) -> dict[str, Any]:
         return await change(request, entry_id, lambda ledger, payload: ledger.delete_entry(entry_id))
+
+    @app.post("/api/entries/{entry_id}/allocations")
+    async def allocate_entry(request: Request, entry_id: str) -> dict[str, Any]:
+        """« Répartir entre les séjours » : analytical only, the expense is still counted once."""
+        return await change(request, entry_id, lambda ledger, payload: ledger.set_allocations(entry_id, payload))
+
+    @app.get("/api/entries/{entry_id}/candidates")
+    async def reconcile_candidates(request: Request, entry_id: str) -> dict[str, Any]:
+        lang = lang_of(request)
+        dataset = dataset_of(request.query_params.get("dataset"))
+        acc, registry = reader(request, dataset)
+        acc.require_admin()
+        data = registry.snapshot()
+        entry = entry_or_404(data, acc, entry_id)
+        return {"candidates": supplier_views.candidates(data, entry, lang)}
+
+    @app.post("/api/entries/{entry_id}/reconcile")
+    async def reconcile_entry(request: Request, entry_id: str) -> dict[str, Any]:
+        return await change(request, entry_id, lambda ledger, payload: ledger.reconcile(entry_id, payload))
+
+    @app.post("/api/entries/{entry_id}/unreconcile")
+    async def unreconcile_entry(request: Request, entry_id: str) -> dict[str, Any]:
+        return await change(request, entry_id, lambda ledger, payload: ledger.unreconcile(entry_id, payload))
 
     @app.post("/api/entries/{entry_id}/payments")
     async def record_payment(request: Request, entry_id: str) -> dict[str, Any]:

@@ -10,6 +10,7 @@ import { openAddMenu, openAlerts, openConfirm, openExplain, openPropertyDialog }
 import { openStay, openStayForm } from "./stay-dialogs.js";
 import { openImport, openImportHistory } from "./import-dialogs.js";
 import { openCategoryForm, openEntry, openEntryForm, toggleCategory } from "./entry-dialogs.js";
+import { openSupplier, openSupplierForm } from "./supplier-dialogs.js";
 import { esc, html, markup, opId, raw } from "./dom.js";
 import { makeI18n } from "./i18n.js";
 import { icon } from "./icons.js";
@@ -18,6 +19,7 @@ import { openCreateKey, openMfaCodes, openMfaDisable, openMfaEnable, openPasswor
 import { datasetSwitch } from "./views/dataset.js";
 import { renderSettings } from "./views/settings.js";
 import { ENTRY_VIEWS, renderExpenses } from "./views/expenses.js";
+import { renderSuppliers } from "./views/suppliers.js";
 import { renderStays, STAY_VIEWS } from "./views/stays.js";
 import { renderSynthese } from "./views/synthese.js";
 import { renderNoAccess, renderOnboarding, renderWelcome } from "./views/welcome.js";
@@ -28,6 +30,7 @@ const SCREENS = [
   ["synthese", "chart"],
   ["sejours", "calendar"],
   ["depenses", "wallet"],
+  ["prestataires", "users"],
   ["reglages", "sliders"],
 ];
 const READY = new Set(SCREENS.map(([key]) => key));
@@ -45,7 +48,8 @@ export class App {
   constructor(root) {
     this.root = root;
     this.state = { screen: "synthese", mode: "activity", propertyId: "all", periodKey: "", loading: true, error: "", overview: null, account: null,
-      stays: { view: "active", q: "", data: null }, entries: { view: "all", q: "", kind: "", year: "", data: null }, categories: null };
+      stays: { view: "active", q: "", data: null }, entries: { view: "all", q: "", kind: "", year: "", data: null }, categories: null,
+      suppliers: { view: "active", q: "", data: null } };
     this.searchTimer = null;
     this.auth = { error: "", busy: false, mfa: false, username: "" };
     this.session = null;
@@ -106,6 +110,7 @@ export class App {
     if (this.state.screen === "reglages") await this.loadAccount();
     if (this.state.screen === "sejours") await this.loadStays();
     if (this.state.screen === "depenses") await this.loadEntries();
+    if (this.state.screen === "prestataires") await this.loadSuppliers();
   }
 
   _sessionLost() {
@@ -217,9 +222,28 @@ export class App {
     this._render();
   }
 
+  /** « Prestataires » list for the current view and search. */
+  async loadSuppliers() {
+    const { view, q } = this.state.suppliers;
+    try {
+      const data = await this.api.get("/api/suppliers", { view, q });
+      if (view === this.state.suppliers.view && q === this.state.suppliers.q) this.state.suppliers.data = data;
+    } catch (err) {
+      if (err.status !== 401) this.toast(err.message, true);
+    }
+    this._render();
+  }
+
+  async afterSupplierChange() {
+    this.state.entries = { ...this.state.entries, data: null };
+    if (this.state.screen === "prestataires") await this.loadSuppliers();
+    if (this.state.screen === "depenses") await this.loadEntries();
+  }
+
   /** After any change to an expense or an income: the list and the Overview come back from the server. */
   async afterEntryChange() {
-    await Promise.all([this.load(), this.state.screen === "depenses" ? this.loadEntries() : Promise.resolve()]);
+    await Promise.all([this.load(), this.state.screen === "depenses" ? this.loadEntries() : Promise.resolve(),
+      this.state.screen === "prestataires" ? this.loadSuppliers() : Promise.resolve()]);
   }
 
   async afterCategoryChange(categories) {
@@ -276,6 +300,7 @@ export class App {
       properties: overview?.properties || this.state.stays.data?.properties || [],
       stays: this.state.stays,
       entries: this.state.entries,
+      suppliers: this.state.suppliers,
       categories: this.state.categories,
       canWrite: this.canWrite,
       periodOptions: this.session?.authenticated ? this.periodOptions() : [],
@@ -302,11 +327,26 @@ export class App {
         if (value === "depenses" && target.dataset.view && ENTRY_VIEWS.includes(target.dataset.view)) {
           this.state.entries = { ...this.state.entries, view: target.dataset.view, q: "", kind: "", year: "", data: null };
         }
+        if (value === "depenses" && target.dataset.q) {
+          this.state.entries = { ...this.state.entries, view: "all", q: target.dataset.q.slice(0, 80), kind: "", year: "", data: null };
+        }
         this._render();
         this.root.querySelector(".main")?.scrollTo({ top: 0 });
         if (value === "reglages") await this.loadAccount();
         if (value === "sejours") await this.loadStays();
         if (value === "depenses") await this.loadEntries();
+        if (value === "prestataires") await this.loadSuppliers();
+        break;
+      case "suppliers-view":
+        this.state.suppliers = { ...this.state.suppliers, view: value };
+        this._render();
+        await this.loadSuppliers();
+        break;
+      case "supplier-open":
+        openSupplier(this, value);
+        break;
+      case "supplier-new":
+        openSupplierForm(this);
         break;
       case "entries-view":
         this.state.entries = { ...this.state.entries, view: value };
@@ -452,6 +492,10 @@ export class App {
       this.state.stays.q = target.value;
       clearTimeout(this.searchTimer);
       this.searchTimer = setTimeout(() => this.loadStays(), 250);
+    } else if (target.dataset.input === "suppliers-q") {
+      this.state.suppliers.q = target.value;
+      clearTimeout(this.searchTimer);
+      this.searchTimer = setTimeout(() => this.loadSuppliers(), 250);
     } else if (target.dataset.input === "entries-q") {
       this.state.entries.q = target.value;
       clearTimeout(this.searchTimer);
@@ -518,8 +562,10 @@ export class App {
     // Lists of the other dataset must never show, even for an instant.
     this.state.stays = { ...this.state.stays, data: null };
     this.state.entries = { ...this.state.entries, data: null };
+    this.state.suppliers = { ...this.state.suppliers, data: null };
     this.state.categories = null;
     await this.load();
+    if (this.state.screen === "prestataires") await this.loadSuppliers();
     if (this.state.screen === "sejours") await this.loadStays();
     if (this.state.screen === "depenses") await this.loadEntries();
     if (this.state.screen === "reglages") await this.loadAccount();
@@ -659,6 +705,8 @@ export class App {
       body = renderStays(this.viewModel());
     } else if (this.state.screen === "depenses") {
       body = renderExpenses(this.viewModel());
+    } else if (this.state.screen === "prestataires") {
+      body = renderSuppliers(this.viewModel());
     } else if (!this.state.overview.properties.length) {
       body = this.canWrite ? renderOnboarding(this.viewModel()) : renderNoAccess(this.viewModel());
     } else {

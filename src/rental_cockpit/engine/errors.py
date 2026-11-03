@@ -70,6 +70,8 @@ MESSAGES: dict[str, tuple[str, str]] = {
     "adjustment_note_required": ("Un ajustement doit être justifié par une note.", "An adjustment must be explained with a note."),
     "allocation_exceeds": ("La ventilation dépasse le montant de {what} ({total}). Rien n'a été enregistré.", "The allocation exceeds the amount of {what} ({total}). Nothing was saved."),
     "allocation_stay_property": ("Une prestation ne peut être affectée qu'à un séjour du même bien.", "A service can only be allocated to a stay of the same property."),
+    "allocation_line_removed": ("La prestation « {what} » est répartie entre des séjours : modifiez d'abord la répartition, puis retirez la prestation. Rien n'a été enregistré.",
+                                "The service \"{what}\" is split between stays: change the split first, then remove the service. Nothing was saved."),
     "allocation_line_required": ("Cette dépense est détaillée en prestations : choisissez la prestation à affecter.", "This expense is broken down into services: choose which service to allocate."),
     "loan_split_mismatch": ("Capital + intérêts + assurance ({split}) doit être égal à la mensualité ({total}).", "Principal + interest + insurance ({split}) must equal the instalment ({total})."),
     "loan_split_category": ("La décomposition capital/intérêts/assurance est réservée aux remboursements d'emprunt.", "The principal/interest/insurance breakdown is only for loan repayments."),
@@ -92,6 +94,10 @@ MESSAGES: dict[str, tuple[str, str]] = {
     "entry_has_payments": ("Cette écriture a des paiements : supprimez-les d'abord, ou archivez-la pour la retirer des totaux.", "This entry has payments: delete them first, or archive it to remove it from the totals."),
     "entry_has_documents": ("Un justificatif est rattaché à cette écriture : archivez-la plutôt que de la supprimer.", "A document is attached to this entry: archive it rather than delete it."),
     "series_months": ("Le nombre de mois doit être compris entre 2 et 36.", "The number of months must be between 2 and 36."),
+    "reconcile_invalid": ("Ces écritures ne peuvent pas être rapprochées : choisissez des dépenses saisies à la main, du même bien, ni archivées ni déjà remplacées.", "These entries cannot be reconciled: choose expenses typed by hand, of the same property, neither archived nor already replaced."),
+    "reconcile_exceeds": ("Les saisies remplacées ({matched}) dépassent le montant de la facture ({total}). Rien n'a été enregistré.", "The replaced entries ({matched}) exceed the invoice amount ({total}). Nothing was saved."),
+    "reconcile_paid_exceeds": ("Avec les paiements des saisies remplacées, la facture serait réglée au-delà de son montant ({paid} pour {total}). Rien n'a été enregistré.", "With the payments of the replaced entries, the invoice would be paid beyond its amount ({paid} for {total}). Nothing was saved."),
+    "entry_reconciled": ("Cette facture remplace des saisies : annulez d'abord le rapprochement.", "This invoice replaces entries: undo the reconciliation first."),
     "superseded": ("Cette dépense a été remplacée par une facture lors d'un rapprochement : modifiez la facture.", "This expense was replaced by an invoice during reconciliation: edit the invoice."),
     "duplicate_operation": ("Opération déjà enregistrée (double clic détecté) : aucune seconde écriture n'a été créée.", "Operation already saved (double click detected): no second entry was created."),
     # Documents
@@ -135,14 +141,14 @@ class RCError(Exception):
         return render(self.code, self.params, lang)
 
     def as_dict(self, lang: str = "fr") -> dict[str, Any]:
-        return {"code": self.code, "message": self.message(lang), "params": _plain(self.params)}
+        return {"code": self.code, "message": self.message(lang), "params": _plain(self.params, lang)}
 
 
 def render(code: str, params: dict[str, Any] | None = None, lang: str = "fr") -> str:
     fr, en = MESSAGES.get(code, UNKNOWN)
     template = fr if lang == "fr" else en
     try:
-        return template.format(**(params or {}))
+        return template.format(**_plain(params or {}, lang))
     except (KeyError, IndexError, ValueError):
         return template
 
@@ -155,5 +161,10 @@ def from_value_error(exc: ValueError, field: str | None = None) -> RCError:
     return RCError(code, field=field or "")
 
 
-def _plain(params: dict[str, Any]) -> dict[str, Any]:
-    return {key: value if isinstance(value, (str, int, float, bool, type(None))) else str(value) for key, value in params.items()}
+def _plain(params: dict[str, Any], lang: str = "fr") -> dict[str, Any]:
+    """Parameters as plain values; a (French, English) pair becomes the reader's language."""
+    def one(value: Any) -> Any:
+        if isinstance(value, tuple) and len(value) == 2 and all(isinstance(v, str) for v in value):
+            return value[0] if lang == "fr" else value[1]
+        return value if isinstance(value, (str, int, float, bool, type(None))) else str(value)
+    return {key: one(value) for key, value in params.items()}

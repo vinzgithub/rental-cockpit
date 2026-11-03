@@ -522,8 +522,8 @@ dialog.rc .dfoot { display: flex; gap: 10px; justify-content: flex-end; flex-wra
 .meta-line svg.i { width: 17px; height: 17px; color: var(--rc-accent); }
 .codebox { display: flex; align-items: center; gap: 6px; padding: 4px 4px 4px 14px; border-radius: 11px; border: 1px solid var(--rc-border-strong); background: var(--rc-inset); min-width: 0; }
 .codebox code { flex: 1; min-width: 0; overflow-wrap: anywhere; word-break: break-all; font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: 13px; color: var(--rc-text); user-select: all; }
-.keyrow { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 12px; border-radius: 13px; background: var(--rc-inset); border: 1px solid var(--rc-border); }
-.keyrow b { display: block; font-size: 14.5px; }
+.keyrow { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px; border-radius: 13px; background: var(--rc-inset); border: 1px solid var(--rc-border); }
+.keyrow b { display: block; font-size: 14.5px; overflow-wrap: break-word; }
 .keyrow small { display: block; color: var(--rc-faint); font-size: 12.5px; margin-top: 2px; }
 .keyrow .tile { width: 40px; height: 40px; }
 .keyrow .tile svg.i { width: 20px; height: 20px; color: var(--rc-accent); }
@@ -739,6 +739,63 @@ fieldset.pay-choice { display: grid; gap: 12px; }
   .head-actions .btn { min-height: 40px; padding: 0 12px; font-size: 13.5px; }
 }
 
+/* ------------------------------------------------------------ « Prestataires », service lines, split */
+.supplier-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr)); }
+.supplier-card { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 16px; border-radius: 14px;
+  background: var(--rc-card); border: 1px solid var(--rc-border); width: 100%; text-align: left; color: inherit; font: inherit; cursor: pointer; }
+@media (hover: hover) { .supplier-card:hover { border-color: var(--rc-accent-line); } }
+.supplier-card .body { display: grid; gap: 4px; min-width: 0; }
+.supplier-card .stay-title { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.supplier-card .when { color: var(--rc-muted); font-size: 13px; }
+.supplier-card .facts { color: var(--rc-muted); font-size: 12.5px; }
+.supplier-card .money-line { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+.supplier-card .chev { color: var(--rc-muted); }
+.tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.tag { padding: 2px 9px; border-radius: 999px; background: rgba(255, 255, 255, 0.06); color: var(--rc-muted); font-size: 12px; }
+.keyrow.clickable { width: 100%; text-align: left; color: inherit; font: inherit; cursor: pointer; }
+@media (hover: hover) { .keyrow.clickable:hover { border-color: var(--rc-accent-line); } }
+.keyrow .end-col { display: grid; justify-items: end; gap: 4px; }
+.keyrow .end-col b { overflow-wrap: normal; white-space: nowrap; }
+.keyrow.pick { grid-template-columns: auto minmax(0, 1fr) auto; cursor: pointer; }
+.keyrow.pick input { width: 20px; height: 20px; accent-color: var(--rc-accent); }
+.keyrow.pick:has(input:checked) { border-color: var(--rc-accent-line); background: var(--rc-accent-soft); }
+.check-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0 12px; }
+.svc-lines, [data-rates] { display: grid; gap: 10px; margin-top: 10px; }
+[data-line-rows] { display: grid; gap: 10px; }
+.svc-line, .rate-line { display: grid; gap: 8px 10px; align-items: end; padding: 12px; border-radius: 12px; background: var(--rc-inset); border: 1px solid var(--rc-border); }
+/* A service line: what and when on the first row, how much on the second, the reason of an adjustment below. */
+.svc-line { grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(150px, 1fr) 44px;
+  grid-template-areas: "kind label label date del" "qty unit price amount ." "note note note note ."; }
+.svc-line .f-kind { grid-area: kind; } .svc-line .f-label { grid-area: label; } .svc-line .f-date { grid-area: date; }
+.svc-line .f-qty { grid-area: qty; } .svc-line .f-unit { grid-area: unit; } .svc-line .f-price { grid-area: price; }
+.svc-line .f-amount { grid-area: amount; } .svc-line .f-note { grid-area: note; } .svc-line .f-del { grid-area: del; }
+.svc-line .f-note[hidden] { display: none; }
+.rate-line { grid-template-columns: minmax(120px, 1fr) minmax(110px, 1fr) minmax(90px, 0.8fr) minmax(0, 2fr) 44px; }
+.svc-line .field input, .svc-line .field select, .rate-line .field input, .rate-line .field select { height: 42px; min-height: 42px; }
+.svc-line label, .rate-line label { font-size: 12px; }
+.svc-foot { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.svc-foot .reading { margin: 0; }
+.split-rows { display: grid; gap: 8px; }
+.split-row { padding: 10px 14px; border-radius: 12px; background: var(--rc-inset); border: 1px solid var(--rc-border); display: grid; gap: 4px; }
+.split-head { display: flex; justify-content: space-between; gap: 10px; }
+.split-head small { color: var(--rc-faint); font-weight: 400; }
+.split-row .plain-list { margin: 0; }
+.split-row small.left { color: var(--rc-amber); }
+.split-row small.done { color: var(--rc-accent); display: inline-flex; gap: 4px; align-items: center; }
+.split-row small.done svg.i { width: 14px; height: 14px; }
+.linkbtn.small.inline { display: inline; padding: 0; min-height: 0; }
+fieldset.split-block { display: grid; gap: 8px; }
+.alloc { display: grid; grid-template-columns: minmax(0, 1fr) 120px 44px; gap: 8px; align-items: center; margin-top: 6px; }
+.alloc select, .alloc input { min-height: 42px; padding: 8px 12px; border-radius: 11px; border: 1px solid var(--rc-border-strong); background-color: var(--rc-inset);
+  color: var(--rc-text); font: inherit; font-size: 14px; min-width: 0; width: 100%; }
+.alloc select { appearance: none; -webkit-appearance: none; padding-right: 32px; background-image: linear-gradient(45deg, transparent 50%, var(--rc-muted) 50%), linear-gradient(135deg, var(--rc-muted) 50%, transparent 50%);
+  background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%; background-size: 5px 5px; background-repeat: no-repeat; }
+.alloc select:focus, .alloc input:focus { outline: 2px solid var(--rc-accent); outline-offset: 0; border-color: transparent; }
+.split-foot { display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap; }
+.split-foot small.bad, .split-total.bad { color: #f3a5af; }
+.split-total { font-weight: 600; text-align: right; }
+.facts-list.after-table { margin-top: 12px; }
+
 /* Dialogs live outside the page container: they follow their own width
    (kept last so it wins over the general rules above). */
 @container dialog (max-width: 560px) {
@@ -761,6 +818,15 @@ fieldset.pay-choice { display: grid; gap: 12px; }
   dialog.rc .dfoot.imp-foot .btn.primary { grid-column: 1 / -1; order: -1; white-space: normal; text-align: center; }
   dialog.rc .dfoot.imp-foot .back { margin: 0; }
   .form-grid.three { grid-template-columns: minmax(0, 1fr); }
+  .svc-line { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 44px;
+    grid-template-areas: "kind kind del" "label label label" "qty unit unit" "price amount amount" "date date date" "note note note"; }
+  .rate-line { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 44px; grid-template-areas: "kind unit del" "price label label"; }
+  .rate-line > :nth-child(1) { grid-area: kind; } .rate-line > :nth-child(2) { grid-area: unit; } .rate-line > :nth-child(3) { grid-area: price; }
+  .rate-line > :nth-child(4) { grid-area: label; } .rate-line > :nth-child(5) { grid-area: del; }
+  .alloc { grid-template-columns: minmax(0, 1fr) 96px 44px; }
+  dialog.rc .dbody .actions .btn, dialog.rc .dbody .keyrow .btn { white-space: normal; text-align: left; }
+  .keyrow.clickable { grid-template-columns: auto minmax(0, 1fr); }
+  .keyrow.clickable .end-col { grid-column: 2; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: flex-start; }
   .pay-option { flex: 1 1 auto; justify-content: center; }
   dialog.rc .dfoot.stay-actions { display: grid; grid-template-columns: 1fr 1fr; }
   dialog.rc .dfoot.stay-actions .del { grid-column: 1 / -1; order: 3; margin: 0; border-color: transparent; }

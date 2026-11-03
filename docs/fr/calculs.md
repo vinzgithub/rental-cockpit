@@ -117,6 +117,27 @@ Exemple (c'est le scénario des tests) : réparation de 300 € datée du 10 oct
 
 **Archiver** retire une écriture de tous les totaux sans l'effacer ; ses paiements sont conservés. **Supprimer** n'est possible que pour une écriture sans paiement ni justificatif.
 
+## Une facture de prestataire
+
+**Prestations.** Une facture peut être détaillée en lignes : ménage, linge, déplacement, autre, remise, taxe, ajustement. Une ligne a un montant, ou une quantité et un prix unitaire (montant = quantité × prix, qui doit tomber juste au centime : rien n'est arrondi en douce). Une remise est négative ; un ajustement peut l'être et exige une justification. **La somme des lignes doit égaler le montant de la facture**, sinon rien n'est enregistré. Les tarifs d'un prestataire pré-remplissent un prix unitaire, ils ne modifient jamais un montant. La facture reste **une seule dépense** : c'est elle qui compte dans les trois lectures.
+
+**Répartition entre les séjours.** Chaque prestation (ménage, linge, déplacement, autre) peut être affectée, en un ou plusieurs morceaux, à des séjours du même bien (seuls les séjours non annulés sont proposés) ; une remise, une taxe ou un ajustement suivent la facture. La somme affectée à une prestation ne dépasse jamais son montant. Le séjour proposé est celui dont le départ tombe le jour de l'intervention, à défaut celui en cours ce jour-là. La répartition **n'ajoute aucune dépense** : elle dit quels séjours une dépense a servis. Une prestation déjà répartie ne peut être retirée de la facture qu'après avoir modifié sa répartition. Une facture répartie en partie est listée dans *À vérifier* avec le montant restant.
+
+**Rapprochement.** Une facture peut remplacer des dépenses saisies à la main pour les mêmes prestations. Sont proposées les dépenses du même bien, de la catégorie de la facture ou de ses prestations, datées entre la première intervention (à défaut, un mois avant le mois de la facture) et la date de la facture, sans prestataire ou du même prestataire. Sont toujours refusées : une dépense d'un autre bien, une recette, une dépense archivée, détaillée, déjà remplacée ou qui en remplace d'autres. Le total remplacé ne dépasse pas le montant de la facture. Les saisies remplacées sortent de tous les totaux ; leurs paiements sont **reportés sur la facture** (à leur date d'origine, la Trésorerie ne change donc pas) et ne peuvent pas dépasser son montant. Le rapprochement s'annule saisie par saisie : elle revient avec ses paiements. Une facture qui remplace des saisies ne peut être ni supprimée ni archivée avant d'avoir annulé ces rapprochements, et son montant ne peut pas descendre sous le total remplacé.
+
+**Coûts et marge d'un séjour.** Les coûts affectés à un séjour sont ses parts de factures réparties, plus les dépenses rattachées au séjour entier (sans répartition). **Marge après coûts = versement net attendu − coûts affectés** ; elle n'est pas calculée pour un séjour annulé ou dont le montant est inconnu.
+
+Exemple (c'est le scénario des tests) : séjour A du 28 septembre au 4 octobre 2026 (600 €, commission 90 €, versement attendu 510 €) et séjour B du 10 au 13 octobre (300 €, commission 45 €, versement attendu 255 €). Deux ménages saisis à la main et payés : 45 € le 4 octobre, 35 € le 13 octobre. Le prestataire envoie ensuite sa facture du 20 octobre : **150 €** = 4 h de ménage à 25 € le 4 octobre + 4 lots de linge à 10 € le 13 octobre + 10 € de déplacement le 13 octobre.
+
+| Étape | Dépenses d'octobre hors commissions (Activité, Factures) | Trésorerie d'octobre | Reste à payer |
+|---|---|---|---|
+| Facture saisie | 45 + 35 + 150 = 230 € | 80 € payés | 150 € |
+| Répartition : ménage → A, linge et déplacement → B | 230 € (inchangé) | 80 € | 150 € |
+| Rapprochement des deux ménages | **150 €** : comptée une fois | 80 € (paiements reportés, mêmes dates) | 150 − 80 = **70 €** |
+| Rétablir le ménage du 4 octobre | 45 + 150 = 195 € | 80 € | 150 − 35 = 115 € |
+
+Après répartition : séjour A, coûts 100 €, marge 510 − 100 = **410 €** ; séjour B, coûts 50 €, marge 255 − 50 = **205 €**.
+
 ## Les indicateurs
 
 | Indicateur | Formule | Exclut |
@@ -147,7 +168,7 @@ Pour un mois : 1 000 € de recettes d'activité, 30 € de commission, 80 € d
 
 Le mois d'exemple de la démonstration reproduit exactement ces chiffres ; le test `test_documented_example_T03` les vérifie.
 
-Exemple de prestations : une facture de 150 € comprend 100 € de ménage, 40 € de linge et 10 € de déplacement ; 90 € sont affectés au séjour A et 60 € au séjour B. Le tableau annuel conserve **une** dépense de 150 €, pas 300 €.
+Exemple de prestations : une facture de 150 € comprend 100 € de ménage, 40 € de linge et 10 € de déplacement ; 90 € sont affectés au séjour A et 60 € au séjour B. Le tableau annuel conserve **une** dépense de 150 €, pas 300 €. La démonstration contient cette facture, déjà répartie (voir « Une facture de prestataire »).
 
 ## Glossaire
 
