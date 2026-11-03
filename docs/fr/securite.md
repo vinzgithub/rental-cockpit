@@ -60,6 +60,18 @@ La démonstration (données fictives) est visible par tout compte connecté et m
 - **Droits** : l'accès aux PDF d'un bien est une autorisation distincte de l'accès au bien. Un lecteur sans cette autorisation voit qu'une dépense a un justificatif, jamais son contenu ni son nom. Envoyer, joindre, détacher, décrire ou supprimer : administrateurs seulement, avec le jeton CSRF.
 - **Cohérence** : la dépense, le justificatif et la ligne de journal sont enregistrés dans une même transaction ; si elle échoue, le fichier nouvellement écrit est retiré. Un fichier laissé par une interruption est supprimé au démarrage suivant. Le journal garde l'action et le début de l'empreinte, jamais le contenu du PDF.
 
+## Comptes lecteurs
+
+- Créés par un administrateur avec un **mot de passe temporaire** (10 caractères au moins, généré par le navigateur) : tant qu'il n'est pas remplacé, il n'ouvre que l'écran « Choisissez votre mot de passe » ; toute autre demande est refusée par le serveur.
+- Les droits se donnent bien par bien ; l'accès aux PDF d'un bien est une autorisation distincte. Un changement de droits s'applique à la requête suivante ; un nouveau mot de passe temporaire ferme toutes les sessions du lecteur.
+- Le compte administrateur ne peut être ni modifié ni supprimé depuis cet écran.
+
+## Sauvegardes
+
+- Une sauvegarde ne contient **aucun secret** : ni empreinte de mot de passe, ni code de double authentification, ni clé d'API. Elle contient en revanche toutes les données privées : elle est signalée comme telle et doit être rangée à l'abri.
+- Écrite dans `backups/` (dossier 0700, fichier 0600), relue et contrôlée après écriture, téléchargeable par un administrateur seulement.
+- Une restauration est vérifiée dans un dossier à part : noms de fichiers attendus seulement (pas de chemin, pas de traversée), taille décompressée limitée, empreinte de chaque fichier, PDF comparé à son nom, schéma, totaux. Elle s'applique après le mot de confirmation, une seule fois par vérification, et commence par sauvegarder les données remplacées.
+
 ## Navigateur
 
 - Politique de sécurité du contenu stricte : `default-src 'self'`, aucun script ni style en ligne ou externe, aucun affichage dans un cadre par défaut (`frame-ancestors 'none'`).

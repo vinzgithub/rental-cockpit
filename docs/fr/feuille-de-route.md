@@ -11,9 +11,9 @@ Rental Cockpit avance par **livraisons** courtes et utilisables. Chaque livraiso
 | **L3** — Dépenses et règlements | 0.4.0 | Dépenses et recettes hors séjours, paiements partiels, à payer / à recevoir, mensualités d'emprunt (série mensuelle, capital / intérêts / assurance), période couverte, catégories, exports CSV, Synthèse « au-delà de l'exploitation » | En validation |
 | **L4** — Prestataires | 0.5.0 | Prestataires et tarifs indicatifs, facture détaillée en prestations, répartition entre les séjours (séjour proposé selon la date d'intervention), rapprochement réversible avec les saisies faites à la main, coûts et marge par séjour | En validation |
 | **L5** — Justificatifs | 0.6.0 | PDF contrôlés sans exécution, aperçu sans écriture, lecture d'assistance « À vérifier », doublons (fichier, référence, cas probable), créer une dépense depuis une facture, joindre et détacher sans toucher à la dépense, stockage privé par empreinte, consultation après contrôle des droits | En validation |
-| **L6** — Version 1.0 | 1.0.0 | Sauvegarde et restauration vérifiées, comptes lecteurs, passe accessibilité et mobile, essai ARM64, recette complète | À venir |
+| **L6** — Version 1.0 | 1.0.0 | Comptes lecteurs (mot de passe temporaire, droits par bien, accès aux PDF à part), sauvegarde ZIP vérifiée sans secret, restauration contrôlée dans une copie de recette puis confirmée, ligne de commande, passe accessibilité (axe-core, 360 px, clavier), performances (10 000 écritures), incidents, recette T01–T12 | En validation |
 
-La priorité P0 (utilisable au quotidien) est atteinte à la 0.4.0. Abritel (et d'autres plateformes) ne seront annoncés qu'après analyse d'exports authentiques et anonymisés : aucun format n'est deviné.
+La priorité P0 (utilisable au quotidien) est atteinte à la 0.4.0 ; la 1.0 couvre tout le périmètre de la première version ([recette](recette.md)). Abritel (et d'autres plateformes) ne seront annoncés qu'après analyse d'exports authentiques et anonymisés : aucun format n'est deviné.
 
 ## Décisions en attente
 

@@ -42,5 +42,8 @@ jobs:
         run: |
           pip install -e ".[dev]" "playwright>=1.48,<2"
           python -m playwright install --with-deps chromium
+          npm install --no-save --prefix "$RUNNER_TEMP/axe" axe-core@4.10.2
       - name: Browser tests
+        env:
+          AXE_PATH: ${{ runner.temp }}/axe/node_modules/axe-core/axe.min.js
         run: pytest -q tests/e2e

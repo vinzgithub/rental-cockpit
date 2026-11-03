@@ -228,7 +228,10 @@ def register_document_routes(app: FastAPI, services: Services) -> None:
         store = stores[dataset]
         new_blob = False
         if pending is not None:
-            new_blob = await run_in_threadpool(store.write, pending["sha256"], pending["raw"])
+            try:
+                new_blob = await run_in_threadpool(store.write, pending["sha256"], pending["raw"])
+            except OSError as exc:  # nothing was recorded: the person can free some space and confirm again
+                raise RCError("storage_full" if exc.errno == 28 else "storage_failed", detail="PDF") from exc
         document = payload.get("document") if isinstance(payload.get("document"), dict) else {}
         fields = payload.get("entry") if isinstance(payload.get("entry"), dict) else {}
 

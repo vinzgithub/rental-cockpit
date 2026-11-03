@@ -540,10 +540,10 @@ def _to_check(data: dict[str, Any], pids: set[str], end: date, today: date, miss
     """« Données à vérifier » : what keeps a result from being final."""
     fr = lang == "fr"
     items: list[dict[str, Any]] = []
+    settled = {link["id"] for p in data.get("payments", {}).values() for link in p["links"] if link["type"] == "entry"}
     unknown_payment = [e for e in data.get("entries", {}).values()
                        if e["property_id"] in pids and e["kind"] == "expense" and not e.get("archived") and not e.get("superseded_by")
-                       and e.get("payment_declared", "unknown") == "unknown"
-                       and not any(link["type"] == "entry" and link["id"] == e["id"] for p in data["payments"].values() for link in p["links"])]
+                       and e.get("payment_declared", "unknown") == "unknown" and e["id"] not in settled]
     received = {link["id"] for p in data.get("payments", {}).values() for link in p["links"] if link["type"] == "stay"}
     payouts = [s for s in data.get("stays", {}).values()
                if s["property_id"] in pids and s["status"] in ("confirmed", "completed") and parse_date(s["end"]) <= today

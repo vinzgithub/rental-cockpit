@@ -49,7 +49,7 @@ docker compose pull
 docker compose up -d
 ```
 
-Copiez le volume de données avant une mise à jour (voir plus bas). Quand une nouvelle version change le format des données, Rental Cockpit écrit en plus une copie complète de la base dans `backups/` avant de la convertir. Une base écrite par une version plus récente n'est jamais ouverte par une version plus ancienne.
+Faites une sauvegarde avant une mise à jour (**Réglages → Sauvegarde et restauration**, voir [sauvegarde.md](sauvegarde.md)). Quand une nouvelle version change le format des données, Rental Cockpit écrit en plus une copie complète de la base dans `backups/` avant de la convertir. Une base écrite par une version plus récente n'est jamais ouverte par une version plus ancienne.
 
 ### Construire l'image soi-même
 
@@ -86,6 +86,7 @@ Gardez **un seul processus** (`--workers 1`, la valeur par défaut) : l'applicat
 | `RENTAL_COCKPIT_FRAME_ANCESTORS` | Origines autorisées à afficher l'application dans un cadre (tableau de bord Home Assistant) | aucune |
 | `TZ` | Fuseau horaire utilisé pour « aujourd'hui » | celui du système |
 | `FORWARDED_ALLOW_IPS` | Adresse de votre proxy inverse, s'il y en a un | — |
+| `RENTAL_COCKPIT_MAX_BACKUP_MB` | Taille maximale d'une sauvegarde envoyée pour une restauration, en Mio | `2048` |
 
 ## Le dossier de données
 
@@ -93,10 +94,11 @@ Gardez **un seul processus** (`--workers 1`, la valeur par défaut) : l'applicat
 |---|---|
 | `rental_cockpit.db` | Comptes, droits, clés d'API (empreintes), registre réel et registre de démonstration (SQLite) |
 | `.secret_key` | Clé de signature des sessions, créée au premier démarrage (droits 0600) |
-| `backups/` | Copies automatiques de la base faites avant chaque migration de format (`pre-migration-v1-to-v2-….db`) |
-| `documents/` | Justificatifs PDF privés (à partir de l'écran Documents) |
+| `backups/` | Sauvegardes ZIP créées depuis les Réglages ou la ligne de commande, sauvegardes faites avant une restauration (`avant-restauration-….zip`) et copies de la base faites avant chaque migration de format (`pre-migration-….db`) |
+| `documents/` | Justificatifs PDF privés, nommés par leur empreinte SHA-256 (droits 0700 / 0600) |
+| `demo-documents/` | PDF fictifs de la démonstration |
 
-**Sauvegarde manuelle** en attendant la sauvegarde intégrée : arrêtez l'application, copiez tout le dossier, redémarrez.
+**Sauvegarde** : utilisez **Réglages → Sauvegarde et restauration**, ou `python -m rental_cockpit.cli backup` ; tout est expliqué dans [sauvegarde.md](sauvegarde.md). Une copie brute du dossier, application arrêtée, reste possible :
 
 ```bash
 docker compose stop
@@ -120,8 +122,8 @@ Chaque commande déconnecte tous les navigateurs du compte.
 
 ## Désinstallation
 
-`docker compose down` arrête l'application **sans supprimer** le volume de données. Pour tout effacer définitivement : `docker compose down -v` (irréversible).
+`docker compose down` arrête l'application **sans supprimer** le volume de données : registres, PDF et sauvegardes restent. Pour tout effacer définitivement : `docker compose down -v` (irréversible) — faites une sauvegarde avant.
 
 ## Exposition réseau
 
-Gardez Rental Cockpit sur votre réseau local, ou derrière un proxy inverse en HTTPS avec `RENTAL_COCKPIT_COOKIE_SECURE=true` et la double authentification activée. N'ouvrez pas de port sur votre box sans avoir lu [securite.md](securite.md). Derrière un proxy inverse, autorisez des requêtes de 8 Mio pour l'import de fichiers (par exemple `client_max_body_size 8m;` avec nginx).
+Gardez Rental Cockpit sur votre réseau local, ou derrière un proxy inverse en HTTPS avec `RENTAL_COCKPIT_COOKIE_SECURE=true` et la double authentification activée. N'ouvrez pas de port sur votre box sans avoir lu [securite.md](securite.md). Derrière un proxy inverse, autorisez des requêtes de 8 Mio pour l'import de fichiers et les justificatifs (par exemple `client_max_body_size 8m;` avec nginx), davantage pour restaurer une sauvegarde depuis le navigateur.

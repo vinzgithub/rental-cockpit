@@ -98,7 +98,8 @@ def register_stay_routes(app: FastAPI, services: Services) -> None:
         data = registry.snapshot()
         today = services.today()
         today_iso = today.isoformat()
-        items = [stay_views.summary(data, stay, today, lang) for stay in data.get("stays", {}).values() if stay["property_id"] in selected]
+        received = stay_views.received_by_stay(data)
+        items = [stay_views.summary(data, stay, today, lang, received) for stay in data.get("stays", {}).values() if stay["property_id"] in selected]
         items = [item for item in items if _search(item, query)]
         counts = {key: sum(1 for item in items if _matches(item, key, today_iso)) for key in VIEWS}
         shown = [item for item in items if _matches(item, view, today_iso)]

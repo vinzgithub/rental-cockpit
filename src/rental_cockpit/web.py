@@ -24,7 +24,7 @@ DATASETS = ("real", "demo")
 MAX_JSON_BYTES = 1024 * 1024
 STATUS = {"forbidden": 403, "forbidden_property": 403, "forbidden_documents": 403, "login_required": 401,
           "csrf_failed": 403, "not_found": 404, "login_locked": 429, "stale_revision": 409,
-          "preview_stale": 409, "upload_too_large": 413}
+          "preview_stale": 409, "upload_too_large": 413, "password_change_required": 403, "backup_too_large": 413}
 
 MFA_PENDING_SECONDS = 300
 
@@ -105,6 +105,8 @@ def dataset_of(value: Any) -> str:
 
 
 def access(services: Services, user: Any, dataset: str) -> Access:
+    if user["must_change_password"]:
+        raise RCError("password_change_required")  # a temporary password opens nothing but the password change
     registry = services.registries[dataset]
     grants = services.db.grants_for(int(user["id"])) if user["role"] != "admin" else {}
     return access_for(user, grants, registry.snapshot(), dataset)

@@ -8,7 +8,7 @@
 
 **Français** · [**English**](README.md)
 
-![Version](https://img.shields.io/badge/version-0.6.0%20pr%C3%A9version-126caa) ![Docker](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-2496ED) ![Licence](https://img.shields.io/badge/licence-%C3%A0%20d%C3%A9finir-lightgrey)
+![Version](https://img.shields.io/badge/version-1.0.0%20en%20recette-126caa) ![Docker](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-2496ED) ![Licence](https://img.shields.io/badge/licence-%C3%A0%20d%C3%A9finir-lightgrey)
 
 <br>
 
@@ -42,7 +42,7 @@
 </table>
 
 > [!NOTE]
-> **Version 0.6.0, préversion.** La Synthèse, les **séjours** (saisie, **import Airbnb et CSV**, annulation, versements reçus), les **dépenses et règlements** (paiements partiels, mensualités d'emprunt, catégories, export CSV), les **prestataires** (tarifs, factures détaillées réparties entre les séjours, rapprochement), les **justificatifs PDF** (vérifiés, privés, doublons détectés), la démonstration, les comptes, la double authentification et le lien avec Home Assistant sont prêts. La **version 1.0** ajoutera la sauvegarde et la restauration vérifiées et les comptes lecteurs.
+> **Version 1.0.0, en recette.** Tout ce que prévoit la première version est prêt : la Synthèse et ses trois lectures, les **séjours** (saisie, **import Airbnb et CSV**, annulation, versements reçus), les **dépenses et règlements**, les **prestataires** (factures détaillées réparties entre les séjours, rapprochement), les **justificatifs PDF**, les **comptes lecteurs**, la **sauvegarde et la restauration vérifiées**, la démonstration, la double authentification et le lien avec Home Assistant. Elle devient la version stable une fois la recette validée ([critères et résultats](docs/fr/recette.md)).
 
 ---
 
@@ -362,9 +362,9 @@ Mise à jour : `docker compose pull && docker compose up -d`.
 
 ## 💾 Vos données
 
-Tout tient dans **un seul dossier**, `/data` : une base SQLite et, bientôt, vos justificatifs PDF privés. La démonstration vit dans son propre registre et ne se mélange jamais à vos données réelles. Aucune télémétrie, aucun compte chez un éditeur, aucun appel sortant.
+Tout tient dans **un seul dossier**, `/data` : une base SQLite, vos justificatifs PDF privés et vos sauvegardes. La démonstration vit dans son propre registre et ne se mélange jamais à vos données réelles. Aucune télémétrie, aucun compte chez un éditeur, aucun appel sortant.
 
-En attendant la sauvegarde intégrée, une copie du volume suffit : la commande est dans le [guide d'installation](docs/fr/installation.md#le-dossier-de-données).
+**Réglages → Sauvegarde et restauration** crée un fichier ZIP vérifié. Il contient vos biens, séjours, dépenses, PDF et les droits des lecteurs, jamais un mot de passe. La restauration est d'abord contrôlée dans une copie de recette, puis appliquée après confirmation ; vos données du moment sont sauvegardées juste avant. Tout est expliqué dans [docs/fr/sauvegarde.md](docs/fr/sauvegarde.md).
 
 ---
 
@@ -379,7 +379,7 @@ En attendant la sauvegarde intégrée, une copie du volume suffit : la commande 
 | ✅ | **0.4.0** | Dépenses et règlements : paiements partiels, à payer / à recevoir, mensualités d'emprunt, catégories, export CSV |
 | ✅ | **0.5.0** | Prestataires : tarifs indicatifs, factures détaillées réparties entre les séjours, rapprochement, marge par séjour |
 | ✅ | **0.6.0** | Justificatifs PDF : contrôlés, privés, doublons détectés, joints aux dépenses ou à l'origine d'une dépense |
-| 🎯 | **1.0** | Sauvegarde vérifiée, comptes lecteurs, recette complète, première version stable |
+| ✅ | **1.0** | Sauvegarde et restauration vérifiées, comptes lecteurs, accessibilité, performances, recette complète — en recette avant publication stable |
 
 📖 [Feuille de route détaillée](docs/fr/feuille-de-route.md)
 
@@ -389,13 +389,15 @@ En attendant la sauvegarde intégrée, une copie du volume suffit : la commande 
 
 | Document | Contenu |
 |---|---|
-| [Installation](docs/fr/installation.md) | Image Docker, Python, variables, mise à jour, sauvegarde, dépannage du compte |
-| [Guide de démarrage](docs/fr/guide.md) | Les dix premières minutes, avec la démonstration |
+| [Installation](docs/fr/installation.md) | Image Docker, Python, variables, mise à jour, dépannage du compte |
+| [Sauvegarde et restauration](docs/fr/sauvegarde.md) | Contenu d'une sauvegarde, restauration vérifiée, ligne de commande, après une mise à jour ratée |
+| [Guide](docs/fr/guide.md) | De la démonstration à l'usage quotidien : séjours, dépenses, prestataires, justificatifs, lecteurs, sauvegarde |
 | [Règles de calcul](docs/fr/calculs.md) | Les trois lectures, chaque indicateur, glossaire |
 | [Home Assistant](docs/fr/home-assistant.md) | Lien facultatif : capteurs, automatisations, carte, référence de l'API |
 | [Sécurité](docs/fr/securite.md) | Comptes, double authentification, droits, clés d'API, données, exposition réseau |
 | [Architecture et adaptations](docs/fr/architecture-et-adaptations.md) | Ce qui est repris du projet d'origine, ce qui change avec une application autonome |
-| [Feuille de route](docs/fr/feuille-de-route.md) | Écrans et lots à venir |
+| [Recette de la 1.0](docs/fr/recette.md) | Chaque critère de publication et ce qui le vérifie, mesures de performance, limites connues |
+| [Feuille de route](docs/fr/feuille-de-route.md) | Livraisons et suites prévues |
 | [Journal des modifications](CHANGELOG.md) | Le contenu de chaque version |
 
 ---

@@ -6,7 +6,7 @@
 
 import { openConfirm, openDialog } from "./dialogs.js";
 import { html, markup, raw } from "./dom.js";
-import { openEntry } from "./entry-dialogs.js";
+import { keepFocusInside, openEntry } from "./entry-dialogs.js";
 import { icon } from "./icons.js";
 
 function errorBox(message) {
@@ -513,6 +513,7 @@ function fillDocument(app, dialog, d) {
     },
   }));
   dialog.querySelector("[data-edit]")?.addEventListener("click", () => openDocumentForm(app, d, (result) => reopen(result, t("doc.updated"))));
+  keepFocusInside(dialog);
 }
 
 async function openDocumentForm(app, d, onSaved) {

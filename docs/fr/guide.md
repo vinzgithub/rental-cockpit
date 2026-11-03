@@ -161,7 +161,31 @@ L'écran **Justificatifs** liste tous les PDF (vue **À compléter** : non joint
 
 ![Fiche d'un justificatif](../images/fr/document-page.png)
 
-## 13. Protéger votre compte
+## 13. Ouvrir l'accès à un lecteur
+
+Un comptable, un associé ou un proche peut consulter vos biens sans rien pouvoir modifier. **Réglages → Comptes et accès → Ajouter un lecteur** :
+
+1. choisissez son identifiant et, si vous voulez, un nom affiché ;
+2. gardez le **mot de passe temporaire** proposé (ou **Autre**), copiez-le et transmettez-le à la personne : il ne sera plus affiché ;
+3. cochez les **biens** qu'il peut consulter et, bien par bien, l'accès à leurs **justificatifs PDF**.
+
+À sa première connexion, le lecteur doit choisir son propre mot de passe avant de voir quoi que ce soit. Le crayon modifie ses accès (effet immédiat), la clé lui donne un nouveau mot de passe temporaire (ses sessions sont fermées), la corbeille supprime son compte sans toucher aux données.
+
+Un lecteur voit la Synthèse, les séjours, les dépenses, les prestataires et les exports **de ses biens seulement**. Sans l'accès aux PDF, il voit qu'une dépense a un justificatif, jamais le fichier.
+
+![Comptes et accès, sauvegarde et restauration](../images/fr/settings-accounts.png)
+
+## 14. Sauvegarder et restaurer
+
+**Réglages → Sauvegarde et restauration → Créer une sauvegarde** écrit un fichier ZIP vérifié et le télécharge : biens, séjours, dépenses, paiements, prestataires, justificatifs PDF et droits des lecteurs, jamais un mot de passe. Rangez-le hors de cette machine : il contient des données privées.
+
+**Restaurer une sauvegarde** la vérifie d'abord dans une copie de recette (fichiers, PDF, totaux) et montre ce qu'elle contient à côté de vos données actuelles. Rien ne change avant que vous tapiez **REMPLACER** ; vos données actuelles sont alors sauvegardées sur le serveur, puis remplacées, et Rental Cockpit indique si les totaux sont identiques.
+
+Tout le détail, la ligne de commande et la marche à suivre après une mise à jour ratée : [sauvegarde.md](sauvegarde.md).
+
+![Restaurer une sauvegarde : vérification et comparaison avant de remplacer](../images/fr/backup-restore.png)
+
+## 15. Protéger votre compte
 
 Dans **Réglages → Double authentification → Activer** :
 
@@ -173,7 +197,7 @@ Dans **Réglages → Double authentification → Activer** :
 
 ![Activation de la double authentification](../images/fr/mfa-setup.png)
 
-## 14. Home Assistant (facultatif)
+## 16. Home Assistant (facultatif)
 
 Dans **Réglages → Home Assistant et API → Créer une clé**, Rental Cockpit affiche une fois la ligne à coller dans `secrets.yaml`. L'adresse à indiquer dans Home Assistant est affichée juste au-dessus. La suite (capteurs, carte, automatisations) : [home-assistant.md](home-assistant.md).
 

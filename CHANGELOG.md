@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.0.0 — not released yet
+
+Version 1.0 (delivery L6): reader accounts, checked backup and restore, an accessibility and performance pass, and the acceptance of every release criterion.
+
+- Settings → Accounts and access (administrators): add a reader with a temporary password generated in the browser, open properties to them one by one and, separately, the PDF documents of each property; change their access, give a new temporary password (their sessions end), delete the account. The administrator account cannot be changed from there.
+- A temporary password opens nothing but "Choose your password": the server refuses everything else until it is replaced.
+- Settings → Backup and restore: a ZIP backup of "My data" — registry, PDF originals, readers' rights by name and a manifest with the fingerprint of every file, the counts and the totals — never a password, two-factor secret or API key. It is written in `backups/`, read back and checked, then downloaded; the server keeps a list to download again or delete.
+- Restore: the backup is unpacked and checked in a staging folder (file names, unpacked size, fingerprints, PDFs, schema, totals) and compared with the current data. It is applied only after typing REMPLACER / REPLACE; the data it replaces are first saved in `avant-restauration-….zip`; the result says whether the totals are the same. Readers' rights come back for the accounts that exist here.
+- Command line: `python -m rental_cockpit.cli backup` and `restore <file>`; with Docker, `restore -` reads the backup on standard input, checks it, and replaces the data only when run again with `--yes`. The documented procedure after an update that went wrong is run for real by the tests and, in the Docker image, by CI.
+- Accessibility: secondary text contrast raised to 4.5:1 at least, a main landmark on the sign-in screen, the illustration marked decorative, a "Skip to content" link, keyboard focus kept inside a dialog that is redrawn; every screen and the main dialogs pass axe-core on a computer and at 360 pixels, checked in CI.
+- Performance: the Overview no longer scans every payment for each expense (22 s → 0.2 s with 10,000 entries and 2,000 stays) and the stays list adds up the payouts once (1.4 s → 0.06 s); a regression test keeps it so.
+- Layout: no horizontal scrolling on any screen from 360 to 1,440 pixels wide (checked by a test at nine widths); the stays table appears from 1,080 pixels, cards below; the expense filters keep their full labels.
+- Incidents: a full disk while storing a PDF is refused with an explanation and nothing recorded; full disk, interruption and expired tokens are covered by tests.
+- Docker: the CI smoke test also runs a command-line backup in the read-only, unprivileged container, then the documented restore with the application stopped, and starts the ARM64 image under emulation.
+- Documentation: backup and restore guide, acceptance matrix T01–T12 with performance measurements, guide chapters on readers and backups, screenshots with the full menu.
+
 ## 0.6.0 — not released yet
 
 PDF documents (delivery L5): invoices are kept as private PDFs, checked without being run, recognised when they come back, and attached to the expenses they justify — or used to create them.

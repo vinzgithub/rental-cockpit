@@ -72,7 +72,7 @@ export function propertyIcon(kind, cls = "") {
 
 /** Welcome illustration: a small lit house, a dotted path and a checklist. */
 export const WELCOME_ART = `
-<svg class="art" viewBox="0 0 420 220" role="img" aria-label="">
+<svg class="art" viewBox="0 0 420 220" aria-hidden="true" focusable="false">
   <defs>
     <linearGradient id="rcwin" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#ffd27a"/><stop offset="1" stop-color="#f0a83c"/></linearGradient>
     <linearGradient id="rcroof" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#1d4258"/><stop offset="1" stop-color="#143247"/></linearGradient>

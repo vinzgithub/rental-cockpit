@@ -36,7 +36,8 @@ Navigateur ──HTTPS (proxy facultatif)──► Application Rental Cockpit (u
 | Dépenses | API des écritures, des règlements et des catégories ; état du règlement, reste dû et séries mensuelles calculés depuis les paiements ; exports CSV | `src/rental_cockpit/entry_routes.py`, `engine/entries.py`, `engine/exports.py` |
 | Justificatifs | Contrôle des PDF (pypdf, sans exécution), lecture d'assistance, doublons, aperçu en mémoire, stockage privé par empreinte, consultation après contrôle des droits | `src/rental_cockpit/document_routes.py`, `engine/documents.py`, `storage.py` |
 | Prestataires | API des prestataires et de leurs tarifs ; prestations d'une facture, répartition entre les séjours, rapprochement réversible avec les saisies faites à la main (validé entièrement avant toute écriture), coûts et marge d'un séjour | `src/rental_cockpit/supplier_routes.py`, `engine/suppliers.py`, `engine/ledger.py` |
-| Dépannage | Réinitialiser un mot de passe, désactiver la double authentification depuis le serveur | `src/rental_cockpit/cli.py` |
+| Administration | Comptes lecteurs et leurs droits, sauvegarde ZIP vérifiée, restauration contrôlée dans une copie de recette | `src/rental_cockpit/admin_routes.py`, `backup.py`, `database.py` |
+| Dépannage | Réinitialiser un mot de passe, désactiver la double authentification, sauvegarder et restaurer depuis le serveur | `src/rental_cockpit/cli.py` |
 | Interface | Écrans, textes français/anglais, styles | `src/rental_cockpit/static/` |
 
 Le moteur ne connaît ni le web ni la base de données : il reçoit un registre, applique une opération et renvoie un résultat. C'est ce qui permet de tester chaque règle de calcul seule (`tests/test_indicators.py`, `tests/test_ledger.py`).

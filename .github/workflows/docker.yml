@@ -49,7 +49,25 @@ jobs:
           test "$(docker exec rc id -u)" = "10001"
           docker exec rc python -m rental_cockpit.cli --help > /dev/null
           docker exec rc test -f /data/rental_cockpit.db
+          docker exec rc python -m rental_cockpit.cli backup
+          docker exec rc sh -c 'ls /data/backups/rental-cockpit-sauvegarde-*.zip'
           docker logs rc
+
+      - name: Restore with the application stopped (documented procedure)
+        run: |
+          docker stop rc
+          docker cp rc:/data/backups/. ./backups
+          backup="$(ls ./backups/rental-cockpit-sauvegarde-*.zip | head -n 1)"
+          restore="docker run --rm -i --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges:true -v rc-test-data:/data rental-cockpit:test python -m rental_cockpit.cli restore -"
+          if $restore < "$backup" > check.log; then cat check.log; echo "the check-only run must not restore"; exit 1; fi
+          cat check.log
+          grep -q "run the same command again with --yes" check.log
+          $restore --yes < "$backup" | tee restore.log
+          grep -q "Same totals as the backup." restore.log
+          docker start rc
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8080/healthz && break; sleep 1; done
+          curl -fsS http://127.0.0.1:8080/healthz
+          docker exec rc sh -c 'ls /data/backups/avant-restauration-*.zip'
 
       - name: Sign in to the GitHub Container Registry
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
@@ -83,3 +101,10 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           provenance: true
           sbom: true
+
+      - name: ARM64 image starts (emulated)
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        run: |
+          image="$(echo '${{ steps.meta.outputs.tags }}' | head -n 1)"
+          docker run --rm --platform linux/arm64 --entrypoint python "$image" -c \
+            "import platform, rental_cockpit, pypdf; print(platform.machine(), rental_cockpit.__version__, pypdf.__version__)" | tee /dev/stderr | grep -q aarch64

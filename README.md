@@ -8,7 +8,7 @@
 
 [**Français**](README.fr.md) · **English**
 
-![Version](https://img.shields.io/badge/version-0.6.0%20preview-126caa) ![Docker](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-2496ED) ![Licence](https://img.shields.io/badge/licence-to%20be%20decided-lightgrey)
+![Version](https://img.shields.io/badge/version-1.0.0%20under%20review-126caa) ![Docker](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-2496ED) ![Licence](https://img.shields.io/badge/licence-to%20be%20decided-lightgrey)
 
 <br>
 
@@ -42,7 +42,7 @@
 </table>
 
 > [!NOTE]
-> **Version 0.6.0, preview.** The Overview, **stays** (entry, **Airbnb and CSV import**, cancellation, payouts received), **expenses and payments** (partial payments, loan instalments, categories, CSV export), **suppliers** (rates, detailed invoices split between stays, reconciliation), **PDF documents** (checked, private, duplicates detected), the demo, accounts, two-factor sign-in and the Home Assistant link are ready. **Version 1.0** will add checked backup and restore and reader accounts.
+> **Version 1.0.0, under review.** Everything planned for the first version is ready: the Overview and its three readings, **stays** (entry, **Airbnb and CSV import**, cancellation, payouts received), **expenses and payments**, **suppliers** (detailed invoices split between stays, reconciliation), **PDF documents**, **reader accounts**, **checked backup and restore**, the demo, two-factor sign-in and the Home Assistant link. It becomes the stable version once acceptance is passed ([criteria and results](docs/en/acceptance.md)).
 
 ---
 
@@ -362,9 +362,9 @@ Upgrade: `docker compose pull && docker compose up -d`.
 
 ## 💾 Your data
 
-Everything fits in **one folder**, `/data`: a SQLite database and, soon, your private PDF documents. The demo lives in its own registry and never mixes with your real data. No telemetry, no vendor account, no outbound call.
+Everything lives in **one folder**, `/data`: an SQLite database, your private PDF documents and your backups. The demo lives in its own registry and never mixes with your real data. No telemetry, no vendor account, no outgoing call.
 
-Until the built-in backup arrives, a copy of the volume is enough: the command is in the [installation guide](docs/en/installation.md#the-data-folder).
+**Settings → Backup and restore** creates a checked ZIP file. It holds your properties, stays, expenses, PDFs and readers' rights, never a password. A restore is first checked in a test copy, then applied after confirmation; your current data are backed up just before. Everything is explained in [docs/en/backup.md](docs/en/backup.md).
 
 ---
 
@@ -379,7 +379,7 @@ Until the built-in backup arrives, a copy of the volume is enough: the command i
 | ✅ | **0.4.0** | Expenses and payments: partial payments, to pay / to receive, loan instalments, categories, CSV export |
 | ✅ | **0.5.0** | Suppliers: indicative rates, detailed invoices split between stays, reconciliation, margin per stay |
 | ✅ | **0.6.0** | PDF documents: checked, private, duplicates detected, attached to expenses or creating one |
-| 🎯 | **1.0** | Checked backup, reader accounts, full acceptance run, first stable version |
+| ✅ | **1.0** | Checked backup and restore, reader accounts, accessibility, performance, full acceptance run — under review before the stable release |
 
 📖 [Detailed roadmap](docs/en/roadmap.md)
 
@@ -389,13 +389,15 @@ Until the built-in backup arrives, a copy of the volume is enough: the command i
 
 | Document | Content |
 |---|---|
-| [Installation](docs/en/installation.md) | Docker image, Python, variables, upgrading, backup, account recovery |
-| [Getting started](docs/en/guide.md) | The first ten minutes, with the demo |
+| [Installation](docs/en/installation.md) | Docker image, Python, variables, upgrading, account recovery |
+| [Backup and restore](docs/en/backup.md) | What a backup holds, checked restore, command line, after an update that went wrong |
+| [Guide](docs/en/guide.md) | From the demo to daily use: stays, expenses, suppliers, documents, readers, backup |
 | [Calculation rules](docs/en/calculations.md) | The three readings, each indicator, glossary |
 | [Home Assistant](docs/en/home-assistant.md) | Optional link: sensors, automations, card, API reference |
 | [Security](docs/en/security.md) | Accounts, two-factor sign-in, rights, API keys, data, network exposure |
 | [Architecture and adaptations](docs/en/architecture.md) | What is reused from the original project, what changes with a standalone application |
-| [Roadmap](docs/en/roadmap.md) | Screens and work packages to come |
+| [Acceptance of 1.0](docs/en/acceptance.md) | Each release criterion and what checks it, performance measurements, known limits |
+| [Roadmap](docs/en/roadmap.md) | Deliveries and what comes next |
 | [Changelog](CHANGELOG.md) | What each version contains |
 
 ---
