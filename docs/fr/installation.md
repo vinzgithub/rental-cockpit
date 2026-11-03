@@ -2,7 +2,7 @@
 
 Rental Cockpit est une application web autonome. Elle tourne dans un conteneur Docker (recommandé) ou dans un processus Python, et garde toutes ses données dans **un seul dossier**.
 
-> Préversion : testée sur Linux x86-64 avec Python 3.13 et un navigateur Chromium récent. L'image Docker est construite automatiquement pour x86-64 et ARM64 (dont Raspberry Pi 4) à chaque modification, et démarrée pour un test réel en x86-64 ; le fonctionnement sur une vraie machine ARM64 reste à confirmer.
+> Version 1.0.0 validée, publication en préparation : testée sur Linux x86-64 avec Python 3.13 et un navigateur Chromium récent. L'image Docker est construite automatiquement pour x86-64 et ARM64 (dont Raspberry Pi 4) à chaque modification, et démarrée pour un test réel en x86-64 ; le fonctionnement sur une vraie machine ARM64 reste à confirmer.
 
 ## Avec Docker (recommandé)
 
@@ -11,8 +11,8 @@ Les images sont publiées sur le registre de conteneurs de GitHub, pour **x86-64
 | Étiquette | Contenu |
 |---|---|
 | `ghcr.io/vinzgithub/rental-cockpit:latest` | Dernière version publiée — celle qu'utilise `docker-compose.yml` |
-| `ghcr.io/vinzgithub/rental-cockpit:0.1` | Reste sur les versions 0.1.x |
-| `ghcr.io/vinzgithub/rental-cockpit:0.1.0` | Une version précise |
+| `ghcr.io/vinzgithub/rental-cockpit:1.0` | Reste sur les versions 1.0.x |
+| `ghcr.io/vinzgithub/rental-cockpit:1.0.0` | Une version précise |
 | `ghcr.io/vinzgithub/rental-cockpit:edge` | Dernier état de la branche principale, pour essayer ce qui arrive |
 
 ### En trois commandes
@@ -41,6 +41,12 @@ docker run -d --name rental-cockpit --restart unless-stopped \
   --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges:true \
   ghcr.io/vinzgithub/rental-cockpit:latest
 ```
+
+### Passage de 0.1.0 à 1.0.0
+
+La version 0.1.0 ne possède pas les commandes `backup` et `restore` ni la sauvegarde ZIP des Réglages. Avant migration, relever le projet Compose, le montage réel de `/data` et l'identifiant/digest de l'image en cours. Conserver cette image et le fichier Compose. Arrêter uniquement cette instance, copier son volume complet (base, clé de session et fichiers), vérifier l'archive et la conserver hors du serveur. Adapter le nom du volume de l'exemple de copie brute ci-dessous au montage réel.
+
+Après publication seulement, choisir `:1.0.0` ou son digest et recréer uniquement le service concerné. Pour revenir à 0.1.0, arrêter l'instance, conserver séparément le volume migré, restaurer la copie complète d'avant migration dans un volume distinct et recréer le service avec l'ancienne image et ce volume. Ne jamais ouvrir le volume migré avec l'ancien code. Le ZIP applicatif ne remplace pas cette copie complète. Les autres projets Compose et leurs volumes ne sont pas concernés.
 
 ### Mise à jour
 

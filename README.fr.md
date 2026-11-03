@@ -8,7 +8,7 @@
 
 **Français** · [**English**](README.md)
 
-![Version](https://img.shields.io/badge/version-1.0.0%20en%20recette-126caa) ![Docker](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-2496ED) ![Licence](https://img.shields.io/badge/licence-%C3%A0%20d%C3%A9finir-lightgrey)
+![Version](https://img.shields.io/badge/version-1.0.0%20valid%C3%A9e-126caa) ![Docker](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-2496ED) ![Licence](https://img.shields.io/badge/licence-%C3%A0%20d%C3%A9finir-lightgrey)
 
 <br>
 
@@ -42,7 +42,7 @@
 </table>
 
 > [!NOTE]
-> **Version 1.0.0, en recette.** Tout ce que prévoit la première version est prêt : la Synthèse (*Mon argent*, *Performance locative*, *Analyse comptable*), les **séjours** (saisie, **import Airbnb et CSV**, annulation, versements reçus), les **dépenses et règlements**, les **prestataires** (factures détaillées réparties entre les séjours, rapprochement), les **justificatifs PDF**, les **comptes lecteurs**, la **sauvegarde et la restauration vérifiées**, la démonstration, la double authentification et le lien avec Home Assistant. Elle devient la version stable une fois la recette validée ([critères et résultats](docs/fr/recette.md)).
+> **Version 1.0.0 validée, publication en préparation.** Tout ce que prévoit la première version est prêt : la Synthèse (*Mon argent*, *Performance locative*, *Analyse comptable*), les **séjours** (saisie, **import Airbnb et CSV**, annulation, versements reçus), les **dépenses et règlements**, les **prestataires** (factures détaillées réparties entre les séjours, rapprochement), les **justificatifs PDF**, les **comptes lecteurs**, la **sauvegarde et la restauration vérifiées**, la démonstration, la double authentification et le lien avec Home Assistant. La recette utilisateur est validée ; le tag et les images stables restent à publier ([critères et résultats](docs/fr/recette.md)).
 
 ---
 
@@ -327,7 +327,7 @@ Mise à jour : `docker compose pull && docker compose up -d`.
 | Image | Pour |
 |---|---|
 | `ghcr.io/vinzgithub/rental-cockpit:latest` | La dernière version publiée |
-| `ghcr.io/vinzgithub/rental-cockpit:0.1` | Rester sur les versions 0.1.x |
+| `ghcr.io/vinzgithub/rental-cockpit:1.0` | Rester sur les versions 1.0.x |
 | `ghcr.io/vinzgithub/rental-cockpit:edge` | Essayer ce qui arrive (branche principale) |
 
 > [!WARNING]
@@ -382,7 +382,7 @@ Tout tient dans **un seul dossier**, `/data` : une base SQLite, vos justificatif
 | ✅ | **0.4.0** | Dépenses et règlements : paiements partiels, à payer / à recevoir, mensualités d'emprunt, catégories, export CSV |
 | ✅ | **0.5.0** | Prestataires : tarifs indicatifs, factures détaillées réparties entre les séjours, rapprochement, marge par séjour |
 | ✅ | **0.6.0** | Justificatifs PDF : contrôlés, privés, doublons détectés, joints aux dépenses ou à l'origine d'une dépense |
-| ✅ | **1.0** | Sauvegarde et restauration vérifiées, comptes lecteurs, accessibilité, performances, recette complète — en recette avant publication stable |
+| ✅ | **1.0** | Sauvegarde et restauration vérifiées, comptes lecteurs, accessibilité, performances, recette utilisateur validée — publication stable en préparation |
 
 📖 [Feuille de route détaillée](docs/fr/feuille-de-route.md)
 

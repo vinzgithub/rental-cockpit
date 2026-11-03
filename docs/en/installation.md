@@ -2,7 +2,7 @@
 
 Rental Cockpit is a standalone web application. It runs in a Docker container (recommended) or a Python process, and keeps all its data in **one folder**.
 
-> Preview: tested on Linux x86-64 with Python 3.13 and a recent Chromium browser. The Docker image is built automatically for x86-64 and ARM64 (including Raspberry Pi 4) on every change, and started for a real test on x86-64; running on a real ARM64 machine is still to be confirmed.
+> Version 1.0.0 accepted, publication pending: tested on Linux x86-64 with Python 3.13 and a recent Chromium browser. The Docker image is built automatically for x86-64 and ARM64 (including Raspberry Pi 4) on every change, and started for a real test on x86-64; running on a real ARM64 machine is still to be confirmed.
 
 ## With Docker (recommended)
 
@@ -11,8 +11,8 @@ Images are published on GitHub's container registry for **x86-64** and **ARM64**
 | Tag | Content |
 |---|---|
 | `ghcr.io/vinzgithub/rental-cockpit:latest` | Latest released version — the one `docker-compose.yml` uses |
-| `ghcr.io/vinzgithub/rental-cockpit:0.1` | Stays on 0.1.x versions |
-| `ghcr.io/vinzgithub/rental-cockpit:0.1.0` | A specific version |
+| `ghcr.io/vinzgithub/rental-cockpit:1.0` | Stays on 1.0.x versions |
+| `ghcr.io/vinzgithub/rental-cockpit:1.0.0` | A specific version |
 | `ghcr.io/vinzgithub/rental-cockpit:edge` | Latest state of the main branch, to try what is coming |
 
 ### In three commands
@@ -41,6 +41,12 @@ docker run -d --name rental-cockpit --restart unless-stopped \
   --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges:true \
   ghcr.io/vinzgithub/rental-cockpit:latest
 ```
+
+### Upgrade from 0.1.0 to 1.0.0
+
+Version 0.1.0 has no `backup` or `restore` commands and no Settings ZIP backup. Before upgrading, record the Compose project, the actual `/data` mount and the running image ID/digest. Keep that image and the Compose file. Stop only this instance, copy its entire volume (database, session key and files), verify the archive and keep it off the server. Adapt the volume name in the raw-copy example below to the actual mount.
+
+Only after publication, select `:1.0.0` or its digest and recreate only the relevant service. To return to 0.1.0, stop the instance, retain the migrated volume separately, restore the full pre-upgrade copy into a separate volume and recreate the service with the old image and that volume. Never open the migrated volume with the old code. An application ZIP is not a substitute for this full copy. Other Compose projects and their volumes are not involved.
 
 ### Upgrading
 

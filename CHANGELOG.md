@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0 — not released yet
+## 1.0.0 — user acceptance completed 2026-11-03; publication pending
 
 Version 1.0 (delivery L6): reader accounts, checked backup and restore, an accessibility and performance pass, and the acceptance of every release criterion.
 
