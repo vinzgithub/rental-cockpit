@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.1 — not released yet
+
+Fixes from the independent audit of 0.1.0.
+
+- The menu only lists screens that work (Overview and Settings); Stays, Expenses, Suppliers and Documents return as they are delivered. No "coming soon" page anymore.
+- "My data / Demo" switch always visible: in the sidebar, in the account window and in Settings, where an administrator can also reset the demo.
+- The bell opens the list of things to check.
+- No more links to screens that do not exist yet (Import button, things to check, next stay).
+- "How is this amount calculated?" fits a phone: each line becomes a small card, nothing scrolls sideways.
+- Copy buttons work on plain HTTP (local network address), with a selection for Ctrl+C as a last resort.
+- Every pull request publishes a test image `ghcr.io/vinzgithub/rental-cockpit:pr-<number>`.
+- Browser tests (Chromium) run on every change.
+
 ## 0.1.0 — 2026-10-31 (preview)
 
 First public preview of the standalone application.

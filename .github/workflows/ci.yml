@@ -24,8 +24,23 @@ jobs:
       - name: Lint
         run: ruff check src tests scripts
       - name: Tests
-        run: pytest -q
+        run: pytest -q --ignore=tests/e2e
       - name: JavaScript syntax
         run: for f in $(find src/rental_cockpit/static/js -name '*.js'); do node --check "$f"; done
       - name: No personal data
         run: python scripts/check_public_data.py
+
+  browser:
+    # The same journeys a person would take, in a real Chromium, on plain HTTP.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          pip install -e ".[dev]" "playwright>=1.48,<2"
+          python -m playwright install --with-deps chromium
+      - name: Browser tests
+        run: pytest -q tests/e2e

@@ -4,7 +4,7 @@
 
 import { esc, html, markup, raw } from "./dom.js";
 import { icon, propertyIcon } from "./icons.js";
-import { periodName } from "./views/synthese.js";
+import { checkItem, periodName } from "./views/synthese.js";
 
 export function openDialog(app, { title, subtitle = "", body, footer, labelledby = "rc-dialog-title", wide = false }) {
   const dialog = document.createElement("dialog");
@@ -83,13 +83,13 @@ export async function openExplain(app, indicatorId) {
           <table class="lines">
             <thead><tr><th>${t("explain.date")}</th><th>${t("explain.item")}</th><th>${t("explain.rule")}</th><th class="amt">${t("explain.total")}</th><th class="amt">${t("explain.share")}</th></tr></thead>
             <tbody>${lines.map((l) => html`<tr>
-              <td class="num">${i18n.dateShort(l.date)}</td>
-              <td>${l.label}<small>${l.property} · ${l.category}</small></td>
-              <td>${l.rule}</td>
-              <td class="amt num">${i18n.money(l.total)}</td>
-              <td class="amt num">${l.sign < 0 ? "− " : ""}${i18n.money(l.share)}</td>
+              <td class="num c-date">${i18n.dateShort(l.date)}</td>
+              <td class="c-item">${l.label}<small>${l.property} · ${l.category}</small></td>
+              <td class="c-rule">${l.rule}</td>
+              <td class="amt num c-total" data-label="${t("explain.total")}${i18n.lang === "fr" ? " : " : ": "}">${i18n.money(l.total)}</td>
+              <td class="amt num c-share">${l.sign < 0 ? "− " : ""}${i18n.money(l.share)}</td>
             </tr>`)}</tbody>
-            <tfoot><tr><td colspan="4">${t("explain.sum")}</td><td class="amt num">${i18n.money(total)}</td></tr></tfoot>
+            <tfoot><tr><td colspan="4" class="c-item">${t("explain.sum")}</td><td class="amt num c-share">${i18n.money(total)}</td></tr></tfoot>
           </table>
         </div>` : html`<div class="empty">${raw(icon("info"))}<span>${t("explain.none")}</span></div>`}
     </section>
@@ -105,23 +105,78 @@ function prevDay(iso) {
 
 // ------------------------------------------------------------------ add menu
 
+// Only what can really be recorded today is offered (no disabled « later » rows).
+function addChoices(app) {
+  const { t } = app.i18n;
+  return [
+    { key: "property", icon: "home", name: t("add.property"), hint: t("add.property.hint"), open: () => openPropertyDialog(app) },
+  ];
+}
+
 export function openAddMenu(app) {
   const { t } = app.i18n;
-  const later = t("add.later");
+  const choices = addChoices(app);
+  if (choices.length === 1) {
+    choices[0].open();
+    return;
+  }
   const dialog = openDialog(app, {
     title: t("add.title"),
     subtitle: t("add.sub"),
     body: html`
-      <div class="menu">
-        <button type="button" class="row" data-pick="property"><span class="tile">${raw(icon("home"))}</span><span><span class="name">${t("add.property")}</span><span class="meta">${t("add.property.hint")}</span></span></button>
-        <button type="button" class="row" aria-disabled="true" data-pick="none"><span class="tile">${raw(icon("calendar"))}</span><span><span class="name">${t("add.stay")}</span><span class="meta">${later}</span></span></button>
-        <button type="button" class="row" aria-disabled="true" data-pick="none"><span class="tile">${raw(icon("wallet"))}</span><span><span class="name">${t("add.expense")}</span><span class="meta">${later}</span></span></button>
+      <div class="menu">${choices.map((c) => html`
+        <button type="button" class="row" data-pick="${c.key}"><span class="tile">${raw(icon(c.icon))}</span><span><span class="name">${c.name}</span><span class="meta">${c.hint}</span></span></button>`)}
       </div>`,
   });
-  dialog.querySelector('[data-pick="property"]').addEventListener("click", () => {
-    dialog.close();
-    openPropertyDialog(app);
+  for (const choice of choices) {
+    dialog.querySelector(`[data-pick="${choice.key}"]`).addEventListener("click", () => {
+      dialog.close();
+      choice.open();
+    });
+  }
+}
+
+// ------------------------------------------------------------------ alerts (bell)
+
+export function openAlerts(app) {
+  const { t } = app.i18n;
+  const items = app.state.overview?.to_check || [];
+  const v = app.viewModel();
+  const dialog = openDialog(app, {
+    title: t("check.title"),
+    subtitle: t("check.sub"),
+    body: html`<div class="rows">${items.length ? items.map((item) => checkItem(v, item))
+      : html`<div class="empty">${raw(icon("checkCircle"))}<span>${t("check.empty")}</span></div>`}</div>`,
+    footer: html`<button type="button" class="btn ghost" data-close>${t("common.close")}</button>`,
   });
+  dialog.addEventListener("click", (event) => {
+    if (event.target.closest('[data-action="go"]')) dialog.close();
+  });
+}
+
+// ------------------------------------------------------------------ confirmation
+
+/** A yes/no question before an action that cannot be undone. */
+export function openConfirm(app, { title, text, confirm, danger = true, run }) {
+  const { t } = app.i18n;
+  const dialog = openDialog(app, {
+    title,
+    body: html`<p>${text}</p><div data-error aria-live="assertive"></div>`,
+    footer: html`<button type="button" class="btn ghost" data-close>${t("common.cancel")}</button><button type="button" class="btn ${danger ? "danger" : "primary"}" data-confirm>${confirm}</button>`,
+  });
+  const button = dialog.querySelector("[data-confirm]");
+  button.addEventListener("click", async () => {
+    button.disabled = true;
+    try {
+      await run();
+      dialog.close();
+    } catch (err) {
+      dialog.querySelector("[data-error]").innerHTML = markup(html`<div class="error-box">${raw(icon("alert"))}<span>${err.message}</span></div>`);
+      button.disabled = false;
+    }
+  });
+  button.focus();
+  return dialog;
 }
 
 // ------------------------------------------------------------------ property form

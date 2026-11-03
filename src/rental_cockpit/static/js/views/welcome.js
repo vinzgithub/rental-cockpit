@@ -72,16 +72,3 @@ export function renderNoAccess(v) {
       <button type="button" class="btn outline-accent" data-action="start" data-value="demo">${raw(icon("eye"))}${t("welcome.demo")}</button>
     </section>`;
 }
-
-export function renderPlaceholder(v, screen) {
-  const { t } = v.i18n;
-  const title = t(`nav.${screen}`);
-  return html`
-    <section class="card placeholder">
-      <span class="bubble teal big">${raw(icon("hourglass"))}</span>
-      <h2>${t("placeholder.title", { screen: title })}</h2>
-      <p class="reading">${t("placeholder.text")}</p>
-      <ul>${t(`placeholder.${screen}`).split("|").map((line) => html`<li>${line}</li>`)}</ul>
-      <button type="button" class="btn ghost" data-action="go" data-value="synthese">${raw(icon("chart"))}${t("nav.synthese")}</button>
-    </section>`;
-}

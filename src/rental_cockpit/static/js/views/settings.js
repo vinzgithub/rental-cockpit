@@ -1,11 +1,12 @@
 /* Copyright © 2026 Vincent Fournet */
-// « Réglages » — account, two-factor sign-in and the optional Home Assistant link.
-// Other settings (categories, readers, backup) arrive in later packages and are
-// listed so nobody looks for them in vain.
+// « Réglages » — account, two-factor sign-in, data shown (own data or demo)
+// and the optional Home Assistant link. Categories, readers and backup arrive
+// with later deliveries, as working settings.
 
 import { html, raw } from "../dom.js";
 import { icon } from "../icons.js";
 import { langSwitch } from "./auth.js";
+import { datasetSwitch } from "./dataset.js";
 
 const DOC_BASE = "https://github.com/vinzgithub/rental-cockpit/blob/main/docs";
 
@@ -79,12 +80,19 @@ function haCard(v) {
     </section>`;
 }
 
-function soonCard(v) {
+function dataCard(v) {
   const { t } = v.i18n;
+  const canReset = v.canWrite && v.session.demo.exists;
   return html`
-    <section class="card" aria-labelledby="rc-set-soon">
-      <div class="card-head"><span class="ico">${raw(icon("hourglass"))}</span><h2 id="rc-set-soon">${t("settings.soon")}</h2></div>
-      <ul class="plain-list">${t("settings.soonList").split("|").map((line) => html`<li>${line}</li>`)}</ul>
+    <section class="card" aria-labelledby="rc-set-data">
+      <div class="card-head"><span class="ico">${raw(icon("eye"))}</span><h2 id="rc-set-data">${t("settings.data")}</h2></div>
+      <p class="reading">${t("settings.dataIntro")}</p>
+      ${datasetSwitch(v)}
+      ${canReset ? html`
+        <p class="meta-line">${raw(icon("info"))}<span>${t("demo.resetHelp")}</span></p>
+        <div class="actions">
+          <button type="button" class="btn ghost" data-action="demo-reset">${raw(icon("repeat"))}${t("demo.resetTitle")}</button>
+        </div>` : ""}
     </section>`;
 }
 
@@ -96,6 +104,6 @@ export function renderSettings(v) {
     ${head}
     <div class="settings-grid">
       <div class="stack">${accountCard(v)}${mfaCard(v)}</div>
-      <div class="stack">${haCard(v)}${soonCard(v)}</div>
+      <div class="stack">${dataCard(v)}${haCard(v)}</div>
     </div>`;
 }
