@@ -4,11 +4,11 @@
 
 ### Votre location saisonnière, chaque chiffre expliqué
 
-**Synthèse · Trois lectures · Indicateurs expliqués · À vérifier · Double authentification · Home Assistant**
+**Synthèse · Séjours · Trois lectures · Indicateurs expliqués · À vérifier · Double authentification · Home Assistant**
 
 **Français** · [**English**](README.md)
 
-![Version](https://img.shields.io/badge/version-0.1.0%20pr%C3%A9version-126caa) ![Docker](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-2496ED) ![Licence](https://img.shields.io/badge/licence-%C3%A0%20d%C3%A9finir-lightgrey)
+![Version](https://img.shields.io/badge/version-0.2.0%20pr%C3%A9version-126caa) ![Docker](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-2496ED) ![Licence](https://img.shields.io/badge/licence-%C3%A0%20d%C3%A9finir-lightgrey)
 
 <br>
 
@@ -35,14 +35,14 @@
 <td width="33%" valign="top"><b>✅ Ce qui reste à vérifier</b><br>Paiements inconnus, séjours sans montant, versements non reçus : un résultat incomplet est signalé, jamais déguisé en zéro.</td>
 </tr>
 <tr>
-<td valign="top"><b>🎮 Une démo à part</b><br>Deux biens fictifs et un an d'activité inventée pour tout essayer, sans jamais toucher à vos données.</td>
+<td valign="top"><b>📅 Des séjours complets</b><br>Saisir, modifier, annuler avec les frais conservés, rétablir, suivre le versement : chaque séjour montre sa part de la Synthèse, mois par mois.</td>
 <td valign="top"><b>🔐 Double authentification</b><br>Un code d'application d'authentification après le mot de passe, et dix codes de secours à usage unique.</td>
 <td valign="top"><b>🏠 Home Assistant, si vous voulez</b><br>Une clé en lecture seule : recettes, occupation, prochaine arrivée, et des automatisations comme chauffer la veille d'une arrivée.</td>
 </tr>
 </table>
 
 > [!NOTE]
-> **Version 0.1.0, préversion.** La Synthèse, la démonstration, les comptes, la double authentification et le lien avec Home Assistant sont prêts. Les écrans **Séjours, Dépenses, Prestataires et Documents** arrivent dans les prochaines versions : avec vos propres données, seule la création des biens est possible pour l'instant.
+> **Version 0.2.0, préversion.** La Synthèse, les **séjours** (saisie, annulation, versements reçus), la démonstration, les comptes, la double authentification et le lien avec Home Assistant sont prêts. L'**import** Airbnb et CSV, les **dépenses**, les **prestataires** et les **justificatifs** arrivent dans les prochaines versions : avec vos propres données, les dépenses ne se saisissent pas encore.
 
 ---
 
@@ -71,6 +71,28 @@ Un clic sous n'importe quel indicateur ouvre son explication :
 - **toutes les lignes utilisées**, avec la règle appliquée à chacune — « Réparti nuit par nuit sur le séjour », « Compté à sa date »… — et le total.
 
 Pas de boîte noire : vous pouvez refaire chaque calcul à la main.
+
+</td>
+</tr>
+</table>
+
+---
+
+## 📅 Les séjours, de la réservation au versement
+
+<img src="docs/images/fr/stays-desktop.png" alt="Liste des séjours avec leur statut et l'état de leur versement" width="100%">
+
+<table>
+<tr>
+<td width="55%" valign="top"><img src="docs/images/fr/stay-detail-card.png" alt="Fiche d'un séjour à cheval sur deux mois : montants, répartition mois par mois, versement reçu"></td>
+<td width="45%" valign="top">
+
+- **Saisie guidée** : bien, dates (les nuits par mois s'affichent tout de suite), canal de réservation, montant brut et commission ; le versement net attendu se calcule seul.
+- **Taxe de séjour et caution** notées à part : jamais comptées comme recettes.
+- **Fiche séjour** : ce qui est reçu, ce qui reste à recevoir, et **ce que le séjour compte dans la Synthèse**, mois par mois.
+- **Versement reçu** en un clic : la lecture Trésorerie se met à jour.
+- **Annulation** avec le montant conservé, compté à la date d'arrivée ; **Rétablir** remet tout.
+- Statuts explicites : *À venir*, *En cours*, *Terminé*, *Provisoire*, *Annulé* ; *Versement attendu*, *à confirmer*, *reçu*.
 
 </td>
 </tr>
@@ -129,12 +151,12 @@ Il est reproduit à l'identique dans le mois d'exemple de la démonstration :
 <tr>
 <td width="46%" valign="top"><img src="docs/images/fr/overview-tablet.png" alt="Synthèse sur tablette"></td>
 <td width="27%" valign="top"><img src="docs/images/fr/overview-phone.png" alt="Synthèse sur téléphone"></td>
-<td width="27%" valign="top"><img src="docs/images/fr/settings-phone.png" alt="Réglages sur téléphone"></td>
+<td width="27%" valign="top"><img src="docs/images/fr/stays-phone.png" alt="Séjours sur téléphone"></td>
 </tr>
 <tr>
 <td align="center"><b>Sur tablette</b></td>
 <td align="center"><b>Sur téléphone</b></td>
-<td align="center"><b>Les réglages, au pouce</b></td>
+<td align="center"><b>Les séjours, au pouce</b></td>
 </tr>
 </table>
 
@@ -155,7 +177,7 @@ Barre latérale sur grand écran, onglets en haut sur tablette, barre en bas sur
 </tr>
 </table>
 
-Avec la démonstration, tout est déjà rempli : un bandeau permanent rappelle que les chiffres sont fictifs. Avec vos données, vous partez d'un espace vide et créez votre premier bien — seul le nom est obligatoire.
+Avec la démonstration, tout est déjà rempli : un bandeau permanent rappelle que les chiffres sont fictifs. Avec vos données, vous partez d'un espace vide et créez votre premier bien — seul le nom est obligatoire. La bascule **Mes données / Démo** permet de passer de l'un à l'autre à tout moment.
 
 📖 [Guide de démarrage : les dix premières minutes](docs/fr/guide.md)
 
@@ -257,10 +279,12 @@ En attendant la sauvegarde intégrée, une copie du volume suffit : la commande 
 | | Étape | Contenu |
 |:--:|---|---|
 | ✅ | **0.1.0** | Synthèse, trois lectures, indicateurs expliqués, démonstration, comptes et droits, double authentification, lien Home Assistant, images Docker |
-| 🔜 | **Saisie** | Séjours, Dépenses et paiements, Prestataires avec répartition d'une facture |
-| 🔜 | **Justificatifs et imports** | Documents PDF contrôlés, import Airbnb, import CSV avec prévisualisation |
-| 🔜 | **Réglages et sauvegarde** | Lecteurs et droits par bien, catégories, sauvegarde vérifiée et restauration |
-| 🎯 | **1.0** | Tests sur une vraie machine ARM64, recette complète, première version stable |
+| ✅ | **0.1.1** | Corrections de l'audit indépendant : menu sans écran vide, bascule Mes données / Démo, explications lisibles sur téléphone |
+| ✅ | **0.2.0** | Séjours : saisie, annulation et rétablissement, versements reçus, part de chaque séjour dans la Synthèse |
+| 🔜 | **0.3.0** | Import Airbnb et CSV avec prévisualisation et détection des doublons |
+| 🔜 | **0.4.0** | Dépenses et règlements : paiements partiels, à payer, emprunt, catégories |
+| 🔜 | **0.5.0 – 0.6.0** | Prestataires et répartition d'une facture ; justificatifs PDF |
+| 🎯 | **1.0** | Sauvegarde vérifiée, comptes lecteurs, recette complète, première version stable |
 
 📖 [Feuille de route détaillée](docs/fr/feuille-de-route.md)
 

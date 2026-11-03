@@ -26,6 +26,7 @@ The demo (fictional data) can be viewed by any signed-in account and changed by 
 - **Anti-CSRF token** required on every change.
 - **Idempotent operations**: each action carries a unique identifier; a double click or a network retry is saved once.
 - **All or nothing**: a change is applied to a copy, written in one SQLite transaction, then published. On failure the previous state is kept and the message says so.
+- **No silent overwrite**: each stay carries a revision number; a change made on an outdated version (somebody else saved in between) is refused and the message asks to reload.
 - **Text**: everything typed or imported is handled as text, never as HTML.
 
 ## Browser
@@ -44,7 +45,7 @@ The demo (fictional data) can be viewed by any signed-in account and changed by 
 ## Data
 
 - **Local storage only**: no telemetry, no vendor account, no outbound call.
-- All data is in the `/data` folder: protect it and its backups, which hold private information.
+- All data is in the `/data` folder: protect it and its backups, which hold private information. This includes `backups/`, where a full copy of the database is written before each data format migration.
 - Guest data is kept to the minimum useful (a label and a number of guests).
 - The operations log records author, date, action, item and result; it holds no secret and no PDF content. It is not a certified legal archive.
 

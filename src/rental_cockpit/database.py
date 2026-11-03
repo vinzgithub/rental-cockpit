@@ -10,6 +10,10 @@ One file, ``rental_cockpit.db``, in the data folder:
 ``registries``  the business registry of each dataset as one JSON document,
                 with a revision number.
 
+Before a registry is migrated to a newer schema, a full copy of the file is
+written to ``backups/`` in the data folder (``pre-migration-…``): an upgrade
+never leaves the person without the data as it was.
+
 A change to a registry follows one path: lock, copy, apply the operation to
 the copy, write it in a single SQLite transaction, then publish the copy in
 memory. If anything fails, the previous state stays in memory and on disk:
@@ -27,7 +31,7 @@ from typing import Any, Callable, Iterator
 
 from .engine.errors import RCError
 from .engine.migrations import migrate
-from .engine.schema import empty_registry
+from .engine.schema import SCHEMA_VERSION, empty_registry
 
 DB_SCHEMA = 1
 
@@ -80,6 +84,7 @@ CREATE TABLE IF NOT EXISTS registries (
 class Database:
     def __init__(self, path: Path) -> None:
         self.path = path
+        self.premigration_done = False  # one copy per start, before the first registry migration
         path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
         if path.is_symlink():
             raise RuntimeError("Refusing a symbolic link for the database")
@@ -87,6 +92,24 @@ class Database:
             db.executescript(_TABLES)
             db.execute("INSERT OR IGNORE INTO meta(key, value) VALUES ('schema', ?)", (str(DB_SCHEMA),))
         path.chmod(0o600)
+
+    def backup_copy(self, label: str) -> Path:
+        """Consistent copy of the whole database (SQLite online backup), mode 0600."""
+        folder = self.path.parent / "backups"
+        folder.mkdir(mode=0o700, exist_ok=True)
+        target = folder / f"{label}.db"
+        index = 1
+        while target.exists():
+            index += 1
+            target = folder / f"{label}-{index}.db"
+        with self.connect() as source:
+            copy = sqlite3.connect(target)
+            try:
+                source.backup(copy)
+            finally:
+                copy.close()
+        target.chmod(0o600)
+        return target
 
     @contextmanager
     def connect(self) -> Iterator[sqlite3.Connection]:
@@ -265,6 +288,11 @@ class Registry:
                     self.revision = self.db.save_registry(self.dataset, data, 0, now)
                     self.data = data
                 return
+            old_schema = int(raw.get("schema") or 1)
+            if old_schema < SCHEMA_VERSION and not self.db.premigration_done:
+                stamp = now[:19].replace(":", "").replace("-", "")
+                self.db.backup_copy(f"pre-migration-v{old_schema}-to-v{SCHEMA_VERSION}-{stamp}")
+                self.db.premigration_done = True
             data, changed = migrate(raw)
             self.data, self.revision = data, revision
             if changed:

@@ -31,6 +31,7 @@ Navigateur ──HTTPS (proxy facultatif)──► Application Rental Cockpit (u
 | Application web | Routes, en-têtes de sécurité, sessions, connexion en deux étapes | `src/rental_cockpit/app.py`, `web.py` |
 | Compte | Mot de passe, double authentification, clés d'API | `src/rental_cockpit/account_routes.py` |
 | Lien Home Assistant | Résumé en lecture seule pour l'intégration RESTful | `src/rental_cockpit/ha_api.py` |
+| Séjours | API des séjours et des versements ; nuits, versement attendu, état du versement et part mois par mois calculés à la volée avec les règles des indicateurs | `src/rental_cockpit/stay_routes.py`, `engine/stays.py` |
 | Dépannage | Réinitialiser un mot de passe, désactiver la double authentification depuis le serveur | `src/rental_cockpit/cli.py` |
 | Interface | Écrans, textes français/anglais, styles | `src/rental_cockpit/static/` |
 
@@ -105,12 +106,12 @@ Afficher toute l'interface dans Home Assistant reste possible, à condition d'au
 
 | Écran | Côté serveur | Côté interface |
 |---|---|---|
-| **Séjours** | API création, correction, annulation, ajustements ; import Airbnb (lecteur repris, formats vérifiés uniquement) et CSV générique avec association des colonnes, prévisualisation sans écriture, annulation du dernier import | Liste filtrable, fiche séjour avec coûts affectés, parcours d'import en trois étapes |
+| **Séjours** | Fait (L1) : création, modification, annulation avec montant conservé, rétablissement, versements. À venir (L2) : import Airbnb (lecteur repris, formats vérifiés uniquement) et CSV générique avec association des colonnes, prévisualisation sans écriture, annulation du dernier import | Fait : liste filtrable, fiche séjour. À venir : coûts affectés (L4), parcours d'import en trois étapes (L2) |
 | **Dépenses** | API écritures, paiements, archivage, filtres ; export CSV avec formules neutralisées | Tableau avec statuts explicites (« Paiement à confirmer », « Payée »…), saisie rapide, actions visibles |
 | **Prestataires** | API prestataires et tarifs indicatifs ; facture multi-prestations ; rapprochement des saisies existantes | « Répartir une facture » : détail des services, répartition par séjour, contrôle « 150 € affectés sur 150 € » |
 | **Documents** | Téléversement HTTP (8 Mio), contrôle PDF avec *pypdf* (ajouté à ce moment-là), empreinte, doublons binaires et métier, téléchargement après contrôle des droits | « Vérifier la facture » : fichier → vérification → enregistrement ; « Cette facture est déjà enregistrée » |
 | **Réglages** | Fait : mot de passe, double authentification, clés d'API. À venir : comptes lecteurs, droits par bien et accès PDF, catégories, sauvegarde / vérification / restauration, diagnostic | Écrans correspondants ; langue ; réinitialisation de la démonstration |
-| Transverse | Migrations SQLite versionnées ; image `edge` publiée à chaque modification de la branche principale, image `latest` à chaque version étiquetée ; intégration continue | Accessibilité vérifiée (clavier, lecteur d'écran, 360 px) sur chaque écran |
+| Transverse | Migrations versionnées du format de données, avec copie automatique de la base avant conversion (première : v1 → v2, canal de réservation) ; image `edge` publiée à chaque modification de la branche principale, image `latest` à chaque version étiquetée ; intégration continue | Accessibilité vérifiée (clavier, lecteur d'écran, 360 px) sur chaque écran |
 
 ## Points encore ouverts
 

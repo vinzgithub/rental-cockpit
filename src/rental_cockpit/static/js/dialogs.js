@@ -4,6 +4,7 @@
 
 import { esc, html, markup, raw } from "./dom.js";
 import { icon, propertyIcon } from "./icons.js";
+import { openStayForm } from "./stay-dialogs.js";
 import { checkItem, periodName } from "./views/synthese.js";
 
 export function openDialog(app, { title, subtitle = "", body, footer, labelledby = "rc-dialog-title", wide = false }) {
@@ -84,7 +85,7 @@ export async function openExplain(app, indicatorId) {
             <thead><tr><th>${t("explain.date")}</th><th>${t("explain.item")}</th><th>${t("explain.rule")}</th><th class="amt">${t("explain.total")}</th><th class="amt">${t("explain.share")}</th></tr></thead>
             <tbody>${lines.map((l) => html`<tr>
               <td class="num c-date">${i18n.dateShort(l.date)}</td>
-              <td class="c-item">${l.label}<small>${l.property} · ${l.category}</small></td>
+              <td class="c-item">${l.label}<small>${l.property} · ${l.category}</small>${(l.ref_type === "stay" || l.ref_type === "stay_commission") && app.viewModel().ready.has("sejours") ? html`<button type="button" class="linkbtn small" data-action="stay-open" data-value="${l.ref_id}">${t("explain.openStay")}</button>` : ""}</td>
               <td class="c-rule">${l.rule}</td>
               <td class="amt num c-total" data-label="${t("explain.total")}${i18n.lang === "fr" ? " : " : ": "}">${i18n.money(l.total)}</td>
               <td class="amt num c-share">${l.sign < 0 ? "− " : ""}${i18n.money(l.share)}</td>
@@ -108,9 +109,12 @@ function prevDay(iso) {
 // Only what can really be recorded today is offered (no disabled « later » rows).
 function addChoices(app) {
   const { t } = app.i18n;
-  return [
-    { key: "property", icon: "home", name: t("add.property"), hint: t("add.property.hint"), open: () => openPropertyDialog(app) },
-  ];
+  const choices = [];
+  if ((app.viewModel().properties || []).some((p) => !p.archived)) {
+    choices.push({ key: "stay", icon: "calendar", name: t("add.stay"), hint: t("add.stay.hint"), open: () => openStayForm(app) });
+  }
+  choices.push({ key: "property", icon: "home", name: t("add.property"), hint: t("add.property.hint"), open: () => openPropertyDialog(app) });
+  return choices;
 }
 
 export function openAddMenu(app) {

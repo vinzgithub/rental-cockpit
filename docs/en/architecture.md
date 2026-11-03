@@ -31,6 +31,7 @@ Browser ──HTTPS (optional proxy)──► Rental Cockpit application (one pr
 | Web application | Routes, security headers, sessions, two-step sign-in | `src/rental_cockpit/app.py`, `web.py` |
 | Account | Password, two-factor sign-in, API keys | `src/rental_cockpit/account_routes.py` |
 | Home Assistant link | Read-only summary for the RESTful integration | `src/rental_cockpit/ha_api.py` |
+| Stays | Stays and payouts API; nights, expected payout, payout status and month-by-month share computed on the fly with the indicators' rules | `src/rental_cockpit/stay_routes.py`, `engine/stays.py` |
 | Recovery | Reset a password, turn two-factor sign-in off from the server | `src/rental_cockpit/cli.py` |
 | Interface | Screens, French/English texts, styles | `src/rental_cockpit/static/` |
 
@@ -105,12 +106,12 @@ Showing the whole interface inside Home Assistant is still possible, provided it
 
 | Screen | Server side | Interface side |
 |---|---|---|
-| **Stays** | API to create, correct, cancel, adjust; Airbnb import (reader reused, checked formats only) and generic CSV with column mapping, preview without writing, undo of the last import | Filterable list, stay page with allocated costs, three-step import |
+| **Stays** | Done (L1): create, edit, cancel with a retained amount, restore, payouts. Coming (L2): Airbnb import (reader reused, checked formats only) and generic CSV with column mapping, preview without writing, undo of the last import | Done: filterable list, stay page. Coming: allocated costs (L4), three-step import (L2) |
 | **Expenses** | API for entries, payments, archiving, filters; CSV export with neutralised formulas | Table with explicit statuses ("Payment to confirm", "Paid"…), quick entry, visible actions |
 | **Suppliers** | API for suppliers and indicative rates; multi-service invoice; matching existing entries | "Split an invoice": services detail, split per stay, "€150 allocated out of €150" check |
 | **Documents** | HTTP upload (8 MiB), PDF check with *pypdf* (added then), fingerprint, binary and business duplicates, download after a rights check | "Check the invoice": file → check → save; "This invoice is already recorded" |
 | **Settings** | Done: password, two-factor sign-in, API keys. Coming: reader accounts, rights per property and PDF access, categories, backup / check / restore, diagnostics | Matching screens; language; demo reset |
-| Cross-cutting | Versioned SQLite migrations; `edge` image published on every change to the main branch, `latest` on every tagged release; continuous integration | Accessibility checked (keyboard, screen reader, 360 px) on each screen |
+| Cross-cutting | Versioned data format migrations, with an automatic copy of the database before converting (first one: v1 → v2, booking channel); `edge` image published on every change to the main branch, `latest` on every tagged release; continuous integration | Accessibility checked (keyboard, screen reader, 360 px) on each screen |
 
 ## Still open
 

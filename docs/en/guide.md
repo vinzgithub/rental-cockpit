@@ -55,9 +55,26 @@ The **To check** card lists what keeps a result from being final. In the demo: c
 
 ## 7. Switch to your data
 
-The banner offers **Use my data**. You land on an empty space with the getting-started steps: create your first property (only the name is required). The demo stays available and separate.
+The banner offers **Use my data**. You land on an empty space with the getting-started steps: create your first property (only the name is required). The demo stays available and separate: the **My data / Demo** switch is at the bottom of the sidebar (in the account window on a phone, and in Settings).
 
-## 8. Protect your account
+## 8. Enter a stay
+
+**Stays → Add a stay**: choose the property, the arrival and the departure. Under the dates, Rental Cockpit already shows how the nights split ("3 nights in September · 3 nights in October"). Fill in, when you know them, the gross amount paid by the guest and the platform commission: the expected net payout is computed. An unknown amount stays empty: it is never counted as 0.
+
+The stay page then shows:
+
+- the amounts, what was already received and what is left to receive;
+- **what the stay counts in the Overview**, month by month;
+- the payouts received, with **Record a payout** when the money arrives;
+- **Edit**, **Cancel the stay** (with any amount retained) and, for an entry made by mistake, **Delete**.
+
+In the Overview, "1 payout to confirm" leads straight to the list of stays to check.
+
+![List of stays](../images/en/stays-desktop.png)
+
+![A stay page](../images/en/stay-detail.png)
+
+## 9. Protect your account
 
 In **Settings → Two-factor sign-in → Turn on**:
 
@@ -69,7 +86,7 @@ At the next sign-in, the code is asked after the password. The other browsers si
 
 ![Turning on two-factor sign-in](../images/en/mfa-setup.png)
 
-## 9. Home Assistant (optional)
+## 10. Home Assistant (optional)
 
 In **Settings → Home Assistant and API → Create a key**, Rental Cockpit shows once the line to paste into `secrets.yaml`. The address to enter in Home Assistant is shown just above. What comes next (sensors, card, automations): [home-assistant.md](home-assistant.md).
 
@@ -79,4 +96,4 @@ In **Settings → Home Assistant and API → Create a key**, Rental Cockpit show
 
 The same Overview shows in one column, balance first, with a navigation bar at the bottom. On touch screens, controls aim at 44 × 44 pixels.
 
-<img src="../images/en/overview-phone.png" alt="Overview on a phone" width="320"> <img src="../images/en/settings-phone.png" alt="Settings on a phone" width="320">
+<img src="../images/en/overview-phone.png" alt="Overview on a phone" width="260"> <img src="../images/en/stays-phone.png" alt="Stays on a phone" width="260"> <img src="../images/en/settings-phone.png" alt="Settings on a phone" width="260">

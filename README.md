@@ -4,11 +4,11 @@
 
 ### Your holiday let, every figure explained
 
-**Overview · Three readings · Explained indicators · To check · Two-factor sign-in · Home Assistant**
+**Overview · Stays · Three readings · Explained indicators · To check · Two-factor sign-in · Home Assistant**
 
 [**Français**](README.fr.md) · **English**
 
-![Version](https://img.shields.io/badge/version-0.1.0%20preview-126caa) ![Docker](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-2496ED) ![Licence](https://img.shields.io/badge/licence-to%20be%20decided-lightgrey)
+![Version](https://img.shields.io/badge/version-0.2.0%20preview-126caa) ![Docker](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-2496ED) ![Licence](https://img.shields.io/badge/licence-to%20be%20decided-lightgrey)
 
 <br>
 
@@ -35,14 +35,14 @@
 <td width="33%" valign="top"><b>✅ What is left to check</b><br>Unknown payments, stays without an amount, payouts not received: an incomplete result is flagged, never disguised as zero.</td>
 </tr>
 <tr>
-<td valign="top"><b>🎮 A separate demo</b><br>Two fictional properties and a year of invented activity to try everything, without ever touching your data.</td>
+<td valign="top"><b>📅 Complete stays</b><br>Enter, edit, cancel with the fee retained, restore, follow the payout: each stay shows its share of the Overview, month by month.</td>
 <td valign="top"><b>🔐 Two-factor sign-in</b><br>A code from an authenticator app after the password, and ten single-use recovery codes.</td>
 <td valign="top"><b>🏠 Home Assistant, if you like</b><br>A read-only key: revenue, occupancy, next arrival, and automations such as heating the day before an arrival.</td>
 </tr>
 </table>
 
 > [!NOTE]
-> **Version 0.1.0, preview.** The Overview, the demo, accounts, two-factor sign-in and the Home Assistant link are ready. The **Stays, Expenses, Suppliers and Documents** screens come in the next versions: with your own data, only properties can be created for now.
+> **Version 0.2.0, preview.** The Overview, **stays** (entry, cancellation, payouts received), the demo, accounts, two-factor sign-in and the Home Assistant link are ready. Airbnb and CSV **import**, **expenses**, **suppliers** and **documents** come in the next versions: with your own data, expenses cannot be entered yet.
 
 ---
 
@@ -71,6 +71,28 @@ One click under any indicator opens its explanation:
 - **every line used**, with the rule applied to each — "Spread night by night over the stay", "Counted on its date"… — and the total.
 
 No black box: you can redo every calculation by hand.
+
+</td>
+</tr>
+</table>
+
+---
+
+## 📅 Stays, from booking to payout
+
+<img src="docs/images/en/stays-desktop.png" alt="List of stays with their status and payout status" width="100%">
+
+<table>
+<tr>
+<td width="55%" valign="top"><img src="docs/images/en/stay-detail-card.png" alt="A stay across two months: amounts, month-by-month split, payout received"></td>
+<td width="45%" valign="top">
+
+- **Guided entry**: property, dates (nights per month shown at once), booking channel, gross amount and commission; the expected net payout is computed.
+- **Tourist tax and security deposit** recorded apart: never counted as revenue.
+- **Stay page**: what was received, what is left to receive, and **what the stay counts in the Overview**, month by month.
+- **Payout received** in one click: the Cash reading updates.
+- **Cancellation** with the amount retained, counted on the arrival date; **Restore** brings everything back.
+- Explicit statuses: *Upcoming*, *In progress*, *Finished*, *Provisional*, *Cancelled*; *Payout expected*, *to confirm*, *received*.
 
 </td>
 </tr>
@@ -129,12 +151,12 @@ It is reproduced exactly in the demo's example month:
 <tr>
 <td width="46%" valign="top"><img src="docs/images/en/overview-tablet.png" alt="Overview on a tablet"></td>
 <td width="27%" valign="top"><img src="docs/images/en/overview-phone.png" alt="Overview on a phone"></td>
-<td width="27%" valign="top"><img src="docs/images/en/settings-phone.png" alt="Settings on a phone"></td>
+<td width="27%" valign="top"><img src="docs/images/en/stays-phone.png" alt="Stays on a phone"></td>
 </tr>
 <tr>
 <td align="center"><b>On a tablet</b></td>
 <td align="center"><b>On a phone</b></td>
-<td align="center"><b>Settings, thumb-friendly</b></td>
+<td align="center"><b>Stays, thumb-friendly</b></td>
 </tr>
 </table>
 
@@ -155,7 +177,7 @@ Sidebar on a large screen, top tabs on a tablet, bottom bar on a phone. On touch
 </tr>
 </table>
 
-With the demo, everything is already filled in: a permanent banner reminds you the figures are fictional. With your data, you start from an empty space and create your first property — only the name is required.
+With the demo, everything is already filled in: a permanent banner reminds you the figures are fictional. With your data, you start from an empty space and create your first property — only the name is required. The **My data / Demo** switch takes you from one to the other at any time.
 
 📖 [Getting started: the first ten minutes](docs/en/guide.md)
 
@@ -257,10 +279,12 @@ Until the built-in backup arrives, a copy of the volume is enough: the command i
 | | Step | Content |
 |:--:|---|---|
 | ✅ | **0.1.0** | Overview, three readings, explained indicators, demo, accounts and rights, two-factor sign-in, Home Assistant link, Docker images |
-| 🔜 | **Recording** | Stays, Expenses and payments, Suppliers with invoice splitting |
-| 🔜 | **Documents and imports** | Checked PDF documents, Airbnb import, CSV import with preview |
-| 🔜 | **Settings and backup** | Readers and rights per property, categories, checked backup and restore |
-| 🎯 | **1.0** | Tests on a real ARM64 machine, full acceptance run, first stable version |
+| ✅ | **0.1.1** | Fixes from the independent audit: menu without empty screens, My data / Demo switch, explanations readable on a phone |
+| ✅ | **0.2.0** | Stays: entry, cancellation and restoration, payouts received, each stay's share of the Overview |
+| 🔜 | **0.3.0** | Airbnb and CSV import with preview and duplicate detection |
+| 🔜 | **0.4.0** | Expenses and payments: partial payments, to pay, loan, categories |
+| 🔜 | **0.5.0 – 0.6.0** | Suppliers and invoice splitting; PDF documents |
+| 🎯 | **1.0** | Checked backup, reader accounts, full acceptance run, first stable version |
 
 📖 [Detailed roadmap](docs/en/roadmap.md)
 

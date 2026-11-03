@@ -1,18 +1,19 @@
 # Feuille de route
 
-Rental Cockpit avance par lots courts. Chaque écran est proposé en captures pour validation du rendu avant d'être généralisé.
+Rental Cockpit avance par **livraisons** courtes et utilisables. Chaque livraison est une demande de fusion (PR) testable seule, avec son image Docker de test (`ghcr.io/vinzgithub/rental-cockpit:pr-<numéro>`), un scénario chiffré et des tests automatiques. Elle n'est fusionnée qu'après validation par les vérificateurs.
 
-| Lot | Contenu | État |
-|---|---|---|
-| **1. Fondations** | Inventaire du projet d'origine, moteur de calcul isolé et testé, démonstration fictive séparée | ✅ Fait |
-| **1 bis. Application autonome** | Comptes, sessions, droits, stockage SQLite, Docker, Synthèse et accueil | ✅ Fait — 0.1.0 |
-| **1 ter. Compte, installation, Home Assistant** | Double authentification (TOTP, codes de secours), réglages du compte, images Docker publiées (x86-64, ARM64), lien facultatif avec Home Assistant (clés en lecture seule, résumé JSON) | ✅ Fait — 0.1.0 |
-| **2. Saisie** | Séjours, Dépenses et paiements, Prestataires avec répartition d'une facture | À venir |
-| **3. Justificatifs et imports** | Documents PDF (contrôle, doublons, téléchargement protégé), import Airbnb repris, import CSV générique avec prévisualisation | À venir |
-| **4. Réglages et sauvegarde** | Lecteurs et droits par bien, catégories, sauvegarde vérifiée et restauration, diagnostic | À venir |
-| **5. Version publique** | Essai sur une vraie machine ARM64, tests débutants, audit complet du dépôt, critères T01 à T12, version 1.0 | À venir |
+| Livraison | Version | Contenu | État |
+|---|---|---|---|
+| Fondations | 0.1.0 | Application autonome : comptes, droits, double authentification, Synthèse et trois lectures, démonstration séparée, lien Home Assistant, images Docker | ✅ Publiée |
+| **L0** — corrections de l'audit | 0.1.1 | Menu sans écran vide, bascule Mes données / Démo, cloche, explications lisibles sur téléphone, copie en HTTP, tests navigateur | En validation |
+| **L1** — Séjours | 0.2.0 | Créer, modifier, annuler, rétablir et supprimer des séjours ; canal de réservation ; versements reçus ; fiche séjour avec sa part dans la Synthèse ; migration du format de données avec copie automatique | En validation |
+| **L2** — Import | 0.3.0 | Import Airbnb (lecteur repris et adapté) et CSV générique : prévisualisation sans écriture, doublons détectés, validation en une fois, annulation du dernier import | À venir |
+| **L3** — Dépenses et règlements | 0.4.0 | Dépenses et recettes hors séjours, paiements partiels, à payer / à recevoir, mensualités d'emprunt, catégories, export CSV | À venir |
+| **L4** — Prestataires | 0.5.0 | Prestataires et tarifs, facture à plusieurs prestations répartie entre séjours | À venir |
+| **L5** — Justificatifs | 0.6.0 | PDF contrôlés, doublons, lien avec les dépenses, téléchargement après contrôle des droits | À venir |
+| **L6** — Version 1.0 | 1.0.0 | Sauvegarde et restauration vérifiées, comptes lecteurs, passe accessibilité et mobile, essai ARM64, recette complète | À venir |
 
-Abritel (et d'autres plateformes) ne seront annoncés qu'après analyse d'exports authentiques et anonymisés : aucun format n'est deviné.
+La priorité P0 (utilisable au quotidien) est atteinte à la 0.4.0. Abritel (et d'autres plateformes) ne seront annoncés qu'après analyse d'exports authentiques et anonymisés : aucun format n'est deviné.
 
 ## Décisions en attente
 

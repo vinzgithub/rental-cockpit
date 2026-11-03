@@ -28,6 +28,37 @@ Cas particuliers :
 - **Ajustement ou remboursement** : compté à sa propre date, sans effacer le montant initial.
 - **Commission de plateforme** : dépense d'exploitation en Activité et en Factures. En Trésorerie elle n'apparaît pas comme un paiement, car elle est déjà déduite du versement reçu.
 
+## Un séjour, de la saisie à la Synthèse
+
+Un séjour se saisit dans l'écran **Séjours** : bien, arrivée, départ et, si on les connaît, le montant brut payé par le voyageur et la commission de la plateforme. Le **versement net attendu** vaut brut − commission, sauf si un autre montant est saisi (la plateforme a versé autre chose). La taxe de séjour collectée et la caution sont notées à part : **ce ne sont jamais des recettes**.
+
+Exemple (c'est le scénario des tests) : un séjour du 28 septembre au 4 octobre 2026, 600 € bruts, 90 € de commission.
+
+| | Septembre 2026 | Octobre 2026 |
+|---|---|---|
+| Nuits | 3 | 3 |
+| **Activité** — recettes / commission / solde | 300 € / 45 € / 255 € | 300 € / 45 € / 255 € |
+| **Factures** — recettes / commission / solde | 600 € / 90 € / 510 € (mois d'arrivée) | 0 € |
+| **Trésorerie** — avant le versement | 0 € | 0 € |
+| **Trésorerie** — après « versement reçu : 510 € le 5 octobre » | 0 € | 510 € reçus |
+
+La fiche du séjour montre ce découpage, mois par mois, avec la même règle que la Synthèse.
+
+**État du versement** d'un séjour :
+
+| État | Quand |
+|---|---|
+| Versement attendu | Le séjour n'est pas terminé, rien n'est encore reçu |
+| Versement à confirmer | Le séjour est terminé et aucun versement n'est enregistré (il apparaît dans *À vérifier*) |
+| Partiellement reçu | Une partie du versement attendu est enregistrée |
+| Versement reçu | Le versement attendu est entièrement enregistré |
+| Montant à compléter | Le montant brut n'est pas connu : rien ne peut être vérifié |
+| Rien à recevoir | Séjour annulé sans montant conservé |
+
+Un versement ne peut pas dépasser ce qui reste attendu : si la plateforme a versé davantage, on corrige d'abord les montants du séjour.
+
+**Annuler un séjour** demande le montant éventuellement conservé (frais d'annulation) et la commission sur ce montant. Le séjour reste visible, sans nuitée ; seul le montant conservé compte, une fois, à la date d'arrivée. Les montants d'avant l'annulation sont gardés : **Rétablir le séjour** les remet. Supprimer un séjour est réservé à une saisie par erreur, sans versement.
+
 ## Les indicateurs
 
 | Indicateur | Formule | Exclut |

@@ -306,7 +306,11 @@ dialog.rc .dhead { display: flex; gap: 14px; align-items: flex-start; padding: 2
 dialog.rc .dhead h2 { font-family: var(--rc-serif); font-weight: 600; font-size: 23px; line-height: 1.2; }
 dialog.rc .dhead p { color: var(--rc-muted); font-size: 13.5px; margin-top: 4px; }
 dialog.rc .dhead .iconbtn { margin-left: auto; margin-top: -6px; margin-right: -8px; }
-dialog.rc .dbody { padding: 18px 22px; overflow: auto; max-height: calc(100vh - 210px); display: grid; gap: 16px; container: dialog / inline-size; }
+dialog.rc[open] { display: flex; flex-direction: column; }
+dialog.rc { container: dialog / inline-size; }
+dialog.rc .dhead, dialog.rc .dfoot { flex: none; }
+/* The body scrolls; the title and the actions always stay visible. */
+dialog.rc .dbody { padding: 18px 22px; overflow: auto; flex: 1 1 auto; min-height: 0; display: grid; gap: 16px; align-content: start; }
 dialog.rc .dfoot { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; padding: 14px 22px 20px; border-top: 1px solid var(--rc-border); }
 .equation { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 10px; align-items: end; }
 .equation .term { display: grid; gap: 6px; justify-items: center; text-align: center; }
@@ -545,6 +549,65 @@ dialog.rc .dfoot { display: flex; gap: 10px; justify-content: flex-end; flex-wra
 .check-line { display: flex; gap: 10px; align-items: center; font-size: 14px; min-height: 44px; cursor: pointer; }
 .check-line input { width: 20px; height: 20px; accent-color: var(--rc-accent); }
 
+/* ------------------------------------------------------------ « Séjours » */
+.pagehead .headline { display: flex; gap: 16px; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; }
+.stays-tools { display: grid; gap: 10px; grid-template-columns: 1fr; }
+.search { position: relative; display: flex; align-items: center; }
+.search svg.i.lead { position: absolute; left: 13px; color: var(--rc-muted); width: 18px; height: 18px; pointer-events: none; }
+.search input { width: 100%; height: 46px; padding: 0 14px 0 40px; border-radius: 12px; border: 1px solid var(--rc-border-strong); background: var(--rc-inset); color: var(--rc-text); font-size: 14.5px; }
+.search input:focus { outline: 2px solid var(--rc-accent); outline-offset: 0; border-color: transparent; }
+.chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.chip { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--rc-border-strong); background: transparent; color: var(--rc-muted); cursor: pointer; font-size: 13.5px; white-space: nowrap; }
+.chip:hover { color: var(--rc-text); }
+.chip .n { min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; display: inline-grid; place-items: center; background: rgba(255, 255, 255, 0.07); font-size: 12px; font-weight: 600; }
+.chip[aria-selected="true"] { background: var(--rc-accent-soft); border-color: var(--rc-accent-line); color: var(--rc-accent); font-weight: 600; }
+.chip.warn .n { background: var(--rc-amber-soft); color: var(--rc-amber); }
+.stays-card { padding: 8px 14px; }
+.stays-card > .empty { margin: 8px 0; }
+.stays-list { display: none; }
+.stays-list td small, .stays-table td small { display: block; color: var(--rc-faint); font-size: 12px; margin-top: 2px; }
+.stays-list td.payout small { margin-top: 5px; }
+.stays-list .amt { text-align: right; white-space: nowrap; }
+.table tr.clickable { cursor: pointer; }
+.table tr.clickable:hover td { background: rgba(255, 255, 255, 0.025); }
+.stays-list-cards { display: grid; gap: 10px; padding: 6px 0; }
+.stay-card.clickable { width: 100%; text-align: left; color: inherit; cursor: pointer; font: inherit; }
+.stay-card.clickable:hover { border-color: var(--rc-accent-line); }
+.stay-card .body { display: grid; gap: 2px; min-width: 0; }
+.stay-card .facts { flex-wrap: wrap; gap: 6px 14px; }
+.stay-card .money-line { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+.muted { color: var(--rc-faint); }
+.nowrap { white-space: nowrap; }
+.stays-list .propcell { white-space: nowrap; }
+.stays-list td.c-title { min-width: 160px; }
+.stays-list td.c-title small { white-space: nowrap; }
+.pill-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.pre { white-space: pre-wrap; }
+.linkbtn.small { font-size: 12.5px; min-height: 24px; padding: 2px 0; display: flex; }
+.btn.danger-text { color: #f3a5af; }
+.btn.danger-text:hover { color: #ffc4cb; border-color: rgba(231, 128, 141, 0.5); }
+.compact-table { max-height: none; }
+.dfoot.stay-actions .del { margin-right: auto; }
+.lines.breakdown td, .lines.breakdown th { white-space: nowrap; }
+.plain-list.notes { font-size: 13px; margin-top: 10px; }
+fieldset.amounts { border: 1px solid var(--rc-border); border-radius: 13px; padding: 14px; margin: 0; min-width: 0; }
+fieldset.amounts legend { padding: 0 6px; color: var(--rc-text); font-weight: 600; font-size: 14px; }
+.nights-preview { color: var(--rc-muted); font-size: 13.5px; }
+.nights-preview.bad { color: #f3a5af; }
+.money-facts dd { font-weight: 550; }
+.facts-list.money-facts > div { grid-template-columns: 250px 1fr; }
+.money-facts dd small { color: var(--rc-faint); font-weight: 400; margin-left: 4px; }
+@container content (min-width: 640px) {
+  .stays-tools { grid-template-columns: minmax(200px, 260px) minmax(220px, 1fr); }
+}
+@container content (min-width: 900px) {
+  .stays-list { display: table; }
+  .stays-list-cards { display: none; }
+}
+@container content (max-width: 899px) {
+  .stays-card { background: none; border: 0; padding: 0; }
+}
+
 /* Dialogs live outside the page container: they follow their own width
    (kept last so it wins over the general rules above). */
 @container dialog (max-width: 560px) {
@@ -552,4 +615,13 @@ dialog.rc .dfoot { display: flex; gap: 10px; justify-content: flex-end; flex-wra
   .equation .op { padding: 0; text-align: center; }
   .facts-list > div { grid-template-columns: 1fr; gap: 2px; }
   .form-grid { grid-template-columns: 1fr; }
+  .facts-list.money-facts > div { grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: baseline; }
+  .facts-list.money-facts dd { text-align: right; }
+  .facts-list.money-facts dd small { display: block; margin: 2px 0 0; }
+  .lines.breakdown tr { grid-template-areas: none; grid-template-columns: minmax(0, 1fr) auto; }
+  .lines.breakdown td.c-item { grid-area: auto; grid-column: 1 / -1; font-weight: 600; }
+  .lines.breakdown td[data-label] { display: contents; }
+  .lines.breakdown td[data-label]::before { content: attr(data-label); color: var(--rc-muted); font-size: 13px; text-align: left; }
+  dialog.rc .dfoot.stay-actions { display: grid; grid-template-columns: 1fr 1fr; }
+  dialog.rc .dfoot.stay-actions .del { grid-column: 1 / -1; order: 3; margin: 0; border-color: transparent; }
 }

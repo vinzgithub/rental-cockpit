@@ -12,8 +12,21 @@ from typing import Any, Callable
 
 from .schema import SCHEMA_VERSION, default_categories, empty_registry
 
+
+def _v1_to_v2(data: dict[str, Any]) -> dict[str, Any]:
+    """Schema 2: every stay gets a booking channel.
+
+    Imported Airbnb stays are Airbnb bookings; for anything else the channel
+    was never recorded, so it becomes « Autre » rather than a guess.
+    """
+    for stay in data.get("stays", {}).values():
+        if not stay.get("channel"):
+            stay["channel"] = "airbnb" if stay.get("source") == "airbnb" else "other"
+    return data
+
+
 STEPS: dict[int, Callable[[dict[str, Any]], dict[str, Any]]] = {
-    # 1: first public schema. Future steps go here, e.g. 1: _v1_to_v2.
+    1: _v1_to_v2,
 }
 
 

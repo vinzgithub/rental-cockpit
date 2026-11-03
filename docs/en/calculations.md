@@ -28,6 +28,37 @@ Special cases:
 - **Adjustment or refund**: counted on its own date, without erasing the original amount.
 - **Platform commission**: operating expense in Activity and Invoices. In Cash it is not a payment, since it is already deducted from the payout received.
 
+## A stay, from entry to the Overview
+
+A stay is entered in the **Stays** screen: property, arrival, departure and, when known, the gross amount paid by the guest and the platform commission. The **expected net payout** is gross − commission, unless another amount is entered (the platform paid something else). The tourist tax collected and the security deposit are recorded apart: **they are never revenue**.
+
+Example (it is the test scenario): a stay from 28 September to 4 October 2026, €600 gross, €90 commission.
+
+| | September 2026 | October 2026 |
+|---|---|---|
+| Nights | 3 | 3 |
+| **Activity** — revenue / commission / balance | €300 / €45 / €255 | €300 / €45 / €255 |
+| **Invoices** — revenue / commission / balance | €600 / €90 / €510 (arrival month) | €0 |
+| **Cash** — before the payout | €0 | €0 |
+| **Cash** — after "payout received: €510 on 5 October" | €0 | €510 received |
+
+The stay page shows this split, month by month, with the same rule as the Overview.
+
+**Payout status** of a stay:
+
+| Status | When |
+|---|---|
+| Payout expected | The stay has not ended, nothing received yet |
+| Payout to confirm | The stay has ended and no payout is recorded (it appears in *To check*) |
+| Partly received | Part of the expected payout is recorded |
+| Payout received | The expected payout is fully recorded |
+| Amount to complete | The gross amount is unknown: nothing can be checked |
+| Nothing to receive | Cancelled stay with no retained amount |
+
+A payout cannot exceed what is still expected: if the platform paid more, correct the stay amounts first.
+
+**Cancelling a stay** asks for any amount retained (cancellation fee) and the commission on it. The stay stays visible, with no night; only the retained amount counts, once, on the arrival date. The amounts from before the cancellation are kept: **Restore the stay** brings them back. Deleting a stay is reserved for an entry made by mistake, with no payout.
+
 ## Indicators
 
 | Indicator | Formula | Excludes |

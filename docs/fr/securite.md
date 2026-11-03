@@ -26,6 +26,7 @@ La démonstration (données fictives) est visible par tout compte connecté et m
 - **Jeton anti-CSRF** obligatoire sur toute modification.
 - **Opérations idempotentes** : chaque action porte un identifiant unique ; un double clic ou un renvoi réseau n'enregistre qu'une fois.
 - **Tout ou rien** : une modification est appliquée à une copie, enregistrée dans une transaction SQLite, puis publiée. En cas d'échec, l'état précédent est conservé et le message le dit.
+- **Pas d'écrasement silencieux** : chaque séjour porte un numéro de révision ; une modification faite sur une version dépassée (quelqu'un d'autre a enregistré entre-temps) est refusée et le message invite à recharger.
 - **Textes** : tout ce qui est saisi ou importé est traité comme du texte, jamais comme du HTML.
 
 ## Navigateur
@@ -44,7 +45,7 @@ La démonstration (données fictives) est visible par tout compte connecté et m
 ## Données
 
 - Stockage **local uniquement** : aucune télémétrie, aucun compte éditeur, aucun appel sortant.
-- Toutes les données sont dans le dossier `/data` : protégez-le et ses sauvegardes, qui contiennent des informations privées.
+- Toutes les données sont dans le dossier `/data` : protégez-le et ses sauvegardes, qui contiennent des informations privées. Cela vaut aussi pour `backups/`, où une copie complète de la base est écrite avant chaque migration de format.
 - Les données des voyageurs sont limitées au strict utile (un libellé et un nombre de voyageurs).
 - Le journal des opérations note l'auteur, la date, l'action, l'élément concerné et le résultat ; il ne contient ni secret ni contenu de PDF. Ce n'est pas un archivage légal certifié.
 
