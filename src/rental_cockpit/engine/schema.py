@@ -89,9 +89,9 @@ LABELS: dict[str, dict[str, tuple[str, str]]] = {
         "other": ("Autre", "Other"),
     },
     "mode": {
-        "activity": ("Activité", "Activity"),
-        "invoice": ("Factures", "Invoices"),
-        "cash": ("Trésorerie", "Cash"),
+        "activity": ("Par nuit occupée", "Per night occupied"),
+        "invoice": ("Par date de séjour ou de facture", "By stay or invoice date"),
+        "cash": ("Par date de paiement", "By payment date"),
     },
 }
 

@@ -1,15 +1,19 @@
 /* Copyright © 2026 Vincent Fournet */
-// « Synthèse » — the overview screen.
-// Three readings (Activité / Factures / Trésorerie), three key figures with
-// their explanation, properties, things to check and upcoming stays.
+// « Synthèse » — the overview screen, in three views:
+//   « Mon argent »            what came in, what went out, what is left to receive or pay (payment dates);
+//   « Performance locative »  what the rental produced: nights, occupancy, result, month by month;
+//   « Analyse comptable »     the three readings of the engine, for whoever needs them.
+// The engine and its rules are the same everywhere; only the presentation changes.
 
 import { html, raw } from "../dom.js";
 import { icon, propertyIcon } from "../icons.js";
+import { periodControl } from "../period.js";
 
 const MODES = ["activity", "invoice", "cash"];
+const VIEWS = ["money", "performance", "analysis"];
 
 export function filtersBar(v) {
-  const { i18n, state, periodOptions, properties } = v;
+  const { i18n, state, properties } = v;
   const { t } = i18n;
   return html`
     <div class="filters">
@@ -22,21 +26,22 @@ export function filtersBar(v) {
         </select>
         ${raw(icon("chevronDown", "chev"))}
       </label>
-      <label class="select has-lead">
-        <span class="sr-only">${t("filter.period")}</span>
-        ${raw(icon("calendar", "lead"))}
-        <select data-change="period">
-          ${periodOptions.map((o) => html`<option value="${o.value}" ${raw(o.value === state.periodKey ? "selected" : "")}>${o.label}</option>`)}
-        </select>
-        ${raw(icon("chevronDown", "chev"))}
-      </label>
+      ${periodControl(i18n, { ...v.period("overview"), allowRange: true })}
+    </div>`;
+}
+
+function viewSwitch(v) {
+  const { t } = v.i18n;
+  return html`
+    <div class="segmented views" role="group" aria-label="${t("view.label")}">
+      ${VIEWS.map((key) => html`<button type="button" data-action="view" data-value="${key}" aria-pressed="${v.state.view === key ? "true" : "false"}">${raw(icon(key === "money" ? "wallet" : key === "performance" ? "chart" : "scale"))}<span>${t(`view.${key}`)}</span></button>`)}
     </div>`;
 }
 
 function modeSwitch(v) {
   const { t } = v.i18n;
   return html`
-    <div class="segmented" role="group" aria-label="${t("mode.label")}">
+    <div class="segmented small" role="group" aria-label="${t("mode.label")}">
       ${MODES.map((m) => html`<button type="button" data-action="mode" data-value="${m}" aria-pressed="${v.state.mode === m ? "true" : "false"}">${t(`mode.${m}`)}</button>`)}
     </div>`;
 }
@@ -66,10 +71,10 @@ export function periodName(v, period) {
   return i18n.monthLower(start);
 }
 
-function kpi(v, { id, labelKey, iconName, tone, goodWhen, hero = false }) {
+function kpi(v, { id, labelKey, iconName, tone, goodWhen, hero = false, sub = "" }) {
   const { i18n, overview } = v;
   const item = overview.indicators[id];
-  const label = id === "revenue" && v.state.mode === "cash" ? i18n.t("kpi.revenue.cash") : i18n.t(labelKey);
+  const label = id === "revenue" && overview.mode === "cash" ? i18n.t("kpi.revenue.cash") : i18n.t(labelKey);
   const incomplete = item && item.complete === false && item.missing?.length
     ? html`<div class="incomplete">${raw(icon("alert"))}<span>${i18n.t("kpi.incomplete", { n: item.missing.length })}</span></div>` : "";
   return html`
@@ -78,10 +83,11 @@ function kpi(v, { id, labelKey, iconName, tone, goodWhen, hero = false }) {
       <div>
         <div class="label">${label}</div>
         <div class="value num">${i18n.money(item?.value, { compact: true })}</div>
+        ${sub ? html`<div class="kpi-sub">${sub}</div>` : ""}
         ${delta(v, id, goodWhen)}
         ${incomplete}
       </div>
-      <button type="button" class="howlink" data-action="explain" data-value="${id}">${raw(icon("help"))}<span>${i18n.t("kpi.how")}</span></button>
+      <button type="button" class="howlink" data-action="explain" data-value="${id}" data-label="${label}">${raw(icon("help"))}<span>${i18n.t("kpi.how")}</span></button>
     </div></article>`;
 }
 
@@ -92,6 +98,86 @@ function kpis(v) {
       ${kpi(v, { id: "operating_balance", labelKey: "kpi.balance", iconName: "scale", tone: "teal", goodWhen: "up", hero: true })}
       ${kpi(v, { id: "revenue", labelKey: "kpi.revenue", iconName: "coins", tone: "teal", goodWhen: "up" })}
       ${kpi(v, { id: "operating_expenses", labelKey: "kpi.expenses", iconName: "wallet", tone: "rose", goodWhen: "down" })}
+    </section>`;
+}
+
+/** « Payé » in detail: what kind of money left, when it is not only running costs. */
+function outSplit(v) {
+  const { i18n, overview } = v;
+  const ind = overview.indicators;
+  const parts = [["operating_expenses", "money.outExpenses"], ["financing", "money.outLoan"], ["taxes", "money.outTaxes"], ["investment", "money.outEquipment"]]
+    .filter(([key]) => ind[key]?.value);
+  if (parts.length < 2) return "";
+  return parts.map(([key, label]) => `${i18n.t(label)} ${i18n.money(ind[key].value, { compact: true })}`).join(" · ");
+}
+
+function moneyKpis(v) {
+  const { t } = v.i18n;
+  return html`
+    <section class="kpis" aria-label="${t("view.money")}">
+      ${kpi(v, { id: "cash_balance", labelKey: "money.balance", iconName: "scale", tone: "teal", goodWhen: "up", hero: true, sub: t("money.balanceSub") })}
+      ${kpi(v, { id: "cash_in", labelKey: "money.in", iconName: "coins", tone: "teal", goodWhen: "up", sub: t("money.inSub") })}
+      ${kpi(v, { id: "cash_out", labelKey: "money.out", iconName: "wallet", tone: "rose", goodWhen: "down", sub: outSplit(v) || t("money.outSub") })}
+    </section>`;
+}
+
+function performanceKpis(v) {
+  const { t } = v.i18n;
+  return html`
+    <section class="kpis" aria-label="${t("view.performance")}">
+      ${kpi(v, { id: "operating_balance", labelKey: "perf.result", iconName: "scale", tone: "teal", goodWhen: "up", hero: true, sub: t("perf.resultSub") })}
+      ${kpi(v, { id: "stay_revenue", labelKey: "perf.nightsRevenue", iconName: "moon", tone: "teal", goodWhen: "up" })}
+      ${kpi(v, { id: "commissions", labelKey: "perf.commissions", iconName: "receipt", tone: "rose", goodWhen: "down" })}
+    </section>`;
+}
+
+/** Nights, occupancy and the rest of the result, each with its explanation. */
+function occupancyCard(v) {
+  const { i18n, overview } = v;
+  const { t } = i18n;
+  const ind = overview.indicators;
+  const nights = ind.nights?.value || 0;
+  return html`
+    <section class="card" aria-labelledby="rc-occupancy">
+      <div class="card-head"><span class="ico">${raw(icon("moon"))}</span><h2 id="rc-occupancy">${t("perf.occupancyTitle")}</h2></div>
+      <div class="metrics">
+        ${metric(v, { id: "nights", labelKey: "perf.nights", text: i18n.plural(nights, "stays.night", "stays.nights") })}
+        ${metric(v, { id: "occupancy", labelKey: "perf.occupancy", text: i18n.ratio(ind.occupancy?.value),
+                      sub: ind.occupancy?.available_nights ? t("perf.available", { n: ind.occupancy.available_nights }) : "" })}
+        ${ind.average_night ? metric(v, { id: "average_night", labelKey: "perf.average", value: ind.average_night.value }) : ""}
+        ${metric(v, { id: "other_income", labelKey: "perf.otherIncome", value: ind.other_income?.value, sub: t("perf.otherIncomeSub") })}
+        ${metric(v, { id: "other_expenses", labelKey: "perf.otherExpenses", value: ind.other_expenses?.value, sub: t("perf.otherExpensesSub") })}
+      </div>
+    </section>`;
+}
+
+const BAR_STEPS = 20;  // bars in 5 % steps: the page's style rules do not allow a computed width
+
+/** « Évolution mensuelle »: the twelve months of the year, per night occupied; a month opens it. */
+function seriesCard(v) {
+  const { i18n, series, state } = v;
+  const { t } = i18n;
+  if (!series) return "";
+  const months = series.months || [];
+  const top = Math.max(1, ...months.map((m) => Math.max(m.stay_revenue + m.other_income, 0)));
+  const current = state.periodKey;
+  return html`
+    <section class="card series-card" aria-labelledby="rc-series">
+      <div class="card-head"><span class="ico">${raw(icon("chart"))}</span><h2 id="rc-series">${t("perf.series", { year: series.year })}</h2></div>
+      <p class="reading">${raw(icon("info"))}<span>${t("perf.seriesIntro")}</span></p>
+      <ol class="series">
+        ${months.map((m) => {
+          const key = `m:${m.month}`;
+          const width = Math.round((Math.max(m.stay_revenue + m.other_income, 0) / top) * BAR_STEPS);
+          return html`<li><button type="button" class="series-row ${key === current ? "current" : ""}" data-action="period-pick" data-target="overview" data-value="${key}"
+              aria-label="${t("perf.seriesRow", { month: i18n.month(`${m.month}-01`), revenue: i18n.money(m.stay_revenue + m.other_income, { compact: true }), result: i18n.money(m.result, { compact: true }), occupancy: i18n.ratio(m.occupancy) })}" ${raw(key === current ? 'aria-current="true"' : "")}>
+            <span class="m">${i18n.monthShort(`${m.month}-01`)}</span>
+            <span class="bar" aria-hidden="true"><i class="w${width}"></i></span>
+            <span class="v num"><b>${i18n.money(m.stay_revenue + m.other_income, { compact: true })}</b><small>${t("perf.seriesResult", { amount: i18n.money(m.result, { compact: true }) })}</small></span>
+            <span class="o num">${m.occupancy === null ? "—" : i18n.ratio(m.occupancy)}</span>
+          </button></li>`;
+        })}
+      </ol>
     </section>`;
 }
 
@@ -117,16 +203,20 @@ function propertiesCard(v) {
       </div>
       <div class="rows">
         ${rows.length ? rows.map((p) => {
-          const f = overview.by_property[p.id] || { revenue: 0, expenses: 0, balance: 0 };
+          const raw0 = overview.by_property[p.id] || { revenue: 0, expenses: 0, balance: 0, out: 0 };
+          // « Mon argent »: money in, money out (everything paid), what is left.
+          const f = overview.mode === "cash" && v.state.view === "money"
+            ? { revenue: raw0.revenue, expenses: raw0.out ?? raw0.expenses, balance: raw0.revenue - (raw0.out ?? raw0.expenses) } : raw0;
+          const words = overview.mode === "cash" && v.state.view === "money" ? ["props.in", "props.out", "props.balance"] : ["props.revenue", "props.expenses", "props.balance"];
           const inScope = overview.property_ids.includes(p.id);
           return html`
             <button type="button" class="row" data-action="focus-property" data-value="${p.id}" aria-label="${t("props.focus", { name: p.name })}">
               <span class="tile">${raw(propertyIcon(p.kind))}</span>
               <span><span class="name">${p.name}</span><span class="meta">${propertyMeta(v, p)}</span></span>
               <span class="figures num">
-                <div><b>${inScope ? i18n.money(f.revenue, { compact: true }) : "—"}</b><span>${t("props.revenue")}</span></div>
-                <div><b>${inScope ? i18n.money(f.expenses, { compact: true }) : "—"}</b><span>${t("props.expenses")}</span></div>
-                <div class="bal"><b>${inScope ? i18n.money(f.balance, { compact: true }) : "—"}</b><span>${t("props.balance")}</span></div>
+                <div><b>${inScope ? i18n.money(f.revenue, { compact: true }) : "—"}</b><span>${t(words[0])}</span></div>
+                <div><b>${inScope ? i18n.money(f.expenses, { compact: true }) : "—"}</b><span>${t(words[1])}</span></div>
+                <div class="bal"><b>${inScope ? i18n.money(f.balance, { compact: true }) : "—"}</b><span>${t(words[2])}</span></div>
               </span>
               <span class="chev">${raw(icon("chevronRight"))}</span>
             </button>`;
@@ -237,14 +327,14 @@ function staysCard(v) {
     </section>`;
 }
 
-function metric(v, { id, labelKey, value, sub = "", strong = false, explain = true, go = null }) {
+function metric(v, { id, labelKey, value, text = null, sub = "", strong = false, explain = true, go = null }) {
   const { i18n } = v;
   const label = i18n.t(labelKey);
   return html`
     <div class="metric ${strong ? "strong" : ""}">
       <span class="what"><b>${label}</b>${sub ? html`<small>${sub}</small>` : ""}</span>
-      <span class="num value">${i18n.money(value)}</span>
-      ${explain ? html`<button type="button" class="iconbtn" data-action="explain" data-value="${id}" aria-label="${i18n.t("kpi.howFor", { label })}">${raw(icon("help"))}</button>`
+      <span class="num value">${text === null ? i18n.money(value) : text}</span>
+      ${explain ? html`<button type="button" class="iconbtn" data-action="explain" data-value="${id}" data-label="${label}" aria-label="${i18n.t("kpi.howFor", { label })}">${raw(icon("help"))}</button>`
         : go && v.ready.has(go[0]) ? html`<button type="button" class="iconbtn" data-action="go" data-value="${go[0]}" data-view="${go[1] || ""}" aria-label="${i18n.t("kpi.see", { label })}">${raw(icon("chevronRight"))}</button>`
         : html`<span></span>`}
     </div>`;
@@ -267,17 +357,17 @@ function beyondCard(v) {
         ${ind.investment.value ? metric(v, { id: "investment", labelKey: "kpi.investment", value: ind.investment.value }) : ""}
         ${ind.taxes.value ? metric(v, { id: "taxes", labelKey: "kpi.taxes", value: ind.taxes.value }) : ""}
         ${ind.financing.value ? metric(v, { id: "financing", labelKey: "kpi.financing", value: ind.financing.value, sub: parts }) : ""}
-        ${metric(v, { id: "balance_after_financing", labelKey: v.state.mode === "cash" ? "kpi.afterCash" : "kpi.after", value: ind.balance_after_financing.value, strong: true })}
+        ${metric(v, { id: "balance_after_financing", labelKey: overview.mode === "cash" ? "kpi.afterCash" : "kpi.after", value: ind.balance_after_financing.value, strong: true })}
       </div>
     </section>`;
 }
 
 /** What is still to pay and to receive at the end of the period, with the list behind it. */
-function settleCard(v) {
+function settleCard(v, always = false) {
   const { i18n, overview } = v;
   const { t } = i18n;
   const ind = overview.indicators;
-  if (!ind.to_pay?.value && !ind.to_receive?.value) return "";
+  if (!always && !ind.to_pay?.value && !ind.to_receive?.value) return "";
   const receive = ind.to_receive;
   const sub = receive.entries && receive.stays
     ? t("kpi.receiveSplit", { stays: i18n.money(receive.stays), entries: i18n.money(receive.entries) })
@@ -287,7 +377,7 @@ function settleCard(v) {
       <div class="card-head"><span class="ico">${raw(icon("hourglass"))}</span><h2 id="rc-settle">${t("kpi.settle")}</h2></div>
       <p class="reading">${t("kpi.settleIntro", { date: i18n.dateLong(prevDayIso(overview.period.end)) })}</p>
       <div class="metrics">
-        ${metric(v, { id: "to_pay", labelKey: "kpi.toPay", value: ind.to_pay.value, explain: false, go: ["depenses", "to_pay"],
+        ${metric(v, { id: "to_pay", labelKey: always ? "money.toPay" : "kpi.toPay", value: ind.to_pay.value, explain: false, go: ["depenses", "to_pay"],
                       sub: i18n.plural(ind.to_pay.count || 0, "kpi.expenseOne", "kpi.expenseMany") })}
         ${metric(v, { id: "to_receive", labelKey: "kpi.toReceive", value: receive.value, explain: false,
                       go: receive.entries && !receive.stays ? ["depenses", "to_receive"] : ["sejours", "attention"], sub })}
@@ -302,8 +392,39 @@ function prevDayIso(iso) {
 }
 
 export function renderSynthese(v) {
-  const { i18n, overview } = v;
+  const { i18n, overview, state } = v;
   const { t } = i18n;
+  const view = state.view;
+  const quick = v.canWrite ? html`<div class="quick mobile-only">
+      <button type="button" class="btn primary" data-action="add-menu">${raw(icon("plus"))}${t("quick.add")}</button>
+    </div>` : "";
+  let body;
+  if (view === "money") {
+    body = html`
+      ${moneyKpis(v)}${quick}
+      <div class="mobile-only">${staysCard(v)}</div>
+      <div class="grid-2">${settleCard(v, true)}${checksCard(v)}</div>
+      ${propertiesCard(v)}
+      <div class="desktop-only">${staysCard(v)}</div>`;
+  } else if (view === "performance") {
+    body = html`
+      ${performanceKpis(v)}${quick}
+      <div class="grid-2">${occupancyCard(v)}${seriesCard(v)}</div>
+      <div class="mobile-only">${staysCard(v)}</div>
+      <div class="grid-2">${propertiesCard(v)}${checksCard(v)}</div>
+      <div class="desktop-only">${staysCard(v)}</div>`;
+  } else {
+    body = html`
+      <div class="modebar">
+        ${modeSwitch(v)}
+        <p class="reading">${raw(icon("info"))}<span>${overview.reading}</span></p>
+      </div>
+      ${kpis(v)}${quick}
+      <div class="mobile-only">${staysCard(v)}</div>
+      <div class="grid-2">${propertiesCard(v)}${checksCard(v)}</div>
+      ${beyondCard(v) || settleCard(v) ? html`<div class="grid-2">${beyondCard(v)}${settleCard(v)}</div>` : ""}
+      <div class="desktop-only">${staysCard(v)}</div>`;
+  }
   return html`
     <header class="pagehead">
       <div>
@@ -312,19 +433,9 @@ export function renderSynthese(v) {
       </div>
       ${filtersBar(v)}
     </header>
-    <div class="modebar">
-      ${modeSwitch(v)}
-      <p class="reading">${raw(icon("info"))}<span>${overview.reading}</span></p>
+    <div class="viewbar">
+      ${viewSwitch(v)}
+      <p class="reading">${raw(icon("info"))}<span>${t(`view.${view}.intro`)}</span></p>
     </div>
-    ${kpis(v)}
-    ${v.canWrite ? html`<div class="quick mobile-only">
-      <button type="button" class="btn primary" data-action="add-menu">${raw(icon("plus"))}${t("quick.add")}</button>
-    </div>` : ""}
-    <div class="mobile-only">${staysCard(v)}</div>
-    <div class="grid-2">
-      ${propertiesCard(v)}
-      ${checksCard(v)}
-    </div>
-    ${beyondCard(v) || settleCard(v) ? html`<div class="grid-2">${beyondCard(v)}${settleCard(v)}</div>` : ""}
-    <div class="desktop-only">${staysCard(v)}</div>`;
+    ${body}`;
 }

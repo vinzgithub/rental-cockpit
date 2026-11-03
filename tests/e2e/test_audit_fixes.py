@@ -2,6 +2,8 @@
 """Fixes from the 0.1.0 audit, checked in a real browser (0.1.1)."""
 from __future__ import annotations
 
+from .helpers import show_view
+
 
 def test_menu_only_lists_working_screens(desktop, base_url):
     desktop.goto(base_url + "/")
@@ -23,6 +25,7 @@ def test_demo_and_own_data_are_one_click_apart(desktop, base_url):
 def test_explanation_fits_a_phone(phone, base_url):
     phone.goto(base_url + "/")
     phone.locator(".kpi").first.wait_for()
+    show_view(phone, "analysis", "activity")
     phone.locator('[data-action="explain"][data-value="operating_balance"]').click()
     phone.locator("dialog[open] .lines").wait_for()
     overflow = phone.evaluate("""() => {

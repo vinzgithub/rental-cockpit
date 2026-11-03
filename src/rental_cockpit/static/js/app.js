@@ -26,6 +26,7 @@ import { renderDocuments } from "./views/documents.js";
 import { renderStays, STAY_VIEWS } from "./views/stays.js";
 import { renderSynthese } from "./views/synthese.js";
 import { renderNoAccess, renderOnboarding, renderWelcome } from "./views/welcome.js";
+import { boundsOf, rangeKey, stepKey, yearOf } from "./period.js";
 
 // A screen enters the menu only once it works: no « coming soon » page.
 const SCREENS = [
@@ -37,6 +38,10 @@ const SCREENS = [
   ["reglages", "sliders"],
 ];
 const DOCUMENT_VIEWS = ["all", "incomplete"];
+// « Synthèse » : « Mon argent » (by payment date), « Performance locative » (per night occupied)
+// and « Analyse comptable » (the three readings side by side, for whoever needs them).
+const OVERVIEW_VIEWS = ["money", "performance", "analysis"];
+const READINGS = ["activity", "invoice", "cash"];
 const READY = new Set(SCREENS.map(([key]) => key));
 const STORE_KEY = "rental-cockpit.view";
 
@@ -51,7 +56,8 @@ function writePrefs(update) {
 export class App {
   constructor(root) {
     this.root = root;
-    this.state = { screen: "synthese", mode: "activity", propertyId: "all", periodKey: "", loading: true, error: "", overview: null, account: null,
+    this.state = { screen: "synthese", view: "money", mode: "activity", propertyId: "all", periodKey: "", loading: true, error: "", overview: null, account: null,
+      periodPanel: null, panelYear: 0, series: null,
       stays: { view: "active", q: "", data: null }, entries: { view: "all", q: "", kind: "", year: "", data: null }, categories: null,
       suppliers: { view: "active", q: "", data: null }, documents: { view: "all", q: "", data: null }, admin: { users: null, backups: null } };
     this.searchTimer = null;
@@ -73,6 +79,12 @@ export class App {
     this.root.addEventListener("change", (event) => this._onChange(event));
     this.root.addEventListener("submit", (event) => this._onSubmit(event));
     this.root.addEventListener("input", (event) => this._onInput(event));
+    this.root.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && this.state.periodPanel) {
+        event.preventDefault();
+        this._closePeriod(true);
+      }
+    });
     this._render();
     await this.refreshSession();
   }
@@ -107,7 +119,8 @@ export class App {
     let dataset = prefs.dataset || (this.session.real.first_choice === "demo" ? "demo" : "real");
     if (dataset === "demo" && !this.session.demo.exists) dataset = "real";
     this.api.dataset = dataset;
-    this.state.mode = prefs.mode || "activity";
+    this.state.view = OVERVIEW_VIEWS.includes(prefs.view) ? prefs.view : "money";
+    this.state.mode = READINGS.includes(prefs.mode) ? prefs.mode : "activity";
     this.state.screen = READY.has(prefs.screen) ? prefs.screen : "synthese";
     if (!this.state.periodKey) this.state.periodKey = this._defaultPeriodKey();
     await this.load();
@@ -141,40 +154,49 @@ export class App {
   newOpId() { return opId(); }
 
   periodBounds(key = this.state.periodKey) {
-    const [kind, value] = key.split(":");
-    if (kind === "y") return { start: `${value}-01-01`, end: `${Number(value) + 1}-01-01` };
-    const [y, m] = value.split("-").map(Number);
-    const end = m === 12 ? `${y + 1}-01-01` : `${y}-${String(m + 1).padStart(2, "0")}-01`;
-    return { start: `${value}-01`, end };
+    return boundsOf(key) || boundsOf(this._defaultPeriodKey());
+  }
+
+  /** The reading behind the view shown: payment date, per night, or the one chosen in « Analyse comptable ». */
+  readingMode() {
+    if (this.state.view === "money") return "cash";
+    if (this.state.view === "performance") return "activity";
+    return this.state.mode;
   }
 
   periodParams() {
-    return { property_id: this.state.propertyId, mode: this.state.mode, ...this.periodBounds() };
+    return { property_id: this.state.propertyId, mode: this.readingMode(), ...this.periodBounds() };
   }
 
-  periodOptions() {
-    const today = this.session.today;
-    const props = this.state.overview?.properties || [];
-    const starts = props.map((p) => p.activity_start).filter(Boolean).sort();
-    const first = starts[0] && starts[0] < today ? starts[0] : null;
-    const anchor = this.isDemo && this.session.demo.focus ? this.session.demo.focus.start : today;
-    const [ty, tm] = anchor.split("-").map(Number);
-    let y = ty, m = tm + 3;
-    if (m > 12) { y += 1; m -= 12; }
-    const limit = first ? Number(first.slice(0, 4)) * 12 + Number(first.slice(5, 7)) - 1 : ty * 12 + tm - 1 - 24;
-    const months = [];
-    for (let index = y * 12 + m - 1; index >= limit && months.length < 60; index -= 1) {
-      const yy = Math.floor(index / 12), mm = (index % 12) + 1;
-      const iso = `${yy}-${String(mm).padStart(2, "0")}-01`;
-      months.push({ value: `m:${iso.slice(0, 7)}`, label: this.i18n.month(iso) });
+  /** Period key of a picker: the Overview's, or the year or month filter of « Dépenses ». */
+  periodValue(target) {
+    if (target === "entries") {
+      const year = this.state.entries.year;
+      return !year ? "all" : year.length === 4 ? `y:${year}` : `m:${year}`;
     }
-    const years = [...new Set(months.map((o) => o.value.slice(2, 6)))].map((yy) => ({ value: `y:${yy}`, label: this.i18n.t("filter.year", { year: yy }) }));
-    const options = [...months, ...years];
-    if (!options.some((o) => o.value === this.state.periodKey)) {
-      const key = this.state.periodKey;
-      options.unshift({ value: key, label: key.startsWith("y:") ? this.i18n.t("filter.year", { year: key.slice(2) }) : this.i18n.month(`${key.slice(2)}-01`) });
+    return this.state.periodKey;
+  }
+
+  async _setPeriod(target, key) {
+    this.state.periodPanel = null;
+    if (target === "entries") {
+      const year = key === "all" ? "" : key.startsWith("y:") ? key.slice(2) : key.startsWith("m:") ? key.slice(2) : "";
+      this.state.entries = { ...this.state.entries, year };
+      await this.loadEntries();
+    } else {
+      this.state.periodKey = key;
+      if (this.state.screen === "depenses") await Promise.all([this.loadEntries(), this.load()]);
+      else if (this.state.screen === "sejours") await Promise.all([this.loadStays(), this.load()]);
+      else await this.load();
     }
-    return options;
+    this.root.querySelector(`[data-period="${target}"] .period-open`)?.focus({ preventScroll: true });
+  }
+
+  _closePeriod(focus) {
+    const target = this.state.periodPanel;
+    this.state.periodPanel = null;
+    this._render();
+    if (focus && target) this.root.querySelector(`[data-period="${target}"] .period-open`)?.focus({ preventScroll: true });
   }
 
   // ---------------------------------------------------------------- data
@@ -189,7 +211,14 @@ export class App {
     this.state.error = "";
     this._render();
     try {
-      const overview = await this.api.get("/api/overview", this.periodParams());
+      const params = this.periodParams();
+      const wantSeries = this.state.screen === "synthese" && this.state.view === "performance";
+      const year = Number(params.start.slice(0, 4));
+      const [overview, series] = await Promise.all([
+        this.api.get("/api/overview", params),
+        wantSeries ? this.api.get("/api/series", { year, property_id: this.state.propertyId }) : Promise.resolve(null),
+      ]);
+      this.state.series = series;
       if (this.state.propertyId !== "all" && !overview.properties.some((p) => p.id === this.state.propertyId)) {
         this.state.propertyId = "all";
         return this.load();
@@ -345,6 +374,9 @@ export class App {
       auth: this.auth,
       account: this.state.account,
       overview,
+      series: this.state.series,
+      period: (target) => ({ target, value: this.periodValue(target), open: this.state.periodPanel === target,
+                             panelYear: this.state.panelYear, today: this.session?.today || "" }),
       properties: overview?.properties || this.state.stays.data?.properties || [],
       stays: this.state.stays,
       entries: this.state.entries,
@@ -354,7 +386,6 @@ export class App {
       canWrite: this.canWrite,
       canAdmin: this.canWrite,
       admin: this.state.admin,
-      periodOptions: this.signedIn ? this.periodOptions() : [],
       dataset: this.api.dataset,
       ready: READY,
     };
@@ -363,6 +394,10 @@ export class App {
   // ---------------------------------------------------------------- events
 
   async _onClick(event) {
+    if (this.state.periodPanel && !event.target.closest(".period")) {
+      this.state.periodPanel = null;  // a click elsewhere closes the period panel, then does what it does
+      if (!event.target.closest("[data-action]")) this._render();
+    }
     const target = event.target.closest("[data-action]");
     if (!target || target.getAttribute("aria-disabled") === "true") return;
     const { action, value } = target.dataset;
@@ -515,13 +550,41 @@ export class App {
         this._render();
         await this.loadAccount();
         break;
+      case "view":
+        if (!OVERVIEW_VIEWS.includes(value)) break;
+        this.state.view = value;
+        writePrefs({ view: value });
+        await this.load();
+        break;
       case "mode":
+        if (!READINGS.includes(value)) break;
         this.state.mode = value;
         writePrefs({ mode: value });
         await this.load();
         break;
+      case "period-open": {
+        const which = target.dataset.target;
+        if (this.state.periodPanel === which) { this._closePeriod(true); break; }
+        this.state.periodPanel = which;
+        this.state.panelYear = yearOf(this.periodValue(which), this.session.today);
+        this._render();
+        const panel = this.root.querySelector(`#rc-period-${which}`);
+        (panel?.querySelector('[aria-pressed="true"]') || panel?.querySelector(".pp-month"))?.focus({ preventScroll: true });
+        break;
+      }
+      case "period-year":
+        this.state.panelYear += Number(value) || 0;
+        this._render();
+        this.root.querySelector(`#rc-period-${target.dataset.target} [data-action="period-year"][data-value="${value}"]`)?.focus({ preventScroll: true });
+        break;
+      case "period-pick":
+        await this._setPeriod(target.dataset.target, value);
+        break;
+      case "period-step":
+        await this._setPeriod(target.dataset.target, stepKey(this.periodValue(target.dataset.target), Number(value) || 0));
+        break;
       case "explain":
-        openExplain(this, value);
+        openExplain(this, value, target.dataset.label || "");
         break;
       case "focus-property":
         this.state.propertyId = value;
@@ -564,9 +627,7 @@ export class App {
     const target = event.target.closest("[data-change]");
     if (!target) return;
     if (target.dataset.change === "property") this.state.propertyId = target.value;
-    if (target.dataset.change === "period") this.state.periodKey = target.value;
     if (target.dataset.change === "entries-kind") this.state.entries = { ...this.state.entries, kind: target.value };
-    if (target.dataset.change === "entries-year") this.state.entries = { ...this.state.entries, year: target.value };
     if (target.dataset.change.startsWith("entries-")) await this.loadEntries();
     else if (this.state.screen === "sejours") await Promise.all([this.loadStays(), this.load()]);
     else if (this.state.screen === "depenses") await Promise.all([this.loadEntries(), this.load()]);
@@ -601,6 +662,15 @@ export class App {
     event.preventDefault();
     const data = Object.fromEntries(new FormData(form).entries());
     const kind = form.dataset.form;
+    if (kind === "period-range") {
+      const key = rangeKey(String(data.from || ""), String(data.to || ""));
+      if (!key) {
+        this.toast(this.i18n.t("period.rangeInvalid"), true);
+        return;
+      }
+      await this._setPeriod(form.dataset.target, key);
+      return;
+    }
     this.auth = { ...this.auth, busy: true, error: "", username: data.username || "" };
     this._render();
     try {

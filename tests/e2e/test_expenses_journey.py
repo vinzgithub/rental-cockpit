@@ -6,6 +6,8 @@ depend on the calendar.
 """
 from __future__ import annotations
 
+from .helpers import pick_period, show_view
+
 
 def clean(text: str) -> str:
     return text.replace(" ", " ").replace("\xa0", " ")
@@ -75,7 +77,8 @@ def test_expenses_from_the_form_to_the_three_readings(desktop, base_url):
     assert content.splitlines()[0].startswith("Date;Bien;Type;Catégorie") and content.count("Mensualité de prêt") == 3
 
     page.locator('.sidebar [data-value="synthese"]').click()
-    page.locator('[data-change="period"]').select_option("m:2026-10")
+    show_view(page, "analysis", "activity")
+    pick_period(page, "m:2026-10")
     assert kpis(page) == ["-300 €", "0 €", "300 €"]
     beyond = clean(page.locator('section[aria-labelledby="rc-beyond"]').text_content())
     assert "Remboursements d'emprunt" in beyond and "500,00 €" in beyond and "capital 350,00 €" in beyond
