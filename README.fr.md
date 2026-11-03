@@ -4,11 +4,11 @@
 
 ### Votre location saisonnière, chaque chiffre expliqué
 
-**Synthèse · Séjours · Import Airbnb et CSV · Trois lectures · Indicateurs expliqués · À vérifier · Double authentification · Home Assistant**
+**Synthèse · Séjours · Import Airbnb et CSV · Dépenses et règlements · Trois lectures · Indicateurs expliqués · À vérifier · Double authentification · Home Assistant**
 
 **Français** · [**English**](README.md)
 
-![Version](https://img.shields.io/badge/version-0.3.0%20pr%C3%A9version-126caa) ![Docker](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-2496ED) ![Licence](https://img.shields.io/badge/licence-%C3%A0%20d%C3%A9finir-lightgrey)
+![Version](https://img.shields.io/badge/version-0.4.0%20pr%C3%A9version-126caa) ![Docker](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-2496ED) ![Licence](https://img.shields.io/badge/licence-%C3%A0%20d%C3%A9finir-lightgrey)
 
 <br>
 
@@ -42,7 +42,7 @@
 </table>
 
 > [!NOTE]
-> **Version 0.3.0, préversion.** La Synthèse, les **séjours** (saisie, **import Airbnb et CSV**, annulation, versements reçus), la démonstration, les comptes, la double authentification et le lien avec Home Assistant sont prêts. Les **dépenses**, les **prestataires** et les **justificatifs** arrivent dans les prochaines versions : avec vos propres données, les dépenses ne se saisissent pas encore.
+> **Version 0.4.0, préversion.** La Synthèse, les **séjours** (saisie, **import Airbnb et CSV**, annulation, versements reçus), les **dépenses et règlements** (paiements partiels, mensualités d'emprunt, catégories, export CSV), la démonstration, les comptes, la double authentification et le lien avec Home Assistant sont prêts. Les **prestataires** (répartition d'une facture entre séjours) et les **justificatifs PDF** arrivent dans les prochaines versions.
 
 ---
 
@@ -120,6 +120,30 @@ Pas de boîte noire : vous pouvez refaire chaque calcul à la main.
 </td>
 </tr>
 </table>
+
+---
+
+## 💳 Dépenses et règlements, sans rien supposer payé
+
+<img src="docs/images/fr/expenses-desktop.png" alt="Liste des dépenses avec leur état de règlement, les totaux à payer et à recevoir, les échéances à venir" width="100%">
+
+<table>
+<tr>
+<td width="38%" valign="top"><img src="docs/images/fr/expenses-phone.png" alt="Dépenses sur téléphone : totaux et cartes avec l'état de règlement"></td>
+<td width="62%" valign="top">
+
+- **Dépenses et recettes hors séjours** : ménage, réparations, assurance, abonnements, remboursements… chacune dans une catégorie dont le **traitement** est annoncé (exploitation, investissement, financement, impôts).
+- **Règlement explicite** : *Payée*, *Partiellement payée*, *À payer* ou *Paiement à confirmer* — rien n'est supposé payé.
+- **Paiements partiels**, jamais au-delà du reste dû ; la Trésorerie compte chaque paiement à sa date.
+- **Mensualités d'emprunt** : capital, intérêts et assurance vérifiés au centime, hors solde d'exploitation ; **répétition mensuelle** jusqu'à 36 mois, les échéances futures restant *À venir*.
+- **Période couverte** : une assurance annuelle est répartie jour par jour dans la lecture Activité.
+- **Catégories** personnalisables dans Réglages ; **export CSV** prêt pour un tableur ou un comptable.
+
+</td>
+</tr>
+</table>
+
+<img src="docs/images/fr/overview-settle.png" alt="Synthèse : remboursements d'emprunt détaillés, solde après financement, reste à payer et à recevoir" width="100%">
 
 ---
 
@@ -272,6 +296,7 @@ Mise à jour : `docker compose pull && docker compose up -d`.
 - Droits vérifiés sur le serveur à chaque requête : un lecteur ne voit que les biens qui lui sont accordés
 - Politique de sécurité du contenu stricte : aucun script, police ou traceur externe — Rental Cockpit n'appelle jamais Internet
 - Clés d'API en lecture seule, affichées une seule fois et conservées sous forme d'empreinte
+- Imports vérifiés avant écriture ; exports CSV protégés contre l'injection de formules
 - Conteneur sans privilège, système de fichiers en lecture seule
 
 <table>
@@ -305,7 +330,7 @@ En attendant la sauvegarde intégrée, une copie du volume suffit : la commande 
 | ✅ | **0.1.1** | Corrections de l'audit indépendant : menu sans écran vide, bascule Mes données / Démo, explications lisibles sur téléphone |
 | ✅ | **0.2.0** | Séjours : saisie, annulation et rétablissement, versements reçus, part de chaque séjour dans la Synthèse |
 | ✅ | **0.3.0** | Import Airbnb et CSV : aperçu sans écriture, doublons, commissions, contrôles, annulation du dernier import |
-| 🔜 | **0.4.0** | Dépenses et règlements : paiements partiels, à payer, emprunt, catégories |
+| ✅ | **0.4.0** | Dépenses et règlements : paiements partiels, à payer / à recevoir, mensualités d'emprunt, catégories, export CSV |
 | 🔜 | **0.5.0 – 0.6.0** | Prestataires et répartition d'une facture ; justificatifs PDF |
 | 🎯 | **1.0** | Sauvegarde vérifiée, comptes lecteurs, recette complète, première version stable |
 

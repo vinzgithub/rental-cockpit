@@ -8,7 +8,7 @@ Rental Cockpit moves forward in short, usable **deliveries**. Each delivery is a
 | **L0** — audit fixes | 0.1.1 | Menu without empty screens, My data / Demo switch, bell, explanations readable on a phone, copy over HTTP, browser tests | Under review |
 | **L1** — Stays | 0.2.0 | Create, edit, cancel, restore and delete stays; booking channel; payouts received; stay page with its share of the Overview; data format migration with an automatic copy | Under review |
 | **L2** — Import | 0.3.0 | Airbnb import (reader reused and adapted) and generic CSV: preview without writing, duplicates detected, commissions (rate for a CSV), checks before confirmation, all-at-once validation, undo of the last import | Under review |
-| **L3** — Expenses and payments | 0.4.0 | Expenses and income outside stays, partial payments, to pay / to receive, loan instalments, categories, CSV export | Coming |
+| **L3** — Expenses and payments | 0.4.0 | Expenses and income outside stays, partial payments, to pay / to receive, loan instalments (monthly series, principal / interest / insurance), period covered, categories, CSV exports, "beyond operations" Overview | Under review |
 | **L4** — Suppliers | 0.5.0 | Suppliers and rates, multi-service invoice split between stays | Coming |
 | **L5** — Documents | 0.6.0 | Checked PDFs, duplicates, link with expenses, download after a rights check | Coming |
 | **L6** — Version 1.0 | 1.0.0 | Checked backup and restore, reader accounts, accessibility and mobile pass, ARM64 test, full acceptance run | Coming |

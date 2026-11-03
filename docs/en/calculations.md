@@ -86,6 +86,37 @@ An imported stay follows exactly the same rules as a stay entered by hand: the i
 
 **Stay entered by hand on the same dates** (probable duplicate): completing it only fills what it did not know. When the file states another gross amount or commission, the ones typed are kept and a remark says so; the file's net payout is then not taken either, so it does not contradict the amounts kept.
 
+## An expense or income outside stays
+
+An entry has an amount including tax, a date (the invoice date) and a **category**. The category's **treatment** says where it counts:
+
+| Treatment | Counted in | Examples |
+|---|---|---|
+| Operations | Expenses (or Revenue) and balance before financing | Cleaning, linen, repair, energy, property insurance, subscription, platform fees |
+| Investment | Investments, apart | Equipment, improvement works |
+| Financing | Loan repayments, outside the operating balance | Instalment: principal + interest + borrower insurance |
+| Taxes | Taxes, apart | Property tax |
+| Information only | No total | Expense kept for reference |
+
+**The three readings.** In *Activity*, the entry counts on its date, or day by day over its **period covered** when it has one (an annual insurance of €240 from 1 November 2026 to 1 November 2027 counts €19.80 in November: 30 days of €0.66, the remaining cents going to the largest remainders). In *Invoices*, it counts on its date. In *Cash*, only its **payments** count, on their date and for their amount.
+
+**Payment status.** The status always comes from the payments recorded:
+
+| Status | When |
+|---|---|
+| Paid (Received) | The payments cover the whole amount |
+| Partly paid (received) | Part of it is settled |
+| To pay (To receive) | Nothing is settled and the entry is known to be due |
+| Payment to confirm | Nothing is settled and nobody said whether it is: listed in *To check* |
+
+A payment never exceeds what is left, and the amount of an entry cannot go below what was already settled.
+
+Example (it is the test scenario): a €300 repair dated 10 October 2026, to pay, then a €100 payment on 12 October. In October: *Activity* and *Invoices* count €300 of expenses; *Cash* counts €100; €200 is left to pay.
+
+**Instalments.** A monthly series creates one entry per month, on the same day (the 31st becomes the last day of a shorter month). Each instalment is settled on its own. An instalment dated after today is *planned*: it is not yet in "To pay" on the Expenses screen. When principal, interest and insurance are given, they must add up to the instalment; the Overview details them under **Loan repayments**. Example: €500 = €350 principal + €120 interest + €30 insurance; in October, the balance before financing is unchanged, the balance after financing is €500 lower.
+
+**Archiving** removes an entry from every total without erasing it; its payments are kept. **Deleting** is only possible for an entry with no payment and no document.
+
 ## Indicators
 
 | Indicator | Formula | Excludes |
@@ -101,8 +132,8 @@ An imported stay follows exactly the same rules as a stay entered by hand: the i
 | **Nights** | Nights of non-cancelled stays inside the period | Departure day, cancelled stays |
 | **Occupancy** | Nights ÷ available nights | Unavailable periods, days before the activity start |
 | **Average revenue per night** (Activity) | Stay revenue ÷ nights | Adjustments, other income |
-| **To pay** | Expenses − recorded payments | |
-| **To receive** | Expected payout of stays − money received | Stays with unknown amount (listed to check) |
+| **To pay** | Expenses dated before the end of the period − recorded payments | Archived entries |
+| **To receive** | Expected payout of stays + income outside stays − money received | Stays with unknown amount (listed to check), provisional stays |
 
 **Changes.** The percentage under an indicator compares the period with the previous one (previous month, previous year, or the same length just before), computed with the same reading and rules. Without a reference value, no percentage is shown.
 

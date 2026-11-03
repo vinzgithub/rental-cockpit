@@ -7,7 +7,7 @@ def test_menu_only_lists_working_screens(desktop, base_url):
     desktop.goto(base_url + "/")
     desktop.locator(".kpi").first.wait_for()
     labels = [text.strip() for text in desktop.locator(".sidebar .navbtn").all_text_contents()]
-    assert labels == ["Synthèse", "Séjours", "Réglages"]
+    assert labels == ["Synthèse", "Séjours", "Dépenses", "Réglages"]
 
 
 def test_demo_and_own_data_are_one_click_apart(desktop, base_url):
@@ -40,8 +40,13 @@ def test_bell_opens_the_things_to_check(phone, base_url):
     dialog = phone.locator("dialog[open]")
     dialog.wait_for()
     assert "À vérifier" in dialog.text_content()
-    # No item leads to a screen that does not exist yet.
-    assert dialog.locator('[data-action="go"]').count() == 0
+    # Every item that leads somewhere leads to a screen of the menu.
+    targets = {link.get_attribute("data-value") for link in dialog.locator('[data-action="go"]').all()}
+    assert targets <= {"synthese", "sejours", "depenses", "reglages"}
+    # « Paiements à confirmer » opens the expenses whose payment is unknown.
+    dialog.locator('[data-action="go"][data-value="depenses"]').click()
+    phone.locator('[data-action="entries-view"][data-value="to_confirm"][aria-selected="true"]').wait_for()
+    phone.locator(".entries-list-cards .entry-card").first.wait_for()
 
 
 def test_copy_works_on_plain_http(desktop, base_url):

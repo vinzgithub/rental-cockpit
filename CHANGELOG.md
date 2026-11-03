@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.4.0 — not released yet
+
+Expenses and payments (delivery L3): expenses and income outside stays can be entered, settled in one or several payments, and show up in the three readings. Day-to-day use with your own data is now possible.
+
+- New "Expenses" screen in the menu: views All, To pay, Payment to confirm, To receive, Archived; filters by property, type, year and text; totals of the list shown (expenses, left to pay, income, left to receive, instalments to come); table on a computer, cards on a phone.
+- Entry form: category with its treatment explained (operating, investment, financing, taxes, information only), amount, date, payment (already paid with its date, to pay, or not known yet), supplier when there are suppliers, invoice number, related stay, period covered (spread day by day in the Activity reading), note.
+- Loan instalments: principal / interest / insurance breakdown, checked live against the instalment; outside the operating balance, in "Balance after financing".
+- "Repeat every month" (2 to 36 months) for loan instalments and subscriptions: one entry per month, each one settled on its own; "already paid" only settles the dates already past. Instalments dated after today are "planned": grouped under "Coming up", out of "To pay" until their date.
+- Entry page: amounts, already paid, left to pay, what the entry counts in each reading, payments (record a partial or full payment, delete one), "Not paid yet" / "I don't know", archive (out of every total, kept for reference), delete an entry made by mistake (refused when it has a payment or a document).
+- A payment never exceeds what is left; the amount of an entry cannot go below what was already paid.
+- Income outside stays (refund, occasional rental…) counts in revenue and in "To receive" until received.
+- Overview: new "Beyond operations" card (investments, taxes, loan repayments with their breakdown, balance after financing) and "Left to settle" card (to pay, to receive, with the list behind each); "Payments to confirm" opens the matching expenses; "How is this amount calculated?" opens the entry of a line.
+- Settings: categories of expenses and income — create, rename (an empty name goes back to the original), archive.
+- CSV exports of the expenses and of the stays, with the filters shown on screen: semicolons and decimal commas in French, a text that a spreadsheet would run as a formula is neutralised. Readers export only the properties they were granted.
+- Switching between "My data" and "Demo" reloads the list shown.
+- New automated tests: payment status, partial payments, series, coverage period, archive, delete, categories, exports, API rights and the browser journey with the figures of the pull request.
+
 ## 0.3.0 — not released yet
 
 Import (delivery L2): stays come from an Airbnb export or any CSV file, checked line by line before anything is saved.

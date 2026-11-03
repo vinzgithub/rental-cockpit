@@ -88,6 +88,10 @@ MESSAGES: dict[str, tuple[str, str]] = {
     "payment_links_mismatch": ("La répartition du paiement ({links}) doit être égale à son montant ({total}).", "The payment breakdown ({links}) must equal its amount ({total})."),
     "payment_direction": ("Un paiement versé concerne une dépense ; une somme reçue concerne un séjour ou une recette.", "An outgoing payment relates to an expense; a received amount relates to a stay or an income."),
     "supersede_invalid": ("La dépense « {label} » ne peut pas être rapprochée : {reason}.", "The expense \"{label}\" cannot be reconciled: {reason}."),
+    "entry_amount_below_paid": ("Le montant ne peut pas être inférieur à ce qui est déjà réglé ({paid}) : supprimez d'abord le paiement en trop. Rien n'a été enregistré.", "The amount cannot be lower than what was already settled ({paid}): delete the extra payment first. Nothing was saved."),
+    "entry_has_payments": ("Cette écriture a des paiements : supprimez-les d'abord, ou archivez-la pour la retirer des totaux.", "This entry has payments: delete them first, or archive it to remove it from the totals."),
+    "entry_has_documents": ("Un justificatif est rattaché à cette écriture : archivez-la plutôt que de la supprimer.", "A document is attached to this entry: archive it rather than delete it."),
+    "series_months": ("Le nombre de mois doit être compris entre 2 et 36.", "The number of months must be between 2 and 36."),
     "superseded": ("Cette dépense a été remplacée par une facture lors d'un rapprochement : modifiez la facture.", "This expense was replaced by an invoice during reconciliation: edit the invoice."),
     "duplicate_operation": ("Opération déjà enregistrée (double clic détecté) : aucune seconde écriture n'a été créée.", "Operation already saved (double click detected): no second entry was created."),
     # Documents

@@ -356,7 +356,8 @@ class Ledger:
     def update_category(self, category_id: str, payload: dict[str, Any]) -> dict[str, Any]:
         category = self._get("categories", category_id)
         if "label" in payload:
-            category["label"] = clean_text(payload.get("label"), "label", 60)
+            # A built-in category goes back to its own name when the label is emptied; a custom one needs a name.
+            category["label"] = clean_text(payload.get("label"), "label", 60, required=not category.get("builtin"))
         if "archived" in payload:
             category["archived"] = bool(payload["archived"])
         if "treatment" in payload and not category.get("builtin"):
@@ -674,13 +675,16 @@ class Ledger:
             raise RCError("superseded")
         self.property(entry["property_id"])
         before = deepcopy(entry)
-        if "category_id" in payload:
-            entry["category_id"] = self.category(payload["category_id"], entry["kind"])["id"]
+        if "category_id" in payload and payload["category_id"] != entry["category_id"]:
+            category = self.category(payload["category_id"], entry["kind"])
+            if category.get("archived"):
+                raise RCError("archived")
+            entry["category_id"] = category["id"]
         if "amount" in payload or "amount_cents" in payload:
             entry["amount"] = read_amount(payload, "amount")
             paid = self.entry_paid(entry["id"])
             if paid > entry["amount"]:
-                raise RCError("payment_exceeds", remaining=money.format_cents(entry["amount"]))
+                raise RCError("entry_amount_below_paid", paid=money.format_cents(paid))
         if "date" in payload:
             entry["date"] = iso(read_date(payload["date"], "date"))
         if "period_start" in payload or "period_end" in payload:
@@ -696,6 +700,10 @@ class Ledger:
             if payload["supplier_id"]:
                 self._get("suppliers", payload["supplier_id"])
             entry["supplier_id"] = payload["supplier_id"] or ""
+        if "stay_id" in payload:
+            if payload["stay_id"] and self._get("stays", payload["stay_id"])["property_id"] != entry["property_id"]:
+                raise RCError("allocation_stay_property")
+            entry["stay_id"] = payload["stay_id"] or ""
         if "payment_declared" in payload:
             entry["payment_declared"] = choice(payload["payment_declared"], PAYMENT_DECLARED, "payment_declared")
         if "lines" in payload or "amount" in payload or "amount_cents" in payload:
@@ -710,9 +718,22 @@ class Ledger:
         else:
             self._validate_allocations(entry, entry.get("allocations", []))
         changed = self._history(entry, before, ("category_id", "amount", "date", "period_start", "period_end", "label", "note",
-                                                "invoice_number", "supplier_id", "payment_declared", "lines", "allocations", "loan_split"))
+                                                "invoice_number", "supplier_id", "stay_id", "payment_declared", "lines", "allocations",
+                                                "loan_split"))
         self.audit("entry.update", entry["id"], detail=",".join(changed))
         return {"entry": deepcopy(entry)}
+
+    def delete_entry(self, entry_id: str) -> dict[str, Any]:
+        """For an entry made by mistake only: with a payment or a document, it is archived instead."""
+        entry = self._get("entries", entry_id)
+        self.property(entry["property_id"])
+        if any(link["type"] == "entry" and link["id"] == entry_id for p in self.data["payments"].values() for link in p["links"]):
+            raise RCError("entry_has_payments")
+        if any(entry_id in (d.get("entry_ids") or []) for d in self.data.get("documents", {}).values()):
+            raise RCError("entry_has_documents")
+        del self.data["entries"][entry_id]
+        self.audit("entry.delete", entry_id)
+        return {"deleted": entry_id}
 
     def set_entry_archived(self, entry_id: str, archived: bool) -> dict[str, Any]:
         entry = self._get("entries", entry_id)

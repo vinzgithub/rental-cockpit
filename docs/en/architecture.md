@@ -33,6 +33,7 @@ Browser ──HTTPS (optional proxy)──► Rental Cockpit application (one pr
 | Home Assistant link | Read-only summary for the RESTful integration | `src/rental_cockpit/ha_api.py` |
 | Stays | Stays and payouts API; nights, expected payout, payout status and month-by-month share computed on the fly with the indicators' rules | `src/rental_cockpit/stay_routes.py`, `engine/stays.py` |
 | Import | Airbnb and CSV readers (read only), preview compared with the registry, writing in one transaction, undo of the last import | `src/rental_cockpit/import_routes.py`, `engine/imports/` |
+| Expenses | Entries, payments and categories API; payment status, amount left and monthly series computed from the payments; CSV exports | `src/rental_cockpit/entry_routes.py`, `engine/entries.py`, `engine/exports.py` |
 | Recovery | Reset a password, turn two-factor sign-in off from the server | `src/rental_cockpit/cli.py` |
 | Interface | Screens, French/English texts, styles | `src/rental_cockpit/static/` |
 
@@ -108,10 +109,10 @@ Showing the whole interface inside Home Assistant is still possible, provided it
 | Screen | Server side | Interface side |
 |---|---|---|
 | **Stays** | Done (L1): create, edit, cancel with a retained amount, restore, payouts. Done (L2): Airbnb import (reader reused, French export checked only) and generic CSV with column mapping and commission rate, preview without writing, check before confirmation, undo of the last import | Done: filterable list, stay page, three-step import, previous imports. Coming: allocated costs (L4) |
-| **Expenses** | API for entries, payments, archiving, filters; CSV export with neutralised formulas | Table with explicit statuses ("Payment to confirm", "Paid"…), quick entry, visible actions |
+| **Expenses** | Done (L3): entries, partial payments, archiving, deleting an entry made by mistake, monthly series, categories, filters, CSV exports with neutralised formulas | Done: list with explicit statuses ("Payment to confirm", "Paid"…), entry page, form, categories in Settings, "Beyond operations" and "Left to settle" cards on the Overview |
 | **Suppliers** | API for suppliers and indicative rates; multi-service invoice; matching existing entries | "Split an invoice": services detail, split per stay, "€150 allocated out of €150" check |
 | **Documents** | HTTP upload (8 MiB), PDF check with *pypdf* (added then), fingerprint, binary and business duplicates, download after a rights check | "Check the invoice": file → check → save; "This invoice is already recorded" |
-| **Settings** | Done: password, two-factor sign-in, API keys. Coming: reader accounts, rights per property and PDF access, categories, backup / check / restore, diagnostics | Matching screens; language; demo reset |
+| **Settings** | Done: password, two-factor sign-in, API keys, categories (L3). Coming: reader accounts, rights per property and PDF access, backup / check / restore, diagnostics | Matching screens; language; demo reset |
 | Cross-cutting | Versioned data format migrations, with an automatic copy of the database before converting (first one: v1 → v2, booking channel); `edge` image published on every change to the main branch, `latest` on every tagged release; continuous integration | Accessibility checked (keyboard, screen reader, 360 px) on each screen |
 
 ## Still open

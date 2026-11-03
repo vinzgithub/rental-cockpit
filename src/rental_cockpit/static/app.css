@@ -680,6 +680,65 @@ fieldset.amounts legend { padding: 0 6px; color: var(--rc-text); font-weight: 60
 .error-box ul { margin: 6px 0 8px; padding-left: 18px; }
 .error-box b { display: block; }
 
+/* ------------------------------------------------------------ « Dépenses » */
+[hidden] { display: none !important; }
+.entries-tools { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
+.entries-tools .search { grid-column: 1 / -1; }
+.totals { display: flex; gap: 10px; flex-wrap: wrap; margin: 0; }
+.totals > div { display: grid; gap: 2px; padding: 10px 14px; border-radius: 12px; background: var(--rc-inset); border: 1px solid var(--rc-border); min-width: 140px; }
+.totals dt { color: var(--rc-muted); font-size: 12.5px; }
+.totals dd { margin: 0; font-size: 17px; font-weight: 650; }
+.totals .warn dd { color: var(--rc-amber); }
+.entries-list { display: none; }
+.entries-list td small { display: block; color: var(--rc-faint); font-size: 12px; margin-top: 2px; }
+.entries-list td.payment small { margin-top: 5px; }
+.entries-list .amt { text-align: right; white-space: nowrap; }
+.entries-list td.c-title { min-width: 200px; }
+.entries-list tr.income td.amt b, .entry-card.income .money-line b { color: var(--rc-green); }
+.entries-list .propcell { white-space: nowrap; }
+.entries-list-cards { display: grid; gap: 10px; padding: 6px 0; }
+.entry-card .stay-title b { overflow-wrap: anywhere; }
+.entry-card .when { color: var(--rc-muted); font-size: 13px; }
+.entry-card.income .tile { color: var(--rc-green); }
+.choice-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.pay-option { position: relative; display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: 11px; border: 1px solid var(--rc-border-strong); background: var(--rc-inset); cursor: pointer; font-size: 14px; }
+.pay-option input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.pay-option:has(input:checked) { border-color: var(--rc-accent-line); background: var(--rc-accent-soft); color: var(--rc-accent); font-weight: 600; }
+.pay-option:has(input:focus-visible) { outline: 2px solid var(--rc-accent); outline-offset: 2px; }
+.pagehead.stacked { grid-template-columns: minmax(0, 1fr); align-items: start; }
+.form-grid .field input, .form-grid .field select { min-width: 0; width: 100%; }
+.entries-list tr.group-row td { padding: 14px 12px 6px; color: var(--rc-muted); font-size: 12.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+.entries-list-cards .group-title { color: var(--rc-muted); font-size: 12.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; margin-top: 8px; }
+fieldset.pay-choice { display: grid; gap: 12px; }
+.form-grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.reading.bad { color: #f3a5af; }
+.cat-row.archived { opacity: 0.62; }
+.cat-row .row-actions { display: flex; gap: 2px; }
+.keyrow small.muted, dd small.muted { color: var(--rc-faint); }
+@container content (min-width: 720px) {
+  .entries-tools { grid-template-columns: minmax(180px, 230px) minmax(170px, 210px) minmax(150px, 180px) minmax(200px, 1fr); }
+  .entries-tools .search { grid-column: auto; }
+}
+@container content (min-width: 900px) {
+  .entries-list { display: table; }
+  .entries-list-cards { display: none; }
+}
+
+.metrics { display: grid; gap: 8px; }
+.metric { display: grid; grid-template-columns: minmax(0, 1fr) auto 44px; gap: 10px; align-items: center; padding: 10px 6px 10px 14px; border-radius: 12px; background: var(--rc-inset); border: 1px solid var(--rc-border); }
+.metric .what { min-width: 0; }
+.metric .what b { display: block; font-weight: 550; font-size: 14px; }
+.metric .what small { display: block; color: var(--rc-faint); font-size: 12px; margin-top: 2px; }
+.metric .value { font-weight: 650; font-size: 16px; white-space: nowrap; }
+.metric.strong { border-color: var(--rc-accent-line); }
+.metric.strong .value { color: var(--rc-accent); }
+@container content (max-width: 640px) {
+  .totals { display: grid; grid-template-columns: 1fr 1fr; }
+  .totals > div { min-width: 0; padding: 8px 12px; }
+  .totals dd { font-size: 15px; }
+  .head-actions .btn { min-height: 40px; padding: 0 12px; font-size: 13.5px; }
+}
+
 /* Dialogs live outside the page container: they follow their own width
    (kept last so it wins over the general rules above). */
 @container dialog (max-width: 560px) {
@@ -701,6 +760,8 @@ fieldset.amounts legend { padding: 0 6px; color: var(--rc-text); font-weight: 60
   dialog.rc .dfoot.imp-foot { display: grid; grid-template-columns: 1fr 1fr; }
   dialog.rc .dfoot.imp-foot .btn.primary { grid-column: 1 / -1; order: -1; white-space: normal; text-align: center; }
   dialog.rc .dfoot.imp-foot .back { margin: 0; }
+  .form-grid.three { grid-template-columns: minmax(0, 1fr); }
+  .pay-option { flex: 1 1 auto; justify-content: center; }
   dialog.rc .dfoot.stay-actions { display: grid; grid-template-columns: 1fr 1fr; }
   dialog.rc .dfoot.stay-actions .del { grid-column: 1 / -1; order: 3; margin: 0; border-color: transparent; }
 }

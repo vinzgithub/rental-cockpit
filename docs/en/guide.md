@@ -51,7 +51,7 @@ Click **How is this amount calculated?** under the balance. The window shows:
 
 ## 6. What remains to check
 
-The **To check** card lists what keeps a result from being final. In the demo: cleaning expenses of the previous month whose payment is not confirmed yet.
+The **To check** card lists what keeps a result from being final. In the demo: cleaning expenses of the previous month whose payment is not confirmed yet. One click opens these expenses in the **Expenses** screen, *Payment to confirm* view.
 
 ## 7. Switch to your data
 
@@ -92,7 +92,29 @@ Importing the same file again creates nothing twice: everything is *Up to date*.
 
 ![Preview of an Airbnb import](../images/en/import-preview.png)
 
-## 10. Protect your account
+## 10. Enter an expense and pay it
+
+**Expenses → Add an expense** (or **Add → An expense**): choose the property, the category — its treatment shows below it: operations, investment, financing, taxes —, the label, the amount including tax and the invoice date. Then state the **payment**:
+
+- *Already paid*: a payment of the full amount is recorded on the date given;
+- *To pay*: the amount counts in "Left to pay";
+- *I don't know yet*: the expense shows in **Payment to confirm**. Nothing is assumed paid.
+
+When the money leaves, open the expense, then **Record a payment**: a partial payment is possible, never above what is left. The Cash reading counts each payment on its date.
+
+For a **loan**, choose the *Loan repayment* category, type the principal / interest / insurance breakdown (checked live) and tick **Repeat every month**: one entry per month is created, each one settled on its own. Instalments whose date has not come yet are *Planned*, grouped under "Coming up" and out of "To pay". In the Overview, they count in **Loan repayments**, outside the operating balance.
+
+For an **annual insurance** or a subscription paid in advance, tick **Covers a period**: the Activity reading spreads it day by day.
+
+Income outside stays (refund, occasional rental) is added with **Add income** and follows the same rules, in "To receive".
+
+An entry made by mistake can be **deleted** as long as it has no payment; otherwise **Archive** it: it leaves every total and stays visible. Categories are created, renamed and archived in **Settings → Categories**. **Export** downloads the list shown as CSV, for a spreadsheet or your accountant.
+
+![List of expenses](../images/en/expenses-desktop.png)
+
+![An expense partly paid](../images/en/expense-detail.png)
+
+## 11. Protect your account
 
 In **Settings → Two-factor sign-in → Turn on**:
 
@@ -104,7 +126,7 @@ At the next sign-in, the code is asked after the password. The other browsers si
 
 ![Turning on two-factor sign-in](../images/en/mfa-setup.png)
 
-## 11. Home Assistant (optional)
+## 12. Home Assistant (optional)
 
 In **Settings → Home Assistant and API → Create a key**, Rental Cockpit shows once the line to paste into `secrets.yaml`. The address to enter in Home Assistant is shown just above. What comes next (sensors, card, automations): [home-assistant.md](home-assistant.md).
 
@@ -114,4 +136,4 @@ In **Settings → Home Assistant and API → Create a key**, Rental Cockpit show
 
 The same Overview shows in one column, balance first, with a navigation bar at the bottom. On touch screens, controls aim at 44 × 44 pixels.
 
-<img src="../images/en/overview-phone.png" alt="Overview on a phone" width="260"> <img src="../images/en/stays-phone.png" alt="Stays on a phone" width="260"> <img src="../images/en/import-phone.png" alt="Import on a phone" width="260"> <img src="../images/en/settings-phone.png" alt="Settings on a phone" width="260">
+<img src="../images/en/overview-phone.png" alt="Overview on a phone" width="260"> <img src="../images/en/stays-phone.png" alt="Stays on a phone" width="260"> <img src="../images/en/import-phone.png" alt="Import on a phone" width="260"> <img src="../images/en/expenses-phone.png" alt="Expenses on a phone" width="260"> <img src="../images/en/settings-phone.png" alt="Settings on a phone" width="260">

@@ -258,7 +258,7 @@ TEXT = {
     "to_pay": {"label": ("À payer", "To pay"), "formula": ("Montant des dépenses − paiements déjà enregistrés", "Expense amounts − payments already recorded"),
                "excludes": ("Une échéance, la mention « paiement comptant » ou la présence d'un PDF ne valent pas paiement.",
                             "A due date, a \"paid in cash\" mention or an attached PDF are not a payment.")},
-    "to_receive": {"label": ("À recevoir", "To receive"), "formula": ("Versement attendu des séjours − sommes déjà reçues", "Expected payout of stays − money already received"),
+    "to_receive": {"label": ("À recevoir", "To receive"), "formula": ("Versement attendu des séjours et recettes hors séjours − sommes déjà reçues", "Expected payout of stays and income outside stays − money already received"),
                    "excludes": ("Séjours dont le montant est inconnu : listés dans « Données à vérifier ».", "Stays whose amount is unknown: listed in \"Data to check\".")},
 }
 
@@ -358,7 +358,8 @@ def compute(data: dict[str, Any], *, property_ids: Iterable[str], start: date, e
 
     pending = _pending(data, pids, end, lang)
     indicators["to_pay"] = ind("to_pay", pending["to_pay"], count=pending["to_pay_count"])
-    indicators["to_receive"] = ind("to_receive", pending["to_receive"], count=pending["to_receive_count"])
+    indicators["to_receive"] = ind("to_receive", pending["to_receive"], count=pending["to_receive_count"],
+                                   stays=pending["to_receive_stays"], entries=pending["to_receive_entries"])
 
     result: dict[str, Any] = {
         "mode": mode,
@@ -407,6 +408,9 @@ def _line(m: Movement, data: dict[str, Any], lang: str) -> dict[str, Any]:
         "date": m.date, "total": m.total, "share": m.share, "bucket": m.bucket,
         "category": category_label(category, lang), "rule": _t(RULES.get(m.rule, (m.rule, m.rule)), lang),
         "sign": -1 if m.bucket != "revenue" else 1,
+        # What the line comes from, so « Comment est calculé ce montant ? » can open it.
+        "stay_id": m.extra.get("stay_id") or (m.ref_id if m.ref_type in ("stay", "stay_commission") else ""),
+        "entry_id": m.extra.get("entry_id") or (m.ref_id if m.ref_type == "entry" else ""),
     }
 
 
@@ -493,7 +497,18 @@ def _pending(data: dict[str, Any], pids: set[str], end: date, lang: str) -> dict
         if remaining > 0:
             to_pay += remaining
             to_pay_count += 1
-    to_receive = to_receive_count = 0
+    to_receive = to_receive_count = from_entries = 0
+    for entry in data.get("entries", {}).values():
+        # Income outside stays (a refund, an occasional rental…) is to receive until paid in full.
+        if entry["property_id"] not in pids or entry["kind"] != "income" or entry.get("archived") or entry.get("superseded_by"):
+            continue
+        if parse_date(entry["date"]) >= end:
+            continue
+        remaining = entry["amount"] - paid_by_entry[entry["id"]]
+        if remaining > 0:
+            to_receive += remaining
+            from_entries += remaining
+            to_receive_count += 1
     for stay in data.get("stays", {}).values():
         if stay["property_id"] not in pids or stay["status"] in ("cancelled", "provisional"):
             continue
@@ -506,7 +521,8 @@ def _pending(data: dict[str, Any], pids: set[str], end: date, lang: str) -> dict
         if remaining > 0:
             to_receive += remaining
             to_receive_count += 1
-    return {"to_pay": to_pay, "to_pay_count": to_pay_count, "to_receive": to_receive, "to_receive_count": to_receive_count}
+    return {"to_pay": to_pay, "to_pay_count": to_pay_count, "to_receive": to_receive, "to_receive_count": to_receive_count,
+            "to_receive_entries": from_entries, "to_receive_stays": to_receive - from_entries}
 
 
 def expected_payout(stay: dict[str, Any]) -> int | None:
