@@ -144,13 +144,13 @@ Sans cette variable, Rental Cockpit refuse d'être affiché dans un cadre.
 
 `GET /api/v1/summary` — en-tête `Authorization: Bearer <clé>`. Paramètres facultatifs : `property_id` (un seul bien), `lang` (`fr` ou `en`, pour les intitulés).
 
-Montants en euros avec deux décimales ; un montant inconnu vaut `null`, jamais 0. Les chiffres du mois et de l'année suivent la lecture **Activité**.
+Montants en euros avec deux décimales ; un montant inconnu vaut `null`, jamais 0. Les chiffres du mois et de l'année sont calculés **par nuit occupée** (la *Performance locative* de la Synthèse).
 
 | Champ | Contenu |
 |---|---|
 | `today`, `generated_at` | Date du jour (fuseau du serveur) et heure de génération |
 | `month`, `year` | `revenue`, `expenses`, `balance_before_financing`, `balance_after_financing`, `nights`, `occupancy` (0 à 1), `complete`, `start`, `end` |
-| `cash_month` | `received` (sommes reçues), `balance_after_financing` — lecture Trésorerie du mois |
+| `cash_month` | `received` (sommes reçues), `balance_after_financing` — par date de paiement, comme « Mon argent » |
 | `to_pay`, `to_receive` | Dépenses non payées, versements attendus non reçus |
 | `to_check`, `to_check_items` | Nombre et liste des données à vérifier (`kind`, `count`, `title`) |
 | `occupied_tonight`, `arrivals_today`, `departures_today` | Nombre de biens concernés |

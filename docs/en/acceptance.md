@@ -17,6 +17,23 @@ Each blocking criterion of the specification (§ 11), with what checks it. The a
 | **T11** Backup | Full restore on another installation, documents readable and same totals | `test_backup_restored_on_another_installation`, `test_command_line_backup_and_restore_after_a_failed_update`, `test_damaged_or_foreign_backups_are_refused`; in the Docker image, command-line restore with the application stopped (CI) | Backup downloaded then restored on another test instance ([backup.md](backup.md)) |
 | **T12** Usability | Keyboard, screen reader, mobile and beginners' journeys checked | `tests/e2e/test_accessibility.py` (axe-core on every screen and the main dialogs, computer and 360 px, "Skip to content" link), "fits a phone" checks of each journey | **Beginners' journeys by at least five outside people** (create a property, enter an expense, find its PDF, explain an indicator): to be organised |
 
+## First acceptance report: issues and corrections
+
+The interim report of 3 November 2026 found two financial issues and six usability points. Each is corrected, with its test. The tests use a fictional Airbnb export built like a real one (`tests/fixtures/airbnb_operations_fr.csv`); no real data is in the repository.
+
+| Point | Finding | Correction | Automated check |
+|---|---|---|---|
+| **ANO-001** AirCover refund ignored | "Versement de résolution" lines were not imported: a month's payouts did not add up | Each "Payout" is matched to the cent with the lines it pays; compensations, credits and amounts withheld become incomes or expenses; an unknown type is to check; payouts check before importing | `test_a_aircover_refund_is_one_income_without_nights` (TEST-A), `test_c_october_payouts_add_up_with_the_refund_apart` (TEST-C), `test_adjustment_withheld_from_a_payout_and_platform_credit`, `test_unknown_type_is_shown_with_its_amount_and_needs_a_choice`, `test_airbnb_operations_and_cancelled_booking` (browser) |
+| **ANO-002** Booking cancelled but compensated | Only "Create the stay" and "Do not import" were offered | Third choice "Cancelled, amount received kept": the money counts, the nights do not; offered on both lines of an overlap | `test_b_cancelled_but_paid_booking_keeps_the_money_not_the_nights` (TEST-B) |
+| **ERGO-001** Three readings at the same level | "Activity", "Invoices", "Cash" hard to understand | Overview in three views: *My money* by default, *Rental performance*, *Accounting analysis* (methods renamed); engine unchanged | `test_views_say_what_they_add_up` (TEST-E) |
+| **ERGO-002** Payout sent or credited | Cash claimed money received | Label "Payouts sent by the platforms"; bank arrival date kept and shown | `test_a_aircover_refund_is_one_income_without_nights` (arrival date recorded) |
+| **ERGO-003** Period picker | A long list to scroll | `◀ October 2026 ▶`, month grid, year arrows, this month, year, free period; the same on Expenses | `test_period_picker_with_the_mouse_and_the_keyboard`, `test_expenses_use_the_same_picker`, `test_period_picker_on_a_phone` (TEST-D) |
+| **ERGO-004** Explanations on phones | Horizontal formula, squeezed columns, scrolling | Whole screen on phones, calculation as a list, lines as cards up to 720 px, one scroll only | `test_every_explanation_fits_a_phone` at 360×760, 390×844 and 760×360, on every view and method (TEST-F) |
+| **ERGO-005** Copy on HTTP | Copy buttons did not work | Visible note next to each secret, one-tap selection, HTTPS advised, failure said in the window | `test_copy_by_hand_is_offered_on_plain_http` |
+| **ERGO-006** Links and notifications | "Coming soon" screens, icons without effect | Checked in 1.0.0: no "coming soon" screen; each alert opens its list | `test_every_link_and_alert_leads_somewhere`, `test_bell_opens_the_things_to_check` |
+
+Regressions (TEST-G) are covered by the full suite, run on every change.
+
 ## Quality
 
 **QUA 01** — The interface only calls routes that exist: `test_interface_calls_only_existing_routes`. Every change route requires a session, the CSRF token and the administrator role. Their contract tests are in the test files of each delivery.

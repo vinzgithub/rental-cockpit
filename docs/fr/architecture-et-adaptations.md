@@ -24,7 +24,7 @@ Navigateur ──HTTPS (proxy facultatif)──► Application Rental Cockpit (u
 
 | Couche | Rôle | Fichiers |
 |---|---|---|
-| Moteur métier | Montants en centimes, dates, biens, séjours, écritures, paiements, prestations ventilées, trois lectures, indicateurs expliqués, démonstration | `src/rental_cockpit/engine/` |
+| Moteur métier | Montants en centimes, dates, biens, séjours, écritures, paiements, prestations ventilées, trois méthodes de rattachement, indicateurs expliqués, démonstration | `src/rental_cockpit/engine/` |
 | Stockage | SQLite, une transaction par modification, numéro de révision | `src/rental_cockpit/database.py` |
 | Droits | Administrateur, lecteur par bien, accès PDF séparé | `src/rental_cockpit/access.py` |
 | Sécurité | Mots de passe scrypt, jeton CSRF, limitation des essais, codes TOTP, codes de secours, clés d'API | `src/rental_cockpit/security.py` |
@@ -51,7 +51,7 @@ Inventaire demandé par le cahier des charges (REP 01). Chaque élément est cla
 | Élément du projet d'origine | Statut | Dans Rental Cockpit |
 |---|---|---|
 | Registre des dépenses et des recettes, distinction exploitation / trésorerie / information | Adapté | Catégories configurables avec un *traitement* explicite (exploitation, investissement, financement, impôts, information) |
-| Calcul de rentabilité par année d'activité, sans double comptage des versements nets | Adapté | Trois lectures (Activité, Factures, Trésorerie) ; le versement net d'un séjour n'est jamais ajouté aux recettes déjà reconnues |
+| Calcul de rentabilité par année d'activité, sans double comptage des versements nets | Adapté | Trois méthodes de rattachement (par nuit occupée, par date de séjour ou de facture, par date de paiement), présentées en trois vues : Mon argent, Performance locative, Analyse comptable ; le versement net d'un séjour n'est jamais ajouté aux recettes déjà reconnues |
 | Capital d'emprunt hors exploitation, intérêts et assurance séparés | Adapté | Mensualité décomposable en capital, intérêts et assurance ; jamais comptée deux fois |
 | Répartition d'un séjour par nuit, fenêtre arrivée → départ | Adapté | Répartition nuit par nuit au centime près (méthode du plus fort reste) |
 | Justificatifs PDF : contrôle de structure, refus du contenu actif, empreinte SHA-256, doublons binaires et métier, annulation de la dernière opération | À reprendre | Écran Documents |

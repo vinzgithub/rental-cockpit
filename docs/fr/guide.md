@@ -19,35 +19,50 @@ Chaque étape peut être reprise plus tard. Choisissez la démonstration.
 
 ![Écran d'accueil](../images/fr/welcome.png)
 
-## 3. Lire la Synthèse
+## 3. Lire la Synthèse : « Mon argent »
 
-Un bandeau rappelle en permanence que les données sont fictives. La période proposée est le **mois d'exemple** de la démonstration, qui reproduit l'exemple de la documentation :
+Un bandeau rappelle en permanence que les données sont fictives. La période proposée est le **mois d'exemple** de la démonstration, qui reproduit l'exemple de la documentation.
 
-- Recettes **1 000 €**, Dépenses **200 €**, Solde avant financement **800 €** ;
-- Appartement A : 600 € / 120 € / 480 € ; Studio B : 400 € / 80 € / 320 €.
+La Synthèse s'ouvre sur **Mon argent** : l'argent entré et sorti pendant la période, à la date de chaque paiement.
 
-Sous chaque montant, le pourcentage compare avec le mois précédent, qui est une activité fictive ordinaire.
+- **Encaissé 970 €** : les versements envoyés par les plateformes et les paiements reçus. La commission de 30 € est déjà retenue par la plateforme.
+- **Payé 370 €** : 170 € de dépenses et 200 € de mensualité d'emprunt.
+- **Solde de la période 600 €** = Encaissé − Payé.
+- **Reste à régler** : ce qui reste à payer et à recevoir à la fin de la période, chaque ligne menant à la liste concernée.
 
-![Synthèse](../images/fr/overview-desktop.png)
+Un versement de plateforme compte le jour où elle l'envoie. Il arrive sur votre compte quelques jours plus tard : quand la plateforme donne cette date, elle est indiquée dans le détail. Sous chaque montant, le pourcentage compare avec le mois précédent.
 
-## 4. Changer de lecture
+![Synthèse, vue Mon argent](../images/fr/overview-desktop.png)
 
-En haut, **Activité / Factures / Trésorerie** change la règle de calcul, pas les données :
+## 4. Les deux autres vues, et la période
 
-- en **Trésorerie**, les recettes deviennent les *sommes reçues* (970 € : la commission est déjà déduite) ;
-- le solde avant financement reste 800 € quand tout est payé dans le mois.
+Les boutons sous le titre changent la présentation, jamais les données :
 
-Une phrase sous les boutons rappelle toujours ce que mesure la lecture choisie.
+- **Performance locative** : ce que la location a produit. On y trouve les recettes des nuitées (1 000 €), les commissions (30 €) et le résultat locatif (800 €), puis les nuitées, le taux d'occupation et le revenu moyen par nuit. L'**évolution mensuelle** montre les douze mois de l'année ; un mois choisi devient la période affichée.
+- **Analyse comptable** : les trois façons de rattacher un montant à une période, pour un suivi comptable :
+  - *par nuit occupée* ;
+  - *par date de séjour ou de facture* ;
+  - *par date de paiement*.
+
+  Une phrase rappelle toujours ce que mesure la méthode choisie.
+
+La vue choisie est retenue pour la prochaine visite.
+
+**Choisir la période** : `◀ Octobre 2026 ▶`. Les flèches passent au mois précédent ou suivant. Le bouton du milieu ouvre les douze mois de l'année, avec des flèches pour changer d'année, **Mois actuel**, **Toute l'année** et une **période libre** (du… au…). Tout se fait aussi au clavier : Entrée ouvre, Échap referme. L'écran Dépenses a le même sélecteur, avec **Toutes les dates**.
+
+![Performance locative et sélecteur de période](../images/fr/overview-performance.png)
 
 ## 5. Comprendre un montant
 
-Cliquez sur **Comment est calculé ce montant ?** sous le solde. La fenêtre montre :
+Cliquez sur **Comment est calculé ce montant ?**, ou sur le **?** d'un montant sur téléphone. La fenêtre montre :
 
-- l'équation Recettes − Dépenses = Solde ;
-- la formule, la période, la lecture, les biens inclus et ce qui est exclu ;
-- **toutes les lignes utilisées**, avec la règle appliquée à chacune (« Réparti nuit par nuit sur le séjour », « Compté à sa date »…) et le total.
+- le calcul, par exemple Encaissé − Payé = Solde ;
+- la formule, la période, la méthode, les biens inclus et ce qui est exclu ;
+- **toutes les lignes utilisées**, avec la règle appliquée à chacune (« Réparti nuit par nuit sur le séjour », « Compté à la date du paiement »…), la date d'arrivée sur le compte quand elle est connue, et le total.
 
-![Explication du solde](../images/fr/explain.png)
+Sur téléphone, la fenêtre prend tout l'écran, le calcul s'affiche en liste et chaque ligne devient une carte : rien ne défile de côté.
+
+![Explication d'un montant](../images/fr/explain.png)
 
 ## 6. Ce qui reste à vérifier
 
@@ -86,7 +101,17 @@ Plutôt que de tout saisir, **Séjours → Importer** (ou **Ajouter → Un fichi
    - *Déjà à jour*, *Sans bien*, *Erreur* : rien ne sera écrit, et la raison est donnée.
 
    Les remarques signalent ce qui mérite un coup d'œil : chevauchement, dates indisponibles, arrivée avant le début d'activité, versement déjà enregistré ou supérieur à l'attendu.
-3. **Résultat** : le nombre de séjours créés, mis à jour, complétés et de versements enregistrés. **Annuler cet import** remet tout comme avant, tant qu'aucun de ces séjours n'a été modifié ; c'est aussi possible plus tard depuis **Imports précédents**.
+
+   **Les autres opérations Airbnb** sont lues aussi (filtre *Autres opérations*) :
+   - un remboursement des dommages AirCover ou un versement de résolution devient une recette « Indemnisation », sans nuitée ;
+   - un crédit divers devient une recette « Prime ou crédit de la plateforme » ;
+   - une régularisation retenue par Airbnb devient une dépense « Remboursement à un voyageur » ;
+   - un type inconnu est montré avec son montant et n'est enregistré que si vous le choisissez.
+
+   **Annulé, montant encaissé conservé** : pour une réservation annulée qu'Airbnb a quand même payée, ce choix garde l'argent sans compter de nuits. Il est proposé sur les deux lignes d'un chevauchement, puisque l'export n'indique pas laquelle a été annulée.
+
+   **Bilan des versements Airbnb** : avant d'importer, le total des versements du fichier, par nature et par mois d'envoi. Si une somme versée ne serait pas enregistrée, le bilan le dit, avec le montant et la ligne.
+3. **Résultat** : le nombre de séjours créés, mis à jour, complétés, de versements, de recettes et de dépenses enregistrés. **Annuler cet import** remet tout comme avant, tant qu'aucun de ces séjours n'a été modifié ; c'est aussi possible plus tard depuis **Imports précédents**.
 
 Réimporter le même fichier ne crée rien en double : tout est *Déjà à jour*. Les choix (colonnes, biens, taux) sont mémorisés pour le fichier suivant. Les noms des voyageurs ne sont repris que si vous cochez l'option.
 
@@ -100,11 +125,11 @@ Réimporter le même fichier ne crée rien en double : tout est *Déjà à jour*
 - *À payer* : le montant compte dans « Reste à payer » ;
 - *Je ne sais pas encore* : la dépense apparaît dans **Paiement à confirmer**. Rien n'est supposé payé.
 
-Quand l'argent part, ouvrez la dépense puis **Enregistrer un paiement** : un paiement partiel est possible, jamais au-delà du reste dû. La lecture Trésorerie compte chaque paiement à sa date.
+Quand l'argent part, ouvrez la dépense puis **Enregistrer un paiement** : un paiement partiel est possible, jamais au-delà du reste dû. *Mon argent* compte chaque paiement à sa date.
 
 Pour un **emprunt**, choisissez la catégorie *Remboursement d'emprunt*, saisissez la décomposition capital / intérêts / assurance (vérifiée en direct) et cochez **Répéter chaque mois** : une écriture par mois est créée, chacune réglée à part. Les échéances dont la date n'est pas encore venue sont *Prévues*, regroupées sous « À venir » et hors de « À payer ». Dans la Synthèse, elles comptent en **Remboursements d'emprunt**, hors solde d'exploitation.
 
-Pour une **assurance annuelle** ou un abonnement payé d'avance, cochez **Couvre une période** : la lecture Activité la répartit jour par jour.
+Pour une **assurance annuelle** ou un abonnement payé d'avance, cochez **Couvre une période** : la *Performance locative* la répartit jour par jour.
 
 Une recette hors séjour (remboursement, location ponctuelle) s'ajoute avec **Ajouter une recette** et suit les mêmes règles, en « À recevoir ».
 

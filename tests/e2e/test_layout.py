@@ -20,4 +20,8 @@ def test_no_horizontal_scrolling_at_any_width(desktop, base_url):
                 return Math.max(document.documentElement.scrollWidth - window.innerWidth, main.scrollWidth - main.clientWidth); }""")
             if over > 0:
                 problems.append(f"{screen} at {width}px: {over}px too wide")
+            # The period picker always shows its whole label (« Octobre 2026 », « Toutes les dates »).
+            cut = page.evaluate("() => [...document.querySelectorAll('.period-open span')].filter(s => s.scrollWidth > s.clientWidth + 1).length")
+            if cut:
+                problems.append(f"{screen} at {width}px: period label cut")
     assert problems == []

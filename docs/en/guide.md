@@ -19,35 +19,50 @@ Every step can be resumed later. Choose the demo.
 
 ![Welcome screen](../images/en/welcome.png)
 
-## 3. Read the Overview
+## 3. Read the Overview: "My money"
 
-A banner permanently reminds you that the data is fictional. The period offered is the demo's **example month**, which reproduces the documentation example:
+A banner permanently reminds you that the data is fictional. The period offered is the demo's **example month**, which reproduces the documentation example.
 
-- Revenue **€1,000**, Expenses **€200**, Balance before financing **€800**;
-- Appartement A: €600 / €120 / €480; Studio B: €400 / €80 / €320.
+The Overview opens on **My money**: money in and out during the period, on the date of each payment.
 
-Under each amount, the percentage compares with the previous month, which is ordinary fictional activity.
+- **Money in €970**: payouts sent by the platforms and payments received. The €30 commission is already withheld by the platform.
+- **Money out €370**: €170 of expenses and a €200 loan instalment.
+- **Balance of the period €600** = Money in − Money out.
+- **Left to settle**: what is left to pay and to receive at the end of the period, each line leading to its list.
 
-![Overview](../images/en/overview-desktop.png)
+A platform payout counts on the day it is sent. It reaches your account a few days later: when the platform gives that date, it is shown in the detail. Under each amount, the percentage compares with the previous month.
 
-## 4. Change the reading
+![Overview, My money view](../images/en/overview-desktop.png)
 
-At the top, **Activity / Invoices / Cash** changes the calculation rule, not the data:
+## 4. The two other views, and the period
 
-- in **Cash**, revenue becomes *money received* (€970: the commission is already deducted);
-- the balance before financing stays €800 when everything is paid within the month.
+The buttons under the title change the presentation, never the data:
 
-A sentence under the buttons always says what the chosen reading measures.
+- **Rental performance**: what the rental produced. It shows the revenue from nights (€1,000), the commissions (€30) and the rental result (€800), then the nights, occupancy and average revenue per night. **Month by month** shows the twelve months of the year; a month chosen becomes the period shown.
+- **Accounting analysis**: the three ways of tying an amount to a period, for accounting:
+  - *per night occupied*;
+  - *by stay or invoice date*;
+  - *by payment date*.
+
+  A sentence always says what the chosen method measures.
+
+The view chosen is kept for the next visit.
+
+**Choose the period**: `◀ October 2026 ▶`. The arrows go to the previous or next month. The middle button opens the twelve months of the year, with arrows to change the year, **This month**, **All of the year** and a **free period** (from… to…). Everything also works with the keyboard: Enter opens, Escape closes. The Expenses screen has the same picker, with **All dates**.
+
+![Rental performance and the period picker](../images/en/overview-performance.png)
 
 ## 5. Understand an amount
 
-Click **How is this amount calculated?** under the balance. The window shows:
+Click **How is this amount calculated?**, or the **?** of an amount on a phone. The window shows:
 
-- the equation Revenue − Expenses = Balance;
-- the formula, period, reading, properties included and what is excluded;
-- **every line used**, with the rule applied to each ("Spread night by night over the stay", "Counted on its date"…) and the total.
+- the calculation, for example Money in − Money out = Balance;
+- the formula, period, method, properties included and what is excluded;
+- **every line used**, with the rule applied to each ("Spread night by night over the stay", "Counted on the payment date"…), the date it reaches the account when known, and the total.
 
-![Explanation of the balance](../images/en/explain.png)
+On a phone the window takes the whole screen, the calculation is shown as a list and each line becomes a card: nothing scrolls sideways.
+
+![Explanation of an amount](../images/en/explain.png)
 
 ## 6. What remains to check
 
@@ -86,7 +101,17 @@ Rather than typing everything, **Stays → Import** (or **Add → A bookings fil
    - *Up to date*, *No property*, *Error*: nothing will be written, and the reason is given.
 
    Remarks point at what deserves a look: overlap, unavailable dates, arrival before the activity start, payout already recorded or above what is expected.
-3. **Result**: the number of stays created, updated, completed and of payouts recorded. **Undo this import** puts everything back as it was, as long as none of these stays was changed; it can also be done later from **Previous imports**.
+
+   **Airbnb's other operations** are read too (*Other operations* filter):
+   - an AirCover damage refund or a resolution payout becomes a "Compensation" income, with no night;
+   - a "Crédit divers" becomes a "Platform bonus or credit" income;
+   - a resolution adjustment withheld by Airbnb becomes a "Refund to a guest" expense;
+   - an unknown type is shown with its amount and recorded only if you choose so.
+
+   **Cancelled, amount received kept**: for a cancelled booking that Airbnb still paid, this choice keeps the money without counting nights. It is offered on both lines of an overlap, since the export does not say which one was cancelled.
+
+   **Airbnb payouts check**: before importing, the total of the file's payouts, by kind and by month sent. If a sum paid would not be recorded, the check says so, with the amount and the line.
+3. **Result**: the number of stays created, updated, completed, and of payouts, incomes and expenses recorded. **Undo this import** puts everything back as it was, as long as none of these stays was changed; it can also be done later from **Previous imports**.
 
 Importing the same file again creates nothing twice: everything is *Up to date*. The choices (columns, properties, rate) are remembered for the next file. Guests' names are only taken when you tick the option.
 
@@ -100,11 +125,11 @@ Importing the same file again creates nothing twice: everything is *Up to date*.
 - *To pay*: the amount counts in "Left to pay";
 - *I don't know yet*: the expense shows in **Payment to confirm**. Nothing is assumed paid.
 
-When the money leaves, open the expense, then **Record a payment**: a partial payment is possible, never above what is left. The Cash reading counts each payment on its date.
+When the money leaves, open the expense, then **Record a payment**: a partial payment is possible, never above what is left. *My money* counts each payment on its date.
 
 For a **loan**, choose the *Loan repayment* category, type the principal / interest / insurance breakdown (checked live) and tick **Repeat every month**: one entry per month is created, each one settled on its own. Instalments whose date has not come yet are *Planned*, grouped under "Coming up" and out of "To pay". In the Overview, they count in **Loan repayments**, outside the operating balance.
 
-For an **annual insurance** or a subscription paid in advance, tick **Covers a period**: the Activity reading spreads it day by day.
+For an **annual insurance** or a subscription paid in advance, tick **Covers a period**: *Rental performance* spreads it day by day.
 
 Income outside stays (refund, occasional rental) is added with **Add income** and follows the same rules, in "To receive".
 

@@ -144,7 +144,7 @@ svg.i.filled { fill: currentColor; stroke: none; }
 .pagehead { display: grid; gap: 16px; }
 .pagehead h1 { font-family: var(--rc-serif); font-weight: 600; font-size: 30px; line-height: 1.15; letter-spacing: -0.2px; }
 .pagehead p.sub { color: var(--rc-muted); margin-top: 6px; font-size: 15px; }
-.filters { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.filters { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }  /* phones: the period gets the whole width */
 .select { position: relative; display: flex; align-items: center; }
 .select svg.i.lead { position: absolute; left: 13px; color: var(--rc-muted); pointer-events: none; width: 18px; height: 18px; }
 .select svg.i.chev { position: absolute; right: 12px; color: var(--rc-muted); pointer-events: none; width: 18px; height: 18px; }
@@ -715,7 +715,7 @@ fieldset.amounts legend { padding: 0 6px; color: var(--rc-text); font-weight: 60
 /* ------------------------------------------------------------ « Dépenses » */
 [hidden] { display: none !important; }
 .entries-tools { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
-.entries-tools .search { grid-column: 1 / -1; }
+.entries-tools .search, .entries-tools .period { grid-column: 1 / -1; }
 .totals { display: flex; gap: 10px; flex-wrap: wrap; margin: 0; }
 .totals > div { display: grid; gap: 2px; padding: 10px 14px; border-radius: 12px; background: var(--rc-inset); border: 1px solid var(--rc-border); min-width: 140px; }
 .totals dt { color: var(--rc-muted); font-size: 12.5px; }
@@ -748,8 +748,8 @@ fieldset.pay-choice { display: grid; gap: 12px; }
 .cat-row .row-actions, .user-row .row-actions, .backup-row .row-actions { display: flex; gap: 2px; }
 .keyrow small.muted, dd small.muted { color: var(--rc-faint); }
 @container content (min-width: 900px) {
-  .entries-tools { grid-template-columns: minmax(180px, 230px) minmax(230px, 250px) minmax(205px, 215px) minmax(200px, 1fr); }
-  .entries-tools .search { grid-column: auto; }
+  .entries-tools { grid-template-columns: minmax(170px, 230px) minmax(200px, 240px) minmax(260px, 300px) minmax(170px, 1fr); }
+  .entries-tools .search, .entries-tools .period { grid-column: auto; }
 }
 @container content (min-width: 900px) {
   .entries-list { display: table; }
