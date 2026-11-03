@@ -4,6 +4,7 @@
 // again; the dialogs only explain, collect and show what the server returns.
 
 import { openConfirm, openDialog } from "./dialogs.js";
+import { documentsSection, wireDocumentsSection } from "./document-dialogs.js";
 import { html, markup, raw } from "./dom.js";
 import { icon } from "./icons.js";
 import { openReconcile, openSplit } from "./split-dialogs.js";
@@ -103,7 +104,7 @@ function fillEntry(app, dialog, e) {
       <p class="reading">${raw(icon("info"))}<span>${t("spl.intro")}</span></p>
       <div class="split-rows">${e.split.map((row) => html`
         <div class="split-row">
-          <div class="split-head"><b>${row.kind_label || e.label}${row.label && row.label !== row.kind_label ? html` <small>· ${row.label}</small>` : ""}</b>
+          <div class="split-head"><b>${row.kind_label || e.label}${row.kind_label && row.label && row.label !== row.kind_label ? html` <small>· ${row.label}</small>` : ""}</b>
             <span class="num">${i18n.money(row.amount)}</span></div>
           ${row.allocations.length ? html`<ul class="plain-list notes">${row.allocations.map((a) => html`<li><span class="num">${i18n.money(a.amount)}</span> → ${a.stay_id ? html`<button type="button" class="linkbtn small inline" data-action="stay-open" data-value="${a.stay_id}">${a.stay_label}</button>` : t("spl.noStay")}</li>`)}</ul>` : ""}
           ${row.remaining <= 0 ? html`<small class="done">${raw(icon("check"))}${t("spl.done")}</small>`
@@ -160,6 +161,7 @@ function fillEntry(app, dialog, e) {
     ${payments}
     ${lines}
     ${reconcile}
+    ${documentsSection(app, e)}
     <section>
       <h3 class="section-title">${t("sjd.about")}</h3>
       <dl class="facts-list">
@@ -190,6 +192,7 @@ function fillEntry(app, dialog, e) {
   dialog.querySelector("[data-pay]")?.addEventListener("click", () => openEntryPayment(app, e, reopen));
   dialog.querySelector("[data-split]")?.addEventListener("click", () => openSplit(app, e, reopen));
   dialog.querySelector("[data-reconcile]")?.addEventListener("click", () => openReconcile(app, e, reopen));
+  wireDocumentsSection(app, dialog, e, reopen);
   dialog.querySelectorAll("[data-unreconcile]").forEach((button) => button.addEventListener("click", () => openConfirm(app, {
     title: t("rec.undoTitle"), text: t("rec.undoText"), confirm: t("rec.undo"), danger: false,
     run: async () => reopen(await app.api.post(`/api/entries/${e.id}/unreconcile`, { entry_id: button.dataset.unreconcile, revision: e.revision }), t("rec.undone")),

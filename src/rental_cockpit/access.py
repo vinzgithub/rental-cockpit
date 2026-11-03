@@ -42,6 +42,9 @@ class Access:
         if property_id not in self.property_ids:
             raise RCError("forbidden_property")
 
+    def sees_documents(self, property_id: str) -> bool:
+        return property_id in self.property_ids and property_id in self.documents
+
     def require_documents(self, property_id: str) -> None:
         self.require_property(property_id)
         if property_id not in self.documents:

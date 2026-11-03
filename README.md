@@ -8,7 +8,7 @@
 
 [**Français**](README.fr.md) · **English**
 
-![Version](https://img.shields.io/badge/version-0.5.0%20preview-126caa) ![Docker](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-2496ED) ![Licence](https://img.shields.io/badge/licence-to%20be%20decided-lightgrey)
+![Version](https://img.shields.io/badge/version-0.6.0%20preview-126caa) ![Docker](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-2496ED) ![Licence](https://img.shields.io/badge/licence-to%20be%20decided-lightgrey)
 
 <br>
 
@@ -42,7 +42,7 @@
 </table>
 
 > [!NOTE]
-> **Version 0.5.0, preview.** The Overview, **stays** (entry, **Airbnb and CSV import**, cancellation, payouts received), **expenses and payments** (partial payments, loan instalments, categories, CSV export), **suppliers** (rates, detailed invoices split between stays, reconciliation), the demo, accounts, two-factor sign-in and the Home Assistant link are ready. **PDF documents** come in the next version.
+> **Version 0.6.0, preview.** The Overview, **stays** (entry, **Airbnb and CSV import**, cancellation, payouts received), **expenses and payments** (partial payments, loan instalments, categories, CSV export), **suppliers** (rates, detailed invoices split between stays, reconciliation), **PDF documents** (checked, private, duplicates detected), the demo, accounts, two-factor sign-in and the Home Assistant link are ready. **Version 1.0** will add checked backup and restore and reader accounts.
 
 ---
 
@@ -167,6 +167,29 @@ No black box: you can redo every calculation by hand.
 </table>
 
 <img src="docs/images/en/invoice-split.png" alt="Splitting an invoice's services between stays, the stay offered from the date of the work" width="100%">
+
+---
+
+## 📎 PDF documents, private and checked
+
+<img src="docs/images/en/invoice-import.png" alt="Create an expense from a PDF invoice: supplier, number, amount and date proposed and marked To check" width="100%">
+
+<table>
+<tr>
+<td width="38%" valign="top"><img src="docs/images/en/documents-phone.png" alt="Documents on a phone: complete invoices and invoices to complete"></td>
+<td width="62%" valign="top">
+
+- **Create an expense from an invoice**: the PDF is read, and the date, amount including tax, number and supplier are **proposed**, marked "To check". Nothing is guessed, nothing is saved before you confirm.
+- **Add a document to an expense**: the expense does not change. Detaching does not change it either.
+- **File checked, never run**: a real PDF, 8 MiB at most, no password, no script, no embedded file.
+- **Duplicates**: the same file, even renamed, or the same reference from the same supplier is refused, with a link to the existing expense. An amount alone is never enough.
+- **Private storage** under the SHA-256 fingerprint, viewing and download only after a rights check — access to a property's PDFs is granted separately.
+
+</td>
+</tr>
+</table>
+
+<img src="docs/images/en/invoice-duplicate.png" alt="The same PDF sent a second time: This invoice already exists, with a link to the existing expense" width="100%">
 
 ---
 
@@ -355,7 +378,7 @@ Until the built-in backup arrives, a copy of the volume is enough: the command i
 | ✅ | **0.3.0** | Airbnb and CSV import: preview with nothing written, duplicates, commissions, checks, undo of the last import |
 | ✅ | **0.4.0** | Expenses and payments: partial payments, to pay / to receive, loan instalments, categories, CSV export |
 | ✅ | **0.5.0** | Suppliers: indicative rates, detailed invoices split between stays, reconciliation, margin per stay |
-| 🔜 | **0.6.0** | PDF documents, checked and linked to expenses |
+| ✅ | **0.6.0** | PDF documents: checked, private, duplicates detected, attached to expenses or creating one |
 | 🎯 | **1.0** | Checked backup, reader accounts, full acceptance run, first stable version |
 
 📖 [Detailed roadmap](docs/en/roadmap.md)

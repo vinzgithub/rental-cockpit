@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.6.0 — not released yet
+
+PDF documents (delivery L5): invoices are kept as private PDFs, checked without being run, recognised when they come back, and attached to the expenses they justify — or used to create them.
+
+- New "Documents" screen in the menu: every PDF with its supplier, number, date, amount and the expenses it justifies; views All and To complete (attached to nothing, or without a supplier or an amount); search.
+- "Create an expense from an invoice" (Documents screen, Expenses screen, Add menu): the PDF is checked, its text read, and the date, amount including tax, invoice number and a known supplier are proposed, each marked "To check"; what is not found stays empty and a scan is typed by hand. The expense and its document are saved together, after confirmation only.
+- "Add a document to this expense" on an expense's page: the expense is not changed. The same PDF can justify several expenses of a property, stored once.
+- Document page: what the invoice says (editable), the expenses it justifies, attach to another expense of the property, detach, open, download (the original bytes), delete when attached to nothing.
+- Checks: a real PDF structure, 8 MiB and 200 pages at most, no password needed, no script, launch action, form submission or embedded file; nothing is ever run; a check that takes too long is refused. The checked file waits 10 minutes in memory for its sender; nothing is written before the confirmation.
+- Duplicates on every property: same file (SHA-256, even renamed) or same supplier and invoice number is a certain duplicate, refused with a link to the existing expense; same supplier, date and amount without a number is a probable one, saved after an explicit confirmation; an amount alone never counts.
+- Private storage: one file per fingerprint, folder 0700 and files 0600, checked against its fingerprint before each sending; a newly written file is removed if the save fails, and leftovers are cleaned at start-up.
+- Rights: access to a property's PDFs is granted separately from access to the property; a reader without it only sees that a document exists. Changes are for administrators.
+- An incomplete document is listed in "To check" and leads to the To complete view.
+- Demo: the documented invoice F-DEMO-018 comes with a fictional PDF.
+- New dependency: pypdf (BSD-3-Clause), to check and read PDFs.
+- New automated tests: refused files (script, embedded file, password, truncated, renamed text file, too many pages, too large), reading assistance, duplicate rules, create, double click, attach, link, detach, delete, metadata, rights of readers with and without PDF access, damaged or missing original, start-up cleanup, demo PDF, and the browser journey.
+
 ## 0.5.0 — not released yet
 
 Suppliers (delivery L4): a supplier's invoice can be broken down into services, split between the stays it served and reconciled with the entries typed by hand, without ever being counted twice.

@@ -138,7 +138,30 @@ Finally, a stay's page shows its **allocated costs** and its **margin after cost
 
 ![Allocated costs and margin of a stay](../images/en/stay-costs.png)
 
-## 12. Protect your account
+## 12. PDF documents
+
+Two ways in, depending on what you have at hand:
+
+- **Create an expense from an invoice** (on the **Documents** screen, a button of the **Expenses** screen, or **Add → A PDF invoice**): choose or drop the PDF. The server checks it, then reads its text and proposes the date, the amount including tax, the invoice number and the supplier when it is one of your suppliers. Each proposed value is marked "To check"; what was not found stays empty, and a scanned PDF without text is typed by hand. Choose the property, the category and the payment, then **Create the expense**: the expense and its document are saved together.
+- **Add a document to this expense** (on an expense's page): the PDF is attached without changing anything in the expense. It takes the expense's supplier, number, date and amount.
+
+**Checks.** The file must be a real PDF (not just have the extension), of 8 MiB and 200 pages at most. It must open without a password and hold no script and no embedded file. Nothing is saved before you confirm, and the check expires after 10 minutes.
+
+**Duplicates.** The same file, even renamed, or an invoice from the same supplier with the same number is a certain duplicate: creating it is refused and **Open the expense** leads to the existing one. Same supplier, same date and same amount with no number to tell them apart: a probable duplicate, which you confirm after checking. An amount alone is never enough. One PDF can justify several expenses of the property: it is then attached without a copy.
+
+The **Documents** screen lists every PDF (**To complete** view: not attached to an expense, or without a supplier or an amount). A document's page lets you **open** it, **download** it (the same bytes as the original), **attach** it to another expense of the property, **detach** it (the expense does not change, the document is still recognised) or, when it is attached to nothing, **delete** it.
+
+![Documents](../images/en/documents-desktop.png)
+
+![Create an expense from an invoice: proposed fields marked "To check"](../images/en/invoice-import.png)
+
+![The same file sent a second time](../images/en/invoice-duplicate.png)
+
+![A document attached to an expense](../images/en/expense-documents.png)
+
+![A document's page](../images/en/document-page.png)
+
+## 13. Protect your account
 
 In **Settings → Two-factor sign-in → Turn on**:
 
@@ -150,7 +173,7 @@ At the next sign-in, the code is asked after the password. The other browsers si
 
 ![Turning on two-factor sign-in](../images/en/mfa-setup.png)
 
-## 13. Home Assistant (optional)
+## 14. Home Assistant (optional)
 
 In **Settings → Home Assistant and API → Create a key**, Rental Cockpit shows once the line to paste into `secrets.yaml`. The address to enter in Home Assistant is shown just above. What comes next (sensors, card, automations): [home-assistant.md](home-assistant.md).
 
@@ -160,4 +183,4 @@ In **Settings → Home Assistant and API → Create a key**, Rental Cockpit show
 
 The same Overview shows in one column, balance first, with a navigation bar at the bottom. On touch screens, controls aim at 44 × 44 pixels.
 
-<img src="../images/en/overview-phone.png" alt="Overview on a phone" width="260"> <img src="../images/en/stays-phone.png" alt="Stays on a phone" width="260"> <img src="../images/en/import-phone.png" alt="Import on a phone" width="260"> <img src="../images/en/expenses-phone.png" alt="Expenses on a phone" width="260"> <img src="../images/en/suppliers-phone.png" alt="A supplier's page on a phone" width="260"> <img src="../images/en/settings-phone.png" alt="Settings on a phone" width="260">
+<img src="../images/en/overview-phone.png" alt="Overview on a phone" width="260"> <img src="../images/en/stays-phone.png" alt="Stays on a phone" width="260"> <img src="../images/en/import-phone.png" alt="Import on a phone" width="260"> <img src="../images/en/expenses-phone.png" alt="Expenses on a phone" width="260"> <img src="../images/en/suppliers-phone.png" alt="A supplier's page on a phone" width="260"> <img src="../images/en/documents-phone.png" alt="Documents on a phone" width="260"> <img src="../images/en/settings-phone.png" alt="Settings on a phone" width="260">

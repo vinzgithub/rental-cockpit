@@ -51,6 +51,15 @@ The demo (fictional data) can be viewed by any signed-in account and changed by 
 - Creating, editing or archiving a supplier, breaking down, splitting or reconciling an invoice: administrators only, with the usual CSRF token, revision number and operation identifier.
 - A reconciliation is fully checked before anything is written (same property, amounts, payments): when it is refused, nothing has changed.
 
+## PDF documents
+
+- **File check**: a real PDF structure (not the extension), 8 MiB and 200 pages at most, opening without a password (a PDF that only restricts printing is accepted), and any script, launch action, form submission or embedded file refused. The PDF is only parsed, never run; a check that takes longer than 20 seconds is abandoned, and the decompression limits of the pypdf library apply.
+- **Preview without writing**: the checked file waits in memory, for the account that sent it only, 10 minutes at most (12 files and 64 MiB in all). Nothing is written to disk before the confirmation.
+- **Private storage**: the original is written once under its SHA-256 fingerprint, in `documents/` (`demo-documents/` for the demo) of the data folder, folder 0700 and files 0600, exclusive and synced write, symbolic links refused. This folder is never served as static files.
+- **Viewing**: only through the API, after the session and the rights are checked. The file is read again and compared with its fingerprint before each sending: a changed or missing file is never served, and the error says so. Headers: `Content-Type: application/pdf`, `X-Content-Type-Options: nosniff`, `Cache-Control: no-store, private`.
+- **Rights**: access to a property's PDFs is a permission distinct from access to the property. A reader without it sees that an expense has a document, never its content or its name. Sending, attaching, detaching, describing or deleting: administrators only, with the CSRF token.
+- **Consistency**: the expense, the document and the journal line are saved in one transaction; if it fails, the newly written file is removed. A file left by an interruption is deleted at the next start. The journal keeps the action and the start of the fingerprint, never the content of the PDF.
+
 ## Browser
 
 - Strict Content-Security-Policy: `default-src 'self'`, no inline or external script or style, no framing by default (`frame-ancestors 'none'`).

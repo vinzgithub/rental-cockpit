@@ -795,6 +795,32 @@ fieldset.split-block { display: grid; gap: 8px; }
 .split-foot small.bad, .split-total.bad { color: #f3a5af; }
 .split-total { font-weight: 600; text-align: right; }
 .facts-list.after-table { margin-top: 12px; }
+/* Justificatifs */
+.doc-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); }
+.doc-card { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 16px; border-radius: 14px;
+  background: var(--rc-card); border: 1px solid var(--rc-border); width: 100%; text-align: left; color: inherit; font: inherit; cursor: pointer; }
+@media (hover: hover) { .doc-card:hover { border-color: var(--rc-accent-line); } }
+.doc-card .body { display: grid; gap: 4px; min-width: 0; }
+.doc-card .stay-title b { overflow-wrap: anywhere; }
+.doc-card .when { color: var(--rc-muted); font-size: 13px; }
+.doc-card .facts { color: var(--rc-muted); font-size: 12.5px; overflow-wrap: anywhere; }
+.doc-card .money-line { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+.doc-card .end-col { display: grid; justify-items: end; gap: 6px; color: var(--rc-muted); }
+.doc-card .end-col b { color: var(--rc-text); white-space: nowrap; }
+.doc-row { grid-template-columns: auto minmax(0, 1fr) auto; }
+.doc-row .doc-name { display: block; text-align: left; font-weight: 600; overflow-wrap: anywhere; padding: 0; min-height: 0; }
+.doc-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.tip.warn { border-color: rgba(232, 171, 79, 0.45); }
+.dup-box ul { margin: 6px 0 4px; padding-left: 0; list-style: none; display: grid; gap: 6px; }
+.dup-box li { display: flex; gap: 8px; flex-wrap: wrap; align-items: baseline; justify-content: space-between; }
+.dup-box .check-line { margin-top: 6px; }
+.dup-box li b { display: inline; }
+.actions + .facts-list { margin-top: 12px; }
+.keyrow .linkbtn { text-align: left; }
+.pill.tiny { padding: 1px 7px; font-size: 11px; margin-left: 6px; vertical-align: 1px; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; }
+.link-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin-top: 10px; }
+.link-row select { min-height: 44px; padding: 8px 12px; border-radius: 11px; border: 1px solid var(--rc-border-strong); background: var(--rc-inset); color: var(--rc-text); font: inherit; font-size: 14px; min-width: 0; width: 100%; }
 
 /* Dialogs live outside the page container: they follow their own width
    (kept last so it wins over the general rules above). */
@@ -826,6 +852,9 @@ fieldset.split-block { display: grid; gap: 8px; }
   .alloc { grid-template-columns: minmax(0, 1fr) 96px 44px; }
   dialog.rc .dbody .actions .btn, dialog.rc .dbody .keyrow .btn { white-space: normal; text-align: left; }
   .keyrow.clickable { grid-template-columns: auto minmax(0, 1fr); }
+  .doc-row { grid-template-columns: auto minmax(0, 1fr); }
+  .doc-row .doc-actions { grid-column: 1 / -1; justify-content: flex-start; }
+  .link-row { grid-template-columns: minmax(0, 1fr); }
   .keyrow.clickable .end-col { grid-column: 2; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: flex-start; }
   .pay-option { flex: 1 1 auto; justify-content: center; }
   dialog.rc .dfoot.stay-actions { display: grid; grid-template-columns: 1fr 1fr; }

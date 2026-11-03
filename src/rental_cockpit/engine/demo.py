@@ -27,6 +27,7 @@ import random
 from datetime import date, timedelta
 from typing import Any
 
+from . import documents
 from .indicators import month_period
 from .ledger import Ledger
 from .schema import empty_registry
@@ -166,6 +167,12 @@ def build_demo(today: date | None = None) -> dict[str, Any]:
         "paid": True, "paid_date": (inv_month + timedelta(days=24)).isoformat(),
     })
     assert invoice["entry"]["amount"] == 15000
+    # Its PDF (fictional, generated identically every time), to find it again from the expense.
+    pdf = documents.SAMPLES["demo-invoice-018"]()
+    led.add_document({"property_id": a, "entry_id": invoice["entry"]["id"], "supplier_id": cleaner, "invoice_number": "F-DEMO-018",
+                      "invoice_date": invoice["entry"]["date"], "amount_cents": 15000},
+                     {"sha256": documents.sha256(pdf), "size": len(pdf), "pages": 1, "text_found": True,
+                      "filename": "Facture F-DEMO-018 (fictive).pdf", "sample": "demo-invoice-018"})
 
     # --- Example month: exactly the documented figures.
     f = focus_start

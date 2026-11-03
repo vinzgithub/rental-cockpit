@@ -125,6 +125,15 @@ def iso(value: date | None) -> str:
     return value.isoformat() if value else ""
 
 
+def safe_filename(value: Any) -> str:
+    """A file name to show and to offer on download: no folder, no control character, ends in .pdf."""
+    name = str(value or "").replace("\\", "/").rsplit("/", 1)[-1]
+    name = "".join(c for c in name if c.isprintable() and c not in '"<>:|?*').strip(" .")[:140]
+    if not name.lower().endswith(".pdf"):
+        name = (name or "justificatif") + ".pdf"
+    return name
+
+
 # --------------------------------------------------------------------------- ledger
 
 class Ledger:
@@ -874,6 +883,101 @@ class Ledger:
         return {"entry": deepcopy(invoice)}
 
     # ----------------------------------------------------------------- payments
+
+    # ----------------------------------------------------------------- documents (PDF 01, DUP 04)
+    # A document is a private PDF with its fingerprint and what it says
+    # (supplier, number, date, amount). Attaching it to an entry, or detaching
+    # it, never creates, changes or removes a charge: the entry stays as it is.
+
+    def _document_fields(self, payload: dict[str, Any], current: dict[str, Any] | None = None) -> dict[str, Any]:
+        current = current or {}
+        get = lambda key, default="": payload[key] if key in payload else current.get(key, default)  # noqa: E731
+        supplier_id = str(get("supplier_id") or "")
+        if supplier_id:
+            supplier = self._get("suppliers", supplier_id)["name"]
+        elif "supplier_id" in payload:  # the supplier was removed: only a name typed now remains
+            supplier = clean_text(payload.get("supplier", ""), "supplier", 120)
+        else:
+            supplier = clean_text(current.get("supplier", ""), "supplier", 120)
+        if "amount" in payload or "amount_cents" in payload:
+            amount = read_amount(payload, "amount", required=False)
+        else:
+            amount = current.get("amount")
+        return {
+            "supplier_id": supplier_id, "supplier": supplier,
+            "invoice_number": clean_text(get("invoice_number", ""), "invoice_number", 80),
+            "invoice_date": iso(read_optional_date(get("invoice_date", ""), "invoice_date")),
+            "amount": amount,
+            "note": clean_text(get("note", ""), "note", 600, multiline=True),
+        }
+
+    def add_document(self, payload: dict[str, Any], file: dict[str, Any]) -> dict[str, Any]:
+        """Record a checked PDF (its bytes are already in private storage), attached to an entry or not."""
+        prop = self.property(payload.get("property_id"))
+        if any(d.get("sha256") == file["sha256"] for d in self.data["documents"].values()):
+            raise RCError("document_duplicate", reason=("même fichier, déjà enregistré", "same file, already stored"))
+        doc = self._stamp({
+            "id": new_id("doc"), "property_id": prop["id"], "sha256": file["sha256"], "size": int(file["size"]),
+            "pages": int(file["pages"]), "text_found": bool(file.get("text_found")),
+            "filename": safe_filename(file.get("filename")), **self._document_fields(payload), "entry_ids": [],
+        })
+        if file.get("sample"):
+            doc["sample"] = str(file["sample"])
+        self.data["documents"][doc["id"]] = doc
+        if payload.get("entry_id"):
+            self._attach(doc, payload["entry_id"])
+        self.audit("document.add", doc["id"], detail=doc["sha256"][:12])
+        return {"document": deepcopy(doc)}
+
+    def _attach(self, doc: dict[str, Any], entry_id: str) -> dict[str, Any]:
+        entry = self._get("entries", entry_id)
+        if entry["property_id"] != doc["property_id"]:
+            raise RCError("document_property", name=self.data["properties"].get(doc["property_id"], {}).get("name", ""))
+        if entry_id in doc.get("entry_ids", []):
+            raise RCError("document_already_attached")
+        doc.setdefault("entry_ids", []).append(entry_id)
+        return entry
+
+    def link_document(self, document_id: str, entry_id: str) -> dict[str, Any]:
+        doc = self._get("documents", document_id)
+        before = deepcopy(doc)
+        self._attach(doc, str(entry_id or ""))
+        self._history(doc, before, ("entry_ids",))
+        self.audit("document.link", doc["id"], detail=str(entry_id))
+        return {"document": deepcopy(doc)}
+
+    def detach_document(self, document_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        """The entry stays, and so does the document: the identity of the invoice is kept (DUP 04)."""
+        doc = self._get("documents", document_id)
+        self._check_revision(doc, payload)
+        entry_id = str(payload.get("entry_id") or "")
+        if entry_id not in doc.get("entry_ids", []):
+            raise RCError("not_found")
+        before = deepcopy(doc)
+        doc["entry_ids"] = [e for e in doc["entry_ids"] if e != entry_id]
+        self._history(doc, before, ("entry_ids",))
+        self.audit("document.detach", doc["id"], detail=entry_id)
+        return {"document": deepcopy(doc)}
+
+    def update_document(self, document_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        doc = self._get("documents", document_id)
+        self._check_revision(doc, payload)
+        self.property(doc["property_id"])
+        before = deepcopy(doc)
+        doc.update(self._document_fields(payload, doc))
+        changed = self._history(doc, before, ("supplier_id", "supplier", "invoice_number", "invoice_date", "amount", "note"))
+        self.audit("document.update", doc["id"], detail=",".join(changed))
+        return {"document": deepcopy(doc)}
+
+    def delete_document(self, document_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        """A document added by mistake: only once it is attached to nothing."""
+        doc = self._get("documents", document_id)
+        self._check_revision(doc, payload)
+        if doc.get("entry_ids"):
+            raise RCError("document_attached", count=len(doc["entry_ids"]))
+        del self.data["documents"][doc["id"]]
+        self.audit("document.delete", doc["id"], detail=doc["sha256"][:12])
+        return {"deleted": doc["id"], "sha256": doc["sha256"]}
 
     def entry_paid(self, entry_id: str) -> int:
         return sum(link["amount"] for p in self.data["payments"].values() for link in p["links"] if link["type"] == "entry" and link["id"] == entry_id)

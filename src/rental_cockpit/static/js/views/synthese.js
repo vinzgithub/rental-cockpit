@@ -144,7 +144,7 @@ const CHECK_ICONS = {
 };
 // Where each « À vérifier » item leads, and which list it opens there.
 const CHECK_TARGET = {
-  documents_incomplete: ["documents"],
+  documents_incomplete: ["justificatifs", "incomplete"],
   payouts_to_confirm: ["sejours", "attention"],
   payments_unknown: ["depenses", "to_confirm"],
   stays_without_amount: ["sejours", "attention"],

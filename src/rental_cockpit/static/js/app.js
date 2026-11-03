@@ -11,6 +11,7 @@ import { openStay, openStayForm } from "./stay-dialogs.js";
 import { openImport, openImportHistory } from "./import-dialogs.js";
 import { openCategoryForm, openEntry, openEntryForm, toggleCategory } from "./entry-dialogs.js";
 import { openSupplier, openSupplierForm } from "./supplier-dialogs.js";
+import { openDocument, openInvoiceImport } from "./document-dialogs.js";
 import { esc, html, markup, opId, raw } from "./dom.js";
 import { makeI18n } from "./i18n.js";
 import { icon } from "./icons.js";
@@ -20,19 +21,21 @@ import { datasetSwitch } from "./views/dataset.js";
 import { renderSettings } from "./views/settings.js";
 import { ENTRY_VIEWS, renderExpenses } from "./views/expenses.js";
 import { renderSuppliers } from "./views/suppliers.js";
+import { renderDocuments } from "./views/documents.js";
 import { renderStays, STAY_VIEWS } from "./views/stays.js";
 import { renderSynthese } from "./views/synthese.js";
 import { renderNoAccess, renderOnboarding, renderWelcome } from "./views/welcome.js";
 
 // A screen enters the menu only once it works: no « coming soon » page.
-// Dépenses, Prestataires and Documents join this list as they are delivered.
 const SCREENS = [
   ["synthese", "chart"],
   ["sejours", "calendar"],
   ["depenses", "wallet"],
   ["prestataires", "users"],
+  ["justificatifs", "file"],
   ["reglages", "sliders"],
 ];
+const DOCUMENT_VIEWS = ["all", "incomplete"];
 const READY = new Set(SCREENS.map(([key]) => key));
 const STORE_KEY = "rental-cockpit.view";
 
@@ -49,7 +52,7 @@ export class App {
     this.root = root;
     this.state = { screen: "synthese", mode: "activity", propertyId: "all", periodKey: "", loading: true, error: "", overview: null, account: null,
       stays: { view: "active", q: "", data: null }, entries: { view: "all", q: "", kind: "", year: "", data: null }, categories: null,
-      suppliers: { view: "active", q: "", data: null } };
+      suppliers: { view: "active", q: "", data: null }, documents: { view: "all", q: "", data: null } };
     this.searchTimer = null;
     this.auth = { error: "", busy: false, mfa: false, username: "" };
     this.session = null;
@@ -111,6 +114,7 @@ export class App {
     if (this.state.screen === "sejours") await this.loadStays();
     if (this.state.screen === "depenses") await this.loadEntries();
     if (this.state.screen === "prestataires") await this.loadSuppliers();
+    if (this.state.screen === "justificatifs") await this.loadDocuments();
   }
 
   _sessionLost() {
@@ -234,6 +238,24 @@ export class App {
     this._render();
   }
 
+  /** « Justificatifs » list for the current view and search. */
+  async loadDocuments() {
+    const { view, q } = this.state.documents;
+    try {
+      const data = await this.api.get("/api/documents", { view, q });
+      if (view === this.state.documents.view && q === this.state.documents.q) this.state.documents.data = data;
+    } catch (err) {
+      if (err.status !== 401) this.toast(err.message, true);
+    }
+    this._render();
+  }
+
+  /** After a PDF is joined, detached, described or deleted. */
+  async afterDocumentChange() {
+    await this.load();
+    if (this.state.screen === "justificatifs") await this.loadDocuments();
+  }
+
   async afterSupplierChange() {
     this.state.entries = { ...this.state.entries, data: null };
     if (this.state.screen === "prestataires") await this.loadSuppliers();
@@ -301,6 +323,7 @@ export class App {
       stays: this.state.stays,
       entries: this.state.entries,
       suppliers: this.state.suppliers,
+      documents: this.state.documents,
       categories: this.state.categories,
       canWrite: this.canWrite,
       periodOptions: this.session?.authenticated ? this.periodOptions() : [],
@@ -327,6 +350,10 @@ export class App {
         if (value === "depenses" && target.dataset.view && ENTRY_VIEWS.includes(target.dataset.view)) {
           this.state.entries = { ...this.state.entries, view: target.dataset.view, q: "", kind: "", year: "", data: null };
         }
+        if (value === "justificatifs") {
+          const docView = DOCUMENT_VIEWS.includes(target.dataset.view) ? target.dataset.view : this.state.documents.view;
+          this.state.documents = { ...this.state.documents, view: docView, q: target.dataset.view ? "" : this.state.documents.q, data: null };
+        }
         if (value === "depenses" && target.dataset.q) {
           this.state.entries = { ...this.state.entries, view: "all", q: target.dataset.q.slice(0, 80), kind: "", year: "", data: null };
         }
@@ -336,11 +363,23 @@ export class App {
         if (value === "sejours") await this.loadStays();
         if (value === "depenses") await this.loadEntries();
         if (value === "prestataires") await this.loadSuppliers();
+        if (value === "justificatifs") await this.loadDocuments();
         break;
       case "suppliers-view":
         this.state.suppliers = { ...this.state.suppliers, view: value };
         this._render();
         await this.loadSuppliers();
+        break;
+      case "documents-view":
+        this.state.documents = { ...this.state.documents, view: value };
+        this._render();
+        await this.loadDocuments();
+        break;
+      case "document-open":
+        openDocument(this, value);
+        break;
+      case "invoice-import":
+        openInvoiceImport(this);
         break;
       case "supplier-open":
         openSupplier(this, value);
@@ -496,6 +535,10 @@ export class App {
       this.state.suppliers.q = target.value;
       clearTimeout(this.searchTimer);
       this.searchTimer = setTimeout(() => this.loadSuppliers(), 250);
+    } else if (target.dataset.input === "documents-q") {
+      this.state.documents.q = target.value;
+      clearTimeout(this.searchTimer);
+      this.searchTimer = setTimeout(() => this.loadDocuments(), 250);
     } else if (target.dataset.input === "entries-q") {
       this.state.entries.q = target.value;
       clearTimeout(this.searchTimer);
@@ -563,9 +606,11 @@ export class App {
     this.state.stays = { ...this.state.stays, data: null };
     this.state.entries = { ...this.state.entries, data: null };
     this.state.suppliers = { ...this.state.suppliers, data: null };
+    this.state.documents = { ...this.state.documents, data: null };
     this.state.categories = null;
     await this.load();
     if (this.state.screen === "prestataires") await this.loadSuppliers();
+    if (this.state.screen === "justificatifs") await this.loadDocuments();
     if (this.state.screen === "sejours") await this.loadStays();
     if (this.state.screen === "depenses") await this.loadEntries();
     if (this.state.screen === "reglages") await this.loadAccount();
@@ -707,6 +752,8 @@ export class App {
       body = renderExpenses(this.viewModel());
     } else if (this.state.screen === "prestataires") {
       body = renderSuppliers(this.viewModel());
+    } else if (this.state.screen === "justificatifs") {
+      body = renderDocuments(this.viewModel());
     } else if (!this.state.overview.properties.length) {
       body = this.canWrite ? renderOnboarding(this.viewModel()) : renderNoAccess(this.viewModel());
     } else {

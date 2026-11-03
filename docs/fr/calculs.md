@@ -138,6 +138,23 @@ Exemple (c'est le scénario des tests) : séjour A du 28 septembre au 4 octobre 
 
 Après répartition : séjour A, coûts 100 €, marge 510 − 100 = **410 €** ; séjour B, coûts 50 €, marge 255 − 50 = **205 €**.
 
+## Un justificatif
+
+Un justificatif (PDF) **ne compte dans aucun total** : c'est la dépense qui compte. Joindre un PDF à une dépense, le détacher ou le supprimer ne crée, ne modifie ni ne supprime aucune dépense, dans aucune lecture. Une dépense qui a un justificatif ne peut pas être supprimée, seulement archivée (ou détachée de son justificatif d'abord).
+
+**Doublons.** Avant d'enregistrer une dépense depuis une facture, sur tous les biens :
+
+| Cas | Règle | Effet |
+|---|---|---|
+| Même fichier | Même empreinte SHA-256, quel que soit le nom du fichier | Certain : refusé, lien vers la dépense existante |
+| Même référence | Même prestataire et même numéro de facture (« F-018 », « f 018 » et « F018 » sont le même numéro) | Certain : refusé, lien vers la dépense existante |
+| Semblable | Même prestataire, même date et même montant, l'une des deux factures sans numéro | Probable : enregistré seulement après « J'ai vérifié : c'est une autre facture » |
+| Montant seul | Même montant, rien d'autre en commun | Jamais un doublon |
+
+Une facture d'un autre numéro, même au même montant et à la même date, n'est pas un doublon.
+
+**À compléter.** Un justificatif est listé dans *À vérifier* tant qu'il n'est joint à aucune dépense ou qu'il lui manque le prestataire ou le montant.
+
 ## Les indicateurs
 
 | Indicateur | Formule | Exclut |

@@ -6,6 +6,7 @@ import { esc, html, markup, raw } from "./dom.js";
 import { icon, propertyIcon } from "./icons.js";
 import { openImport } from "./import-dialogs.js";
 import { openEntryForm } from "./entry-dialogs.js";
+import { openInvoiceImport } from "./document-dialogs.js";
 import { openStayForm } from "./stay-dialogs.js";
 import { checkItem, periodName } from "./views/synthese.js";
 
@@ -116,6 +117,7 @@ function addChoices(app) {
     choices.push({ key: "stay", icon: "calendar", name: t("add.stay"), hint: t("add.stay.hint"), open: () => openStayForm(app) });
     choices.push({ key: "import", icon: "upload", name: t("add.import"), hint: t("add.import.hint"), open: () => openImport(app) });
     choices.push({ key: "expense", icon: "receipt", name: t("add.expense"), hint: t("add.expense.hint"), open: () => openEntryForm(app, { kind: "expense" }) });
+    choices.push({ key: "invoice", icon: "file", name: t("add.invoice"), hint: t("add.invoice.hint"), open: () => openInvoiceImport(app) });
     choices.push({ key: "income", icon: "coins", name: t("add.income"), hint: t("add.income.hint"), open: () => openEntryForm(app, { kind: "income" }) });
   }
   choices.push({ key: "property", icon: "home", name: t("add.property"), hint: t("add.property.hint"), open: () => openPropertyDialog(app) });
