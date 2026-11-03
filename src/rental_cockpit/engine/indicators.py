@@ -194,7 +194,8 @@ class _Collector:
                         continue
                     self.add(bucket="revenue", ref_type="payment", ref_id=payment["id"], property_id=payment["property_id"],
                              label=self.label_of_stay(stay), date=payment["date"], total=payment["amount"], share=link["amount"],
-                             category_id="accommodation", rule="payment_date", extra={"stay_id": stay["id"], "direction": "in"})
+                             category_id="accommodation", rule="payment_date",
+                             extra={"stay_id": stay["id"], "direction": "in", "expected_on": payment.get("expected_on", "")})
                     continue
                 entry = entries.get(link["id"])
                 if not entry or entry.get("archived"):
@@ -205,7 +206,8 @@ class _Collector:
                 self.add(bucket=bucket, ref_type="payment", ref_id=payment["id"], property_id=payment["property_id"],
                          label=entry["label"], date=payment["date"], total=entry["amount"], share=link["amount"],
                          category_id=entry["category_id"], rule="payment_date",
-                         extra={"entry_id": entry["id"], "direction": payment["direction"], "loan_split": entry.get("loan_split"), "lines": entry.get("lines") or []})
+                         extra={"entry_id": entry["id"], "direction": payment["direction"], "loan_split": entry.get("loan_split"),
+                                "lines": entry.get("lines") or [], "expected_on": payment.get("expected_on", "")})
 
 
 # --------------------------------------------------------------------------- explanations
@@ -406,7 +408,8 @@ def _line(m: Movement, data: dict[str, Any], lang: str) -> dict[str, Any]:
     return {
         "ref_type": m.ref_type, "ref_id": m.ref_id, "property": prop.get("name", "—"), "label": m.label,
         "date": m.date, "total": m.total, "share": m.share, "bucket": m.bucket,
-        "category": category_label(category, lang), "rule": _t(RULES.get(m.rule, (m.rule, m.rule)), lang),
+        "category": category_label(category, lang), "category_id": m.category_id,
+        "rule": _t(RULES.get(m.rule, (m.rule, m.rule)), lang), "expected_on": m.extra.get("expected_on", ""),
         "sign": -1 if m.bucket != "revenue" else 1,
         # What the line comes from, so « Comment est calculé ce montant ? » can open it.
         "stay_id": m.extra.get("stay_id") or (m.ref_id if m.ref_type in ("stay", "stay_commission") else ""),

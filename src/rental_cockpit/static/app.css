@@ -673,6 +673,21 @@ fieldset.amounts legend { padding: 0 6px; color: var(--rc-text); font-weight: 60
 .imp-row .changes b { font-weight: 600; }
 .imp-row .changes ul { margin: 4px 0 0; padding-left: 18px; }
 .imp-row .decision { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 13px; color: var(--rc-muted); margin-top: 2px; }
+.imp-row.op { border-style: dashed; }
+.imp-rec .facts-list { margin-bottom: 10px; }
+.imp-rec .facts-list > div { grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: baseline; }
+.imp-rec .facts-list dd { text-align: right; white-space: nowrap; }
+.imp-rec .reading.ok { color: var(--rc-accent); }
+.imp-rec .reading.ok svg.i { color: var(--rc-accent); }
+.imp-months { margin-top: 10px; font-size: 13.5px; }
+.imp-months summary { cursor: pointer; color: var(--rc-accent); min-height: 32px; display: flex; align-items: center; }
+.imp-months .table { font-size: 13px; }
+.imp-months .table td, .imp-months .table th { padding: 7px 8px; }
+.imp-months .table .amt { text-align: right; white-space: nowrap; }
+.imp-months .warn-text { color: #f1d5a8; font-weight: 600; }
+@container dialog (max-width: 560px) {
+  .imp-months .table th:nth-child(3), .imp-months .table td:nth-child(3), .imp-months .table th:nth-child(4), .imp-months .table td:nth-child(4) { display: none; }
+}
 .imp-done { display: flex; gap: 16px; align-items: center; }
 .imp-done h3 { font-family: var(--rc-serif); font-size: 21px; font-weight: 600; }
 .imp-done p { color: var(--rc-muted); font-size: 13.5px; overflow-wrap: anywhere; }

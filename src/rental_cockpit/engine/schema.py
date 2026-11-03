@@ -31,6 +31,8 @@ EXPENSE_TREATMENTS = {"operating_expense", "investment", "financing", "tax", "in
 DEFAULT_CATEGORIES: tuple[dict[str, Any], ...] = (
     {"id": "accommodation", "kind": "income", "treatment": "operating_income", "fr": "Recettes d'hébergement", "en": "Accommodation revenue", "icon": "home"},
     {"id": "other_income", "kind": "income", "treatment": "operating_income", "fr": "Autres recettes", "en": "Other income", "icon": "plus"},
+    {"id": "platform_compensation", "kind": "income", "treatment": "operating_income", "fr": "Indemnisation (dommages, résolution)", "en": "Compensation (damage, resolution)", "icon": "shield"},
+    {"id": "platform_credit", "kind": "income", "treatment": "operating_income", "fr": "Prime ou crédit de la plateforme", "en": "Platform bonus or credit", "icon": "coins"},
     {"id": "maintenance", "kind": "expense", "treatment": "operating_expense", "fr": "Entretien et réparation", "en": "Maintenance and repairs", "icon": "wrench"},
     {"id": "cleaning", "kind": "expense", "treatment": "operating_expense", "fr": "Ménage", "en": "Cleaning", "icon": "spray"},
     {"id": "linen", "kind": "expense", "treatment": "operating_expense", "fr": "Linge", "en": "Linen", "icon": "linen"},
@@ -39,6 +41,7 @@ DEFAULT_CATEGORIES: tuple[dict[str, Any], ...] = (
     {"id": "insurance", "kind": "expense", "treatment": "operating_expense", "fr": "Assurance", "en": "Insurance", "icon": "shield"},
     {"id": "subscription", "kind": "expense", "treatment": "operating_expense", "fr": "Abonnement", "en": "Subscription", "icon": "repeat"},
     {"id": "platform_fees", "kind": "expense", "treatment": "operating_expense", "fr": "Frais de plateforme", "en": "Platform fees", "icon": "percent"},
+    {"id": "guest_refund", "kind": "expense", "treatment": "operating_expense", "fr": "Remboursement à un voyageur", "en": "Refund to a guest", "icon": "repeat"},
     {"id": "other_expense", "kind": "expense", "treatment": "operating_expense", "fr": "Autre dépense", "en": "Other expense", "icon": "dots"},
     {"id": "equipment", "kind": "expense", "treatment": "investment", "fr": "Équipement", "en": "Equipment", "icon": "sofa"},
     {"id": "loan", "kind": "expense", "treatment": "financing", "fr": "Remboursement d'emprunt", "en": "Loan repayment", "icon": "bank"},

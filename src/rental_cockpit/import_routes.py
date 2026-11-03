@@ -19,7 +19,7 @@ from starlette.concurrency import run_in_threadpool
 from .engine.errors import RCError
 from .engine.imports import airbnb, generic, plan
 from .engine.ledger import Ledger
-from .engine.schema import CHANNELS
+from .engine.schema import CHANNELS, category_label
 from .web import Services, access, current_user, dataset_of, lang_of, public_property, require_csrf, utc_now
 
 MAX_BODY = 8 * 1024 * 1024  # a 5 MiB file in base64, plus options
@@ -123,16 +123,26 @@ def _view(parsed: dict[str, Any], built: dict[str, Any], options: dict[str, Any]
           sha: str) -> dict[str, Any]:
     fr = lang == "fr"
     names = {pid: p["name"] for pid, p in data["properties"].items()}
+    categories = data.get("categories", {})
     rows = []
     for row in built["rows"]:
+        operation = row.get("kind") == "operation"
+        extra = {}
+        if operation:
+            name = row["label_pair"][0 if fr else 1] if row.get("label_pair") else row.get("type_label", "")
+            extra = {k: row.get(k) for k in ("family", "type_label", "date", "amount", "direction", "details", "entry_id", "bank_by", "payout_ref")}
+            extra.update(label=f"{name} — {row['details']}" if row.get("details") else name,
+                         category=category_label(categories.get(row.get("category_id", "")), lang) if row.get("category_id") else "")
         rows.append({
             **{k: row.get(k) for k in ("key", "lines", "status", "decision", "external_ref", "listing", "start", "end", "nights",
                                        "guests", "guest_label", "amounts", "payout", "property_id", "stay_id", "twin_label",
                                        "choices", "locked")},
+            "kind": "operation" if operation else "stay", **extra,
             "status_label": STATUS_LABELS[row["status"]][0 if fr else 1],
             "property": names.get(row.get("property_id"), ""),
             "errors": [plan.render(e, lang) for e in row["errors"]],
             "warnings": [plan.render(w, lang) for w in row["warnings"]],
+            "facts": [plan.render(f, lang) for f in row.get("facts", [])],
             "changes": [{**c, "label": plan.FIELD_LABELS.get(c["field"], (c["field"], c["field"]))[0 if fr else 1]}
                         for c in row["changes"]],
         })
@@ -148,6 +158,7 @@ def _view(parsed: dict[str, Any], built: dict[str, Any], options: dict[str, Any]
         "keep_names": bool(options.get("keep_names")), "create_payouts": options.get("create_payouts", True) is not False,
         "errors": [plan.render(e, lang) for e in built["errors"]], "notices": [plan.render(n, lang) for n in built["notices"]],
         "rows": rows, "counts": built["counts"], "can_apply": built["can_apply"], "sha256": sha,
+        "reconciliation": built.get("reconciliation"),
     }
 
 
@@ -202,12 +213,12 @@ def register_import_routes(app: FastAPI, services: Services) -> None:
                 options = _options(payload, parsed, work, acc)
                 built = plan.build(work, parsed, options, services.today(), sha)
                 expect = payload.get("expect")
-                if isinstance(expect, dict) and any(built["counts"].get(k) != expect.get(k) for k in ("to_write", "payouts")):
+                if isinstance(expect, dict) and any(built["counts"].get(k) != expect.get(k, built["counts"].get(k)) for k in ("to_write", "payouts", "entries")):
                     # Someone changed the stays between the preview and the confirmation: show the new preview first.
                     raise RCError("preview_stale")
                 result = plan.apply(ledger, built, {"kind": parsed["kind"], "reader": parsed["reader"], "sha256": sha,
                                                     "file_name": str(payload.get("file_name") or ""),
-                                                    "channel": options.get("channel", "other")})
+                                                    "channel": options.get("channel", "other"), "lang": lang})
                 settings = work.setdefault("settings", {})
                 if payload.get("remember", True) is not False:
                     aliases = settings.setdefault("listing_aliases", {})
