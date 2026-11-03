@@ -8,7 +8,7 @@
 
 [**Français**](README.fr.md) · **English**
 
-![Version](https://img.shields.io/badge/version-1.0.0%20under%20review-126caa) ![Docker](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-2496ED) ![Licence](https://img.shields.io/badge/licence-to%20be%20decided-lightgrey)
+![Version](https://img.shields.io/badge/version-1.0.0%20accepted-126caa) ![Docker](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-2496ED) ![Licence](https://img.shields.io/badge/licence-to%20be%20decided-lightgrey)
 
 <br>
 
@@ -42,7 +42,7 @@
 </table>
 
 > [!NOTE]
-> **Version 1.0.0, under review.** Everything planned for the first version is ready: the Overview (*My money*, *Rental performance*, *Accounting analysis*), **stays** (entry, **Airbnb and CSV import**, cancellation, payouts received), **expenses and payments**, **suppliers** (detailed invoices split between stays, reconciliation), **PDF documents**, **reader accounts**, **checked backup and restore**, the demo, two-factor sign-in and the Home Assistant link. It becomes the stable version once acceptance is passed ([criteria and results](docs/en/acceptance.md)).
+> **Version 1.0.0 accepted; publication pending.** Everything planned for the first version is ready: the Overview (*My money*, *Rental performance*, *Accounting analysis*), **stays** (entry, **Airbnb and CSV import**, cancellation, payouts received), **expenses and payments**, **suppliers** (detailed invoices split between stays, reconciliation), **PDF documents**, **reader accounts**, **checked backup and restore**, the demo, two-factor sign-in and the Home Assistant link. User acceptance is complete; the stable tag and images remain to be published ([criteria and results](docs/en/acceptance.md)).
 
 ---
 
@@ -327,7 +327,7 @@ Upgrade: `docker compose pull && docker compose up -d`.
 | Image | For |
 |---|---|
 | `ghcr.io/vinzgithub/rental-cockpit:latest` | The latest released version |
-| `ghcr.io/vinzgithub/rental-cockpit:0.1` | Staying on 0.1.x versions |
+| `ghcr.io/vinzgithub/rental-cockpit:1.0` | Staying on 1.0.x versions |
 | `ghcr.io/vinzgithub/rental-cockpit:edge` | Trying what is coming (main branch) |
 
 > [!WARNING]
@@ -382,7 +382,7 @@ Everything lives in **one folder**, `/data`: an SQLite database, your private PD
 | ✅ | **0.4.0** | Expenses and payments: partial payments, to pay / to receive, loan instalments, categories, CSV export |
 | ✅ | **0.5.0** | Suppliers: indicative rates, detailed invoices split between stays, reconciliation, margin per stay |
 | ✅ | **0.6.0** | PDF documents: checked, private, duplicates detected, attached to expenses or creating one |
-| ✅ | **1.0** | Checked backup and restore, reader accounts, accessibility, performance, full acceptance run — under review before the stable release |
+| ✅ | **1.0** | Checked backup and restore, reader accounts, accessibility, performance, user acceptance complete — stable publication pending |
 
 📖 [Detailed roadmap](docs/en/roadmap.md)
 

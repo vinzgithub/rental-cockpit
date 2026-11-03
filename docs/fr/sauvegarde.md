@@ -40,6 +40,8 @@ La vérification expire après 30 minutes. La taille maximale d'une sauvegarde e
 
 ## Restaurer après une mise à jour qui s'est mal passée
 
+Cette procédure nécessite une version disposant des commandes de sauvegarde/restauration. Pour revenir à 0.1.0, utiliser la copie complète d'avant migration et l'ancienne image, selon [installation.md](installation.md). Après changement d'image, `up -d --no-deps --force-recreate` recrée le service avec l'image choisie ; `start` seul redémarrerait l'ancien conteneur.
+
 Ces étapes sont exécutées par les tests automatiques : `test_command_line_backup_and_restore_after_a_failed_update`.
 
 1. **Avant toute mise à jour**, créez une sauvegarde et téléchargez-la.
@@ -52,7 +54,7 @@ docker compose stop
 docker compose run --rm -T rental-cockpit python -m rental_cockpit.cli restore - < rental-cockpit-sauvegarde-AAAAMMJJ-HHMMSS.zip
 # 2. Si le contenu affiché est le bon : la même commande avec --yes
 docker compose run --rm -T rental-cockpit python -m rental_cockpit.cli restore - --yes < rental-cockpit-sauvegarde-AAAAMMJJ-HHMMSS.zip
-docker compose start
+docker compose up -d --no-deps --force-recreate rental-cockpit
 ```
 
 La sauvegarde est transmise par l'entrée standard (`-` et `<`) : le conteneur, qui ne tourne pas en administrateur, n'a pas besoin du droit de lire un fichier de votre machine. La première commande vérifie la sauvegarde et affiche son contenu (date, version, nombres, biens) sans rien modifier. La seconde enregistre les données remplacées dans `backups/avant-restauration-….zip`, restaure, puis dit si les totaux sont identiques.

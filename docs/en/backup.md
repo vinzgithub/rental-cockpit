@@ -40,6 +40,8 @@ The check expires after 30 minutes. The largest backup that can be sent is 2 GiB
 
 ## Restore after an update that went wrong
 
+This procedure requires a version with backup/restore commands. To return to 0.1.0, use the full pre-upgrade copy and the old image as described in [installation.md](installation.md). After changing images, `up -d --no-deps --force-recreate` recreates the service with the selected image; `start` alone would restart the old container.
+
 These steps are run by the automated tests: `test_command_line_backup_and_restore_after_a_failed_update`.
 
 1. **Before any update**, create a backup and download it.
@@ -52,7 +54,7 @@ docker compose stop
 docker compose run --rm -T rental-cockpit python -m rental_cockpit.cli restore - < rental-cockpit-sauvegarde-YYYYMMDD-HHMMSS.zip
 # 2. If the content shown is the right one: the same command with --yes
 docker compose run --rm -T rental-cockpit python -m rental_cockpit.cli restore - --yes < rental-cockpit-sauvegarde-YYYYMMDD-HHMMSS.zip
-docker compose start
+docker compose up -d --no-deps --force-recreate rental-cockpit
 ```
 
 The backup is passed on standard input (`-` and `<`): the container, which does not run as an administrator, does not need the right to read a file of your machine. The first command checks the backup and shows its content (date, version, counts, properties) without changing anything. The second saves the data it replaces in `backups/avant-restauration-….zip`, restores, then says whether the totals are the same.
