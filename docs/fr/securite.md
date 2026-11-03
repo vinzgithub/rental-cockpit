@@ -29,6 +29,16 @@ La démonstration (données fictives) est visible par tout compte connecté et m
 - **Pas d'écrasement silencieux** : chaque séjour porte un numéro de révision ; une modification faite sur une version dépassée (quelqu'un d'autre a enregistré entre-temps) est refusée et le message invite à recharger.
 - **Textes** : tout ce qui est saisi ou importé est traité comme du texte, jamais comme du HTML.
 
+## Imports de fichiers
+
+- Réservés aux **administrateurs** ; jeton anti-CSRF obligatoire, comme toute modification.
+- **5 Mio et 20 000 lignes au plus.** Un classeur (.xlsx, .ods), un PDF ou tout fichier binaire est refusé avec un message clair. Encodages acceptés : UTF-8, ou Windows-1252 annoncé dans l'aperçu.
+- **Le fichier n'est pas conservé** : il est lu en mémoire à l'aperçu puis à la confirmation ; seule son empreinte SHA-256 est gardée, pour signaler un fichier déjà importé.
+- **Rien n'est écrit pendant l'aperçu.** À la confirmation, l'import est recalculé sur les données du moment : s'il ne correspond plus à l'aperçu affiché (quelqu'un a modifié les séjours entre-temps), il est refusé et le nouvel aperçu s'affiche.
+- **Noms des voyageurs non conservés** par défaut : seuls la référence, les dates et les montants sont enregistrés, sauf choix explicite.
+- **Un import, une ligne de journal** (auteur, date, nombre de séjours et de versements), pour ne pas chasser les entrées plus anciennes du journal.
+- **Annulation** du dernier import seulement, et seulement si aucun de ses séjours n'a été modifié depuis : rien de ce qui a été saisi après n'est effacé.
+
 ## Navigateur
 
 - Politique de sécurité du contenu stricte : `default-src 'self'`, aucun script ni style en ligne ou externe, aucun affichage dans un cadre par défaut (`frame-ancestors 'none'`).
@@ -46,13 +56,13 @@ La démonstration (données fictives) est visible par tout compte connecté et m
 
 - Stockage **local uniquement** : aucune télémétrie, aucun compte éditeur, aucun appel sortant.
 - Toutes les données sont dans le dossier `/data` : protégez-le et ses sauvegardes, qui contiennent des informations privées. Cela vaut aussi pour `backups/`, où une copie complète de la base est écrite avant chaque migration de format.
-- Les données des voyageurs sont limitées au strict utile (un libellé et un nombre de voyageurs).
+- Les données des voyageurs sont limitées au strict utile (un libellé et un nombre de voyageurs). À l'import, leur nom n'est repris que si vous le demandez.
 - Le journal des opérations note l'auteur, la date, l'action, l'élément concerné et le résultat ; il ne contient ni secret ni contenu de PDF. Ce n'est pas un archivage légal certifié.
 
 ## Exposition réseau
 
 - Utilisez Rental Cockpit sur votre réseau local ou derrière un VPN.
-- Si un accès extérieur est indispensable : proxy inverse en HTTPS, `RENTAL_COCKPIT_COOKIE_SECURE=true`, `FORWARDED_ALLOW_IPS` réglé sur l'adresse du proxy, et double authentification activée.
+- Si un accès extérieur est indispensable : proxy inverse en HTTPS, `RENTAL_COCKPIT_COOKIE_SECURE=true`, `FORWARDED_ALLOW_IPS` réglé sur l'adresse du proxy, et double authentification activée. Le proxy doit accepter des requêtes de 8 Mio pour l'import (le fichier voyage encodé avec ses choix).
 - L'installation de base n'ouvre aucun port sur votre box.
 
 ## Signaler une vulnérabilité

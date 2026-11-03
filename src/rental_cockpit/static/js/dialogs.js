@@ -4,6 +4,7 @@
 
 import { esc, html, markup, raw } from "./dom.js";
 import { icon, propertyIcon } from "./icons.js";
+import { openImport } from "./import-dialogs.js";
 import { openStayForm } from "./stay-dialogs.js";
 import { checkItem, periodName } from "./views/synthese.js";
 
@@ -112,6 +113,7 @@ function addChoices(app) {
   const choices = [];
   if ((app.viewModel().properties || []).some((p) => !p.archived)) {
     choices.push({ key: "stay", icon: "calendar", name: t("add.stay"), hint: t("add.stay.hint"), open: () => openStayForm(app) });
+    choices.push({ key: "import", icon: "upload", name: t("add.import"), hint: t("add.import.hint"), open: () => openImport(app) });
   }
   choices.push({ key: "property", icon: "home", name: t("add.property"), hint: t("add.property.hint"), open: () => openPropertyDialog(app) });
   return choices;

@@ -131,7 +131,9 @@ export function renderStays(v) {
   } else if (!data.stays.length) {
     const message = v.stays.q ? t("sj.emptySearch", { q: v.stays.q }) : t(`sj.empty.${view}`);
     body = html`<div class="empty">${raw(icon(view === "attention" ? "checkCircle" : "calendar"))}<span>${message}</span>
-      ${canWrite && !v.stays.q && (view === "active" || view === "all") ? html`<button type="button" class="btn ghost small" data-action="stay-new">${raw(icon("plus"))}${t("sj.add")}</button>` : ""}</div>`;
+      ${canWrite && !v.stays.q && (view === "active" || view === "all") ? html`<span class="empty-actions">
+        <button type="button" class="btn ghost small" data-action="stay-new">${raw(icon("plus"))}${t("sj.add")}</button>
+        <button type="button" class="btn ghost small" data-action="import">${raw(icon("upload"))}${t("sj.importLong")}</button></span>` : ""}</div>`;
   } else {
     body = html`${table(v, data.stays)}${cards(v, data.stays)}`;
   }
@@ -139,7 +141,10 @@ export function renderStays(v) {
     <header class="pagehead">
       <div class="headline">
         <div><h1>${t("nav.sejours")}</h1><p class="sub">${t("sj.sub")}</p></div>
-        ${canWrite && v.properties.length ? html`<button type="button" class="btn primary" data-action="stay-new">${raw(icon("plus"))}${t("sj.add")}</button>` : ""}
+        ${canWrite && v.properties.length ? html`<div class="head-actions">
+          <button type="button" class="btn ghost" data-action="import">${raw(icon("upload"))}${t("sj.import")}</button>
+          <button type="button" class="btn primary" data-action="stay-new">${raw(icon("plus"))}${t("sj.add")}</button>
+        </div>` : ""}
       </div>
       ${toolbar(v)}
     </header>

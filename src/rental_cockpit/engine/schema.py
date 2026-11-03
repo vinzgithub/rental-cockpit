@@ -119,6 +119,7 @@ def empty_registry() -> dict[str, Any]:
             "first_choice": None,          # "own_data" or "demo" once chosen
             "onboarding": {"property": False, "first_record": False, "dashboard": False, "backup": False},
             "guest_retention_months": 0,   # 0 = keep guest labels; otherwise anonymise after N months
+            "listing_aliases": {},          # listing name in an import file → property id, remembered after an import
         },
         "properties": {},
         "suppliers": {},

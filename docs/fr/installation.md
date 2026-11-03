@@ -124,4 +124,4 @@ Chaque commande déconnecte tous les navigateurs du compte.
 
 ## Exposition réseau
 
-Gardez Rental Cockpit sur votre réseau local, ou derrière un proxy inverse en HTTPS avec `RENTAL_COCKPIT_COOKIE_SECURE=true` et la double authentification activée. N'ouvrez pas de port sur votre box sans avoir lu [securite.md](securite.md).
+Gardez Rental Cockpit sur votre réseau local, ou derrière un proxy inverse en HTTPS avec `RENTAL_COCKPIT_COOKIE_SECURE=true` et la double authentification activée. N'ouvrez pas de port sur votre box sans avoir lu [securite.md](securite.md). Derrière un proxy inverse, autorisez des requêtes de 8 Mio pour l'import de fichiers (par exemple `client_max_body_size 8m;` avec nginx).

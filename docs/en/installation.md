@@ -124,4 +124,4 @@ Each command signs out every browser of the account.
 
 ## Network exposure
 
-Keep Rental Cockpit on your local network, or behind an HTTPS reverse proxy with `RENTAL_COCKPIT_COOKIE_SECURE=true` and two-factor sign-in turned on. Do not open a port on your router without reading [security.md](security.md).
+Keep Rental Cockpit on your local network, or behind an HTTPS reverse proxy with `RENTAL_COCKPIT_COOKIE_SECURE=true` and two-factor sign-in turned on. Do not open a port on your router without reading [security.md](security.md). Behind a reverse proxy, allow 8 MiB requests for file imports (for example `client_max_body_size 8m;` with nginx).

@@ -59,6 +59,33 @@ Un versement ne peut pas dépasser ce qui reste attendu : si la plateforme a ver
 
 **Annuler un séjour** demande le montant éventuellement conservé (frais d'annulation) et la commission sur ce montant. Le séjour reste visible, sans nuitée ; seul le montant conservé compte, une fois, à la date d'arrivée. Les montants d'avant l'annulation sont gardés : **Rétablir le séjour** les remet. Supprimer un séjour est réservé à une saisie par erreur, sans versement.
 
+## Un séjour importé
+
+Un séjour importé suit exactement les mêmes règles qu'un séjour saisi : l'import ne fait que remplir les mêmes champs.
+
+**Export Airbnb** (« Historique des transactions », en français) :
+
+| Colonne Airbnb | Champ du séjour |
+|---|---|
+| Code de confirmation | Référence |
+| Date de début / Date de fin | Arrivée / départ (le nombre de nuits du fichier doit correspondre) |
+| Revenus bruts | Montant brut (à défaut : Montant + Frais de service) |
+| Frais de service | Commission |
+| Montant | Versement net |
+| Taxes reversées par Airbnb | Taxe de séjour collectée (jamais une recette) |
+| Date | Date du versement, s'il est déjà passé |
+
+- Les lignes **« Payout »** sont des virements de montants déjà présents sur les lignes de réservation : elles ne sont **jamais comptées une seconde fois**. Les autres types de ligne (ajustements, résolutions…) ne sont pas des réservations : ils sont comptés dans l'aperçu, pas importés.
+- Un même code sur plusieurs lignes forme un seul séjour, dont les montants s'additionnent. Si ces lignes ne s'accordent pas sur les dates ou le logement, le séjour est refusé plutôt que deviné.
+- L'ordre jour/mois est déduit des dates sans ambiguïté (Airbnb écrit MM/JJ/AAAA) ; un fichier qui mélange les deux est refusé.
+- Si brut − frais de service ≠ montant versé, une remarque le signale.
+
+**CSV** : chaque colonne est choisie dans l'aperçu. Montants au format français ou anglais (« 1 234,50 », « 1,234.50 »). Sans colonne de commission, un **taux** peut être indiqué : commission = brut × taux, arrondie au centime le plus proche (demi-centime vers le haut). Exemple : 15 % de 333,33 € = 50,00 € ; 3,5 % de 333,33 € = 11,67 €.
+
+**Versements du fichier** : enregistrés dans la lecture Trésorerie à leur date, une seule fois (même date et même montant déjà enregistrés = ignoré), jamais au-delà du versement attendu, et seulement si leur date est passée.
+
+**Séjour saisi à la main aux mêmes dates** (doublon probable) : le compléter ne remplit que ce qu'il ne savait pas. Si le fichier annonce un autre montant brut ou une autre commission, ceux saisis sont conservés et une remarque le signale ; le versement net du fichier n'est alors pas repris, pour ne pas contredire les montants conservés.
+
 ## Les indicateurs
 
 | Indicateur | Formule | Exclut |

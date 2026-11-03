@@ -4,11 +4,11 @@
 
 ### Votre location saisonnière, chaque chiffre expliqué
 
-**Synthèse · Séjours · Trois lectures · Indicateurs expliqués · À vérifier · Double authentification · Home Assistant**
+**Synthèse · Séjours · Import Airbnb et CSV · Trois lectures · Indicateurs expliqués · À vérifier · Double authentification · Home Assistant**
 
 **Français** · [**English**](README.md)
 
-![Version](https://img.shields.io/badge/version-0.2.0%20pr%C3%A9version-126caa) ![Docker](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-2496ED) ![Licence](https://img.shields.io/badge/licence-%C3%A0%20d%C3%A9finir-lightgrey)
+![Version](https://img.shields.io/badge/version-0.3.0%20pr%C3%A9version-126caa) ![Docker](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-2496ED) ![Licence](https://img.shields.io/badge/licence-%C3%A0%20d%C3%A9finir-lightgrey)
 
 <br>
 
@@ -35,14 +35,14 @@
 <td width="33%" valign="top"><b>✅ Ce qui reste à vérifier</b><br>Paiements inconnus, séjours sans montant, versements non reçus : un résultat incomplet est signalé, jamais déguisé en zéro.</td>
 </tr>
 <tr>
-<td valign="top"><b>📅 Des séjours complets</b><br>Saisir, modifier, annuler avec les frais conservés, rétablir, suivre le versement : chaque séjour montre sa part de la Synthèse, mois par mois.</td>
+<td valign="top"><b>📅 Des séjours complets</b><br>Saisis à la main ou importés d'Airbnb ou d'un CSV après vérification ; annulés avec les frais conservés, versements suivis : chaque séjour montre sa part de la Synthèse.</td>
 <td valign="top"><b>🔐 Double authentification</b><br>Un code d'application d'authentification après le mot de passe, et dix codes de secours à usage unique.</td>
 <td valign="top"><b>🏠 Home Assistant, si vous voulez</b><br>Une clé en lecture seule : recettes, occupation, prochaine arrivée, et des automatisations comme chauffer la veille d'une arrivée.</td>
 </tr>
 </table>
 
 > [!NOTE]
-> **Version 0.2.0, préversion.** La Synthèse, les **séjours** (saisie, annulation, versements reçus), la démonstration, les comptes, la double authentification et le lien avec Home Assistant sont prêts. L'**import** Airbnb et CSV, les **dépenses**, les **prestataires** et les **justificatifs** arrivent dans les prochaines versions : avec vos propres données, les dépenses ne se saisissent pas encore.
+> **Version 0.3.0, préversion.** La Synthèse, les **séjours** (saisie, **import Airbnb et CSV**, annulation, versements reçus), la démonstration, les comptes, la double authentification et le lien avec Home Assistant sont prêts. Les **dépenses**, les **prestataires** et les **justificatifs** arrivent dans les prochaines versions : avec vos propres données, les dépenses ne se saisissent pas encore.
 
 ---
 
@@ -93,6 +93,29 @@ Pas de boîte noire : vous pouvez refaire chaque calcul à la main.
 - **Versement reçu** en un clic : la lecture Trésorerie se met à jour.
 - **Annulation** avec le montant conservé, compté à la date d'arrivée ; **Rétablir** remet tout.
 - Statuts explicites : *À venir*, *En cours*, *Terminé*, *Provisoire*, *Annulé* ; *Versement attendu*, *à confirmer*, *reçu*.
+
+</td>
+</tr>
+</table>
+
+---
+
+## 📥 Import Airbnb et CSV, vérifié avant d'écrire
+
+<img src="docs/images/fr/import-preview.png" alt="Aperçu d'un import : chaque ligne du fichier avec son statut, ses montants, le versement et la décision à prendre" width="100%">
+
+<table>
+<tr>
+<td width="38%" valign="top"><img src="docs/images/fr/import-phone.png" alt="Import d'un fichier CSV sur téléphone : commission calculée d'après le taux, doublon probable, nouveaux séjours"></td>
+<td width="62%" valign="top">
+
+- **Export Airbnb** (« Historique des transactions », en français) ou **n'importe quel CSV** : Booking.com, Abritel, tableur.
+- **Rien n'est écrit avant votre confirmation** : chaque ligne dit ce qui se passera — *Nouveau*, *Mis à jour* (champ par champ), *Doublon probable*, *Déjà à jour*, *Erreur*.
+- **Doublons détectés** : même référence, ou mêmes dates qu'un séjour saisi à la main ; vous choisissez de le compléter, d'en créer un autre ou d'ignorer la ligne.
+- **Commissions** lues dans le fichier, ou calculées d'après le taux de la plateforme, au centime.
+- **Contrôles** : dates illisibles, nuits qui ne correspondent pas, chevauchements, dates indisponibles, montants négatifs, versement supérieur à l'attendu.
+- **Versements** datés enregistrés une seule fois ; les virements Airbnb ne sont jamais comptés deux fois.
+- **Colonnes et biens mémorisés** pour le fichier suivant ; **annulation** du dernier import en un clic.
 
 </td>
 </tr>
@@ -281,7 +304,7 @@ En attendant la sauvegarde intégrée, une copie du volume suffit : la commande 
 | ✅ | **0.1.0** | Synthèse, trois lectures, indicateurs expliqués, démonstration, comptes et droits, double authentification, lien Home Assistant, images Docker |
 | ✅ | **0.1.1** | Corrections de l'audit indépendant : menu sans écran vide, bascule Mes données / Démo, explications lisibles sur téléphone |
 | ✅ | **0.2.0** | Séjours : saisie, annulation et rétablissement, versements reçus, part de chaque séjour dans la Synthèse |
-| 🔜 | **0.3.0** | Import Airbnb et CSV avec prévisualisation et détection des doublons |
+| ✅ | **0.3.0** | Import Airbnb et CSV : aperçu sans écriture, doublons, commissions, contrôles, annulation du dernier import |
 | 🔜 | **0.4.0** | Dépenses et règlements : paiements partiels, à payer, emprunt, catégories |
 | 🔜 | **0.5.0 – 0.6.0** | Prestataires et répartition d'une facture ; justificatifs PDF |
 | 🎯 | **1.0** | Sauvegarde vérifiée, comptes lecteurs, recette complète, première version stable |

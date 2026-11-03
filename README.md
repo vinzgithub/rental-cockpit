@@ -4,11 +4,11 @@
 
 ### Your holiday let, every figure explained
 
-**Overview · Stays · Three readings · Explained indicators · To check · Two-factor sign-in · Home Assistant**
+**Overview · Stays · Airbnb and CSV import · Three readings · Explained indicators · To check · Two-factor sign-in · Home Assistant**
 
 [**Français**](README.fr.md) · **English**
 
-![Version](https://img.shields.io/badge/version-0.2.0%20preview-126caa) ![Docker](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-2496ED) ![Licence](https://img.shields.io/badge/licence-to%20be%20decided-lightgrey)
+![Version](https://img.shields.io/badge/version-0.3.0%20preview-126caa) ![Docker](https://img.shields.io/badge/Docker-amd64%20%7C%20arm64-2496ED) ![Licence](https://img.shields.io/badge/licence-to%20be%20decided-lightgrey)
 
 <br>
 
@@ -35,14 +35,14 @@
 <td width="33%" valign="top"><b>✅ What is left to check</b><br>Unknown payments, stays without an amount, payouts not received: an incomplete result is flagged, never disguised as zero.</td>
 </tr>
 <tr>
-<td valign="top"><b>📅 Complete stays</b><br>Enter, edit, cancel with the fee retained, restore, follow the payout: each stay shows its share of the Overview, month by month.</td>
+<td valign="top"><b>📅 Complete stays</b><br>Entered by hand or imported from Airbnb or a CSV after a check; cancelled with the fee retained, payouts followed: each stay shows its share of the Overview.</td>
 <td valign="top"><b>🔐 Two-factor sign-in</b><br>A code from an authenticator app after the password, and ten single-use recovery codes.</td>
 <td valign="top"><b>🏠 Home Assistant, if you like</b><br>A read-only key: revenue, occupancy, next arrival, and automations such as heating the day before an arrival.</td>
 </tr>
 </table>
 
 > [!NOTE]
-> **Version 0.2.0, preview.** The Overview, **stays** (entry, cancellation, payouts received), the demo, accounts, two-factor sign-in and the Home Assistant link are ready. Airbnb and CSV **import**, **expenses**, **suppliers** and **documents** come in the next versions: with your own data, expenses cannot be entered yet.
+> **Version 0.3.0, preview.** The Overview, **stays** (entry, **Airbnb and CSV import**, cancellation, payouts received), the demo, accounts, two-factor sign-in and the Home Assistant link are ready. **Expenses**, **suppliers** and **documents** come in the next versions: with your own data, expenses cannot be entered yet.
 
 ---
 
@@ -93,6 +93,29 @@ No black box: you can redo every calculation by hand.
 - **Payout received** in one click: the Cash reading updates.
 - **Cancellation** with the amount retained, counted on the arrival date; **Restore** brings everything back.
 - Explicit statuses: *Upcoming*, *In progress*, *Finished*, *Provisional*, *Cancelled*; *Payout expected*, *to confirm*, *received*.
+
+</td>
+</tr>
+</table>
+
+---
+
+## 📥 Airbnb and CSV import, checked before writing
+
+<img src="docs/images/en/import-preview.png" alt="Import preview: each line of the file with its status, amounts, payout and the decision to take" width="100%">
+
+<table>
+<tr>
+<td width="38%" valign="top"><img src="docs/images/en/import-phone.png" alt="CSV import on a phone: commission computed from the rate, probable duplicate, new stays"></td>
+<td width="62%" valign="top">
+
+- **Airbnb export** (French "Historique des transactions") or **any CSV**: Booking.com, Abritel, spreadsheet.
+- **Nothing is written before you confirm**: each line says what will happen — *New*, *Updated* (field by field), *Probable duplicate*, *Up to date*, *Error*.
+- **Duplicates detected**: same reference, or same dates as a stay entered by hand; you choose to complete it, create another one or skip the line.
+- **Commissions** read from the file, or computed from the platform's rate, to the cent.
+- **Checks**: unreadable dates, nights that do not match, overlaps, unavailable dates, negative amounts, payout above what is expected.
+- **Payouts** dated in the file are recorded once; Airbnb transfers are never counted twice.
+- **Columns and properties remembered** for the next file; the last import can be **undone** in one click.
 
 </td>
 </tr>
@@ -281,7 +304,7 @@ Until the built-in backup arrives, a copy of the volume is enough: the command i
 | ✅ | **0.1.0** | Overview, three readings, explained indicators, demo, accounts and rights, two-factor sign-in, Home Assistant link, Docker images |
 | ✅ | **0.1.1** | Fixes from the independent audit: menu without empty screens, My data / Demo switch, explanations readable on a phone |
 | ✅ | **0.2.0** | Stays: entry, cancellation and restoration, payouts received, each stay's share of the Overview |
-| 🔜 | **0.3.0** | Airbnb and CSV import with preview and duplicate detection |
+| ✅ | **0.3.0** | Airbnb and CSV import: preview with nothing written, duplicates, commissions, checks, undo of the last import |
 | 🔜 | **0.4.0** | Expenses and payments: partial payments, to pay, loan, categories |
 | 🔜 | **0.5.0 – 0.6.0** | Suppliers and invoice splitting; PDF documents |
 | 🎯 | **1.0** | Checked backup, reader accounts, full acceptance run, first stable version |

@@ -173,5 +173,15 @@ def detail(data: dict[str, Any], stay: dict[str, Any], today: date, lang: str) -
         "history": [{"at": h["at"], "by": h["by"], "fields": sorted(h.get("changes", {}))} for h in stay.get("history", [])][-20:],
         "created_at": stay.get("created_at"),
         "created_by": stay.get("created_by"),
+        "source": stay.get("source", "manual"),
+        "imported": _imported(data, stay),
     })
     return result
+
+
+def _imported(data: dict[str, Any], stay: dict[str, Any]) -> dict[str, Any] | None:
+    """The import that created the stay (file and moment), shown in « À propos » for traceability."""
+    record = data.get("imports", {}).get(stay.get("origin_import") or "")
+    if record is None:
+        return None
+    return {"id": record["id"], "at": record["at"], "file_name": record.get("file_name", ""), "kind": record.get("kind", "")}

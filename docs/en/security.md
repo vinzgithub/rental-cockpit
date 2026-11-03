@@ -29,6 +29,16 @@ The demo (fictional data) can be viewed by any signed-in account and changed by 
 - **No silent overwrite**: each stay carries a revision number; a change made on an outdated version (somebody else saved in between) is refused and the message asks to reload.
 - **Text**: everything typed or imported is handled as text, never as HTML.
 
+## File imports
+
+- **Administrators only**; CSRF token required, like any change.
+- **5 MiB and 20,000 lines at most.** A workbook (.xlsx, .ods), a PDF or any binary file is refused with a clear message. Accepted encodings: UTF-8, or Windows-1252 stated in the preview.
+- **The file is not kept**: it is read in memory for the preview and again for the confirmation; only its SHA-256 fingerprint is kept, to flag a file already imported.
+- **Nothing is written during the preview.** On confirmation the import is computed again on the current data: if it no longer matches the preview shown (someone changed the stays in the meantime), it is refused and the new preview is shown.
+- **Guests' names are not kept** by default: only the reference, dates and amounts are saved, unless chosen explicitly.
+- **One import, one journal line** (author, date, number of stays and payouts), so older journal entries are not pushed out.
+- **Undo** of the last import only, and only if none of its stays was changed since: nothing entered afterwards is erased.
+
 ## Browser
 
 - Strict Content-Security-Policy: `default-src 'self'`, no inline or external script or style, no framing by default (`frame-ancestors 'none'`).
@@ -46,13 +56,13 @@ The demo (fictional data) can be viewed by any signed-in account and changed by 
 
 - **Local storage only**: no telemetry, no vendor account, no outbound call.
 - All data is in the `/data` folder: protect it and its backups, which hold private information. This includes `backups/`, where a full copy of the database is written before each data format migration.
-- Guest data is kept to the minimum useful (a label and a number of guests).
+- Guest data is kept to the minimum useful (a label and a number of guests). On import, their name is only taken when you ask for it.
 - The operations log records author, date, action, item and result; it holds no secret and no PDF content. It is not a certified legal archive.
 
 ## Network exposure
 
 - Use Rental Cockpit on your local network or through a VPN.
-- If outside access is unavoidable: HTTPS reverse proxy, `RENTAL_COCKPIT_COOKIE_SECURE=true`, `FORWARDED_ALLOW_IPS` set to the proxy's address, and two-factor sign-in turned on.
+- If outside access is unavoidable: HTTPS reverse proxy, `RENTAL_COCKPIT_COOKIE_SECURE=true`, `FORWARDED_ALLOW_IPS` set to the proxy's address, and two-factor sign-in turned on. The proxy must accept 8 MiB requests for imports (the file travels encoded with its choices).
 - The base installation opens no port on your router.
 
 ## Reporting a vulnerability

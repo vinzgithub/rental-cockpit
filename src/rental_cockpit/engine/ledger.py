@@ -133,6 +133,27 @@ class Ledger:
         self.data = data
         self.actor = actor or "system"
         self.clock = clock
+        # Imports write thousands of stays at once: the checks look things up in
+        # indexes kept for this working copy, the journal gets one line for the
+        # whole file instead of one per stay (which would push older lines out),
+        # and the after-save warnings were already shown in the preview.
+        self.bulk = False
+        self._refs: set[tuple[str, str, str]] | None = None
+        self._received: dict[str, int] | None = None
+
+    def _bulk_refs(self) -> set[tuple[str, str, str]]:
+        if self._refs is None:
+            self._refs = {(s["property_id"], s.get("source", ""), s["external_ref"]) for s in self.data["stays"].values() if s.get("external_ref")}
+        return self._refs
+
+    def _bulk_received(self) -> dict[str, int]:
+        if self._received is None:
+            self._received = {}
+            for payment in self.data["payments"].values():
+                for link in payment["links"]:
+                    if link["type"] == "stay":
+                        self._received[link["id"]] = self._received.get(link["id"], 0) + link["amount"]
+        return self._received
 
     # ----------------------------------------------------------------- plumbing
 
@@ -364,9 +385,14 @@ class Ledger:
             raise RCError("stay_dates")
         external_ref = clean_text(payload.get("external_ref", ""), "external_ref", 80)
         if external_ref:
-            for other in self.data["stays"].values():
-                if other["property_id"] == prop["id"] and other.get("external_ref") == external_ref and other.get("source") == source:
+            if self.bulk:
+                if (prop["id"], source, external_ref) in self._bulk_refs():
                     raise RCError("stay_external_ref_exists", ref=external_ref)
+                self._bulk_refs().add((prop["id"], source, external_ref))
+            else:
+                for other in self.data["stays"].values():
+                    if other["property_id"] == prop["id"] and other.get("external_ref") == external_ref and other.get("source") == source:
+                        raise RCError("stay_external_ref_exists", ref=external_ref)
         stay = self._stamp({
             "id": new_id("stay"),
             "property_id": prop["id"],
@@ -385,6 +411,8 @@ class Ledger:
         })
         self.data["stays"][stay["id"]] = stay
         self.data["settings"]["onboarding"]["first_record"] = True
+        if self.bulk:
+            return {"stay": deepcopy(stay), "warnings": []}
         self.audit("stay.create", stay["id"])
         return {"stay": deepcopy(stay), "warnings": self.stay_warnings(stay)}
 
@@ -418,6 +446,8 @@ class Ledger:
         if "amounts" in payload:
             stay["amounts"] = self._stay_amounts(payload, stay)
         changed = self._history(stay, before, ("start", "end", "status", "channel", "external_ref", "guest_label", "guests", "amounts", "note"))
+        if self.bulk:
+            return {"stay": deepcopy(stay), "warnings": []}
         self.audit("stay.update", stay["id"], detail=",".join(changed))
         return {"stay": deepcopy(stay), "warnings": self.stay_warnings(stay)}
 
@@ -758,8 +788,9 @@ class Ledger:
                     raise RCError("payment_direction")
                 expected = expected_payout(target)
                 if expected is not None:
-                    already = sum(link["amount"] for p in self.data["payments"].values() for link in p["links"]
-                                  if link["type"] == "stay" and link["id"] == target["id"])
+                    already = self._bulk_received().get(target["id"], 0) if self.bulk else sum(
+                        link["amount"] for p in self.data["payments"].values() for link in p["links"]
+                        if link["type"] == "stay" and link["id"] == target["id"])
                     if already + link_amount > expected:
                         raise RCError("payout_exceeds", remaining=money.format_cents(max(expected - already, 0)),
                                       expected=money.format_cents(expected))
@@ -778,6 +809,12 @@ class Ledger:
             "origin": payload.get("origin") or {"type": "manual"},
         })
         self.data["payments"][payment["id"]] = payment
+        if self.bulk:
+            received = self._bulk_received()
+            for link in links:
+                if link["type"] == "stay":
+                    received[link["id"]] = received.get(link["id"], 0) + link["amount"]
+            return {"payment": deepcopy(payment)}
         self.audit("payment.create", payment["id"])
         return {"payment": deepcopy(payment)}
 

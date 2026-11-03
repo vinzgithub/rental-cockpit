@@ -32,6 +32,7 @@ Browser ──HTTPS (optional proxy)──► Rental Cockpit application (one pr
 | Account | Password, two-factor sign-in, API keys | `src/rental_cockpit/account_routes.py` |
 | Home Assistant link | Read-only summary for the RESTful integration | `src/rental_cockpit/ha_api.py` |
 | Stays | Stays and payouts API; nights, expected payout, payout status and month-by-month share computed on the fly with the indicators' rules | `src/rental_cockpit/stay_routes.py`, `engine/stays.py` |
+| Import | Airbnb and CSV readers (read only), preview compared with the registry, writing in one transaction, undo of the last import | `src/rental_cockpit/import_routes.py`, `engine/imports/` |
 | Recovery | Reset a password, turn two-factor sign-in off from the server | `src/rental_cockpit/cli.py` |
 | Interface | Screens, French/English texts, styles | `src/rental_cockpit/static/` |
 
@@ -51,7 +52,7 @@ Inventory required by the specification (REP 01): each item is **reused**, **ada
 | Stay spread per night, arrival → departure window | Adapted | Night-by-night spreading exact to the cent (largest remainder) |
 | PDF documents: structure check, active content refused, SHA-256, binary and business duplicates, undo of the last operation | To reuse | Documents screen |
 | Cleaning supplier invoice: cleaning / linen / travel lines, split per stay equal to the total, matching manual entries | Adapted (rules) · to reuse (screen) | Generic services: any supplier, any rate; message "€10 of travel left to allocate" |
-| Airbnb CSV import: checked headers, date order detected, payout lines ignored, duplicate guards | To reuse | Stays screen, with the reader version shown |
+| Airbnb CSV import: checked headers, date order detected, payout lines ignored, duplicate guards | Reused (L2) | Stays → Import: preview without writing, duplicates, checks, undo of the last import; reader version stored with each import; generic CSV added |
 | Invoice readers specific to some suppliers of the original project | Removed | Not published (PRE 06); a generic reader suggests fields marked "to check" |
 | Functions specific to the original home: energy and equipment tracking, cameras, 3D plan, assets planning, automated assistance, multi-install bridge | Removed | Out of the public scope |
 | Accounts, sessions, rights, separate demo, explanation of every indicator | New | See below |
@@ -106,7 +107,7 @@ Showing the whole interface inside Home Assistant is still possible, provided it
 
 | Screen | Server side | Interface side |
 |---|---|---|
-| **Stays** | Done (L1): create, edit, cancel with a retained amount, restore, payouts. Coming (L2): Airbnb import (reader reused, checked formats only) and generic CSV with column mapping, preview without writing, undo of the last import | Done: filterable list, stay page. Coming: allocated costs (L4), three-step import (L2) |
+| **Stays** | Done (L1): create, edit, cancel with a retained amount, restore, payouts. Done (L2): Airbnb import (reader reused, French export checked only) and generic CSV with column mapping and commission rate, preview without writing, check before confirmation, undo of the last import | Done: filterable list, stay page, three-step import, previous imports. Coming: allocated costs (L4) |
 | **Expenses** | API for entries, payments, archiving, filters; CSV export with neutralised formulas | Table with explicit statuses ("Payment to confirm", "Paid"…), quick entry, visible actions |
 | **Suppliers** | API for suppliers and indicative rates; multi-service invoice; matching existing entries | "Split an invoice": services detail, split per stay, "€150 allocated out of €150" check |
 | **Documents** | HTTP upload (8 MiB), PDF check with *pypdf* (added then), fingerprint, binary and business duplicates, download after a rights check | "Check the invoice": file → check → save; "This invoice is already recorded" |
