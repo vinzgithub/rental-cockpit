@@ -17,6 +17,23 @@ Chaque critère bloquant du cahier des charges (§ 11), avec ce qui le vérifie.
 | **T11** Sauvegarde | Restauration complète sur une autre installation, documents lisibles et totaux identiques | `test_backup_restored_on_another_installation`, `test_command_line_backup_and_restore_after_a_failed_update`, `test_damaged_or_foreign_backups_are_refused` ; dans l'image Docker, restauration en ligne de commande application arrêtée (CI) | Sauvegarde téléchargée puis restaurée sur une autre instance de recette ([sauvegarde.md](sauvegarde.md)) |
 | **T12** Utilisabilité | Clavier, lecteur d'écran, mobile et parcours débutants vérifiés | `tests/e2e/test_accessibility.py` (axe-core sur chaque écran et les principales fenêtres, ordinateur et 360 px, lien « Aller au contenu »), contrôles « tient sur un téléphone » de chaque parcours | **Parcours débutants par au moins cinq personnes extérieures** (créer un bien, saisir une dépense, retrouver son PDF, expliquer un indicateur) : à organiser |
 
+## Premier rapport de recette : anomalies et corrections
+
+Le rapport intermédiaire du 3 novembre 2026 a relevé deux anomalies financières et six points d'ergonomie. Chacun est corrigé, avec son test. Les tests utilisent un export Airbnb fictif construit comme un vrai (`tests/fixtures/airbnb_operations_fr.csv`) ; aucune donnée réelle n'est dans le dépôt.
+
+| Point | Constat | Correction | Vérification automatique |
+|---|---|---|---|
+| **ANO-001** Remboursement AirCover ignoré | Les lignes « Versement de résolution » n'étaient pas importées : les versements d'un mois ne se retrouvaient pas | Chaque « Payout » est rapproché au centime des lignes qu'il paie ; indemnisations, crédits et retenues deviennent des recettes ou des dépenses ; un type inconnu est à vérifier ; bilan des versements avant import | `test_a_aircover_refund_is_one_income_without_nights` (TEST-A), `test_c_october_payouts_add_up_with_the_refund_apart` (TEST-C), `test_adjustment_withheld_from_a_payout_and_platform_credit`, `test_unknown_type_is_shown_with_its_amount_and_needs_a_choice`, `test_airbnb_operations_and_cancelled_booking` (navigateur) |
+| **ANO-002** Réservation annulée mais indemnisée | Seuls « Créer le séjour » et « Ne pas importer » étaient proposés | Troisième choix « Annulé, montant encaissé conservé » : l'argent compte, les nuits non ; proposé sur les deux lignes d'un chevauchement | `test_b_cancelled_but_paid_booking_keeps_the_money_not_the_nights` (TEST-B) |
+| **ERGO-001** Trois lectures au même niveau | « Activité », « Factures », « Trésorerie » peu compréhensibles | Synthèse en trois vues : *Mon argent* par défaut, *Performance locative*, *Analyse comptable* (méthodes renommées) ; moteur inchangé | `test_views_say_what_they_add_up` (TEST-E) |
+| **ERGO-002** Versement envoyé ou crédité | La Trésorerie affirmait un argent reçu | Libellé « Versements envoyés par les plateformes » ; date d'arrivée bancaire gardée et affichée | `test_a_aircover_refund_is_one_income_without_nights` (date d'arrivée enregistrée) |
+| **ERGO-003** Sélecteur de période | Longue liste à parcourir | `◀ Octobre 2026 ▶`, grille des mois, flèches de l'année, mois actuel, année, période libre ; le même sur Dépenses | `test_period_picker_with_the_mouse_and_the_keyboard`, `test_expenses_use_the_same_picker`, `test_period_picker_on_a_phone` (TEST-D) |
+| **ERGO-004** Explications sur téléphone | Formule horizontale, colonnes comprimées, défilement | Plein écran sur téléphone, calcul en liste, lignes en cartes jusqu'à 720 px, un seul défilement | `test_every_explanation_fits_a_phone` à 360×760, 390×844 et 760×360, sur toutes les vues et méthodes (TEST-F) |
+| **ERGO-005** Copie en HTTP | Les boutons de copie ne fonctionnaient pas | Consigne visible à côté de chaque secret, sélection en un appui, HTTPS conseillé, échec dit dans la fenêtre | `test_copy_by_hand_is_offered_on_plain_http` |
+| **ERGO-006** Liens et notifications | Écrans « bientôt disponible », icônes sans effet | Vérifié dans la 1.0.0 : aucun écran « bientôt » ; chaque alerte ouvre sa liste | `test_every_link_and_alert_leads_somewhere`, `test_bell_opens_the_things_to_check` |
+
+Les régressions (TEST-G) sont couvertes par la suite complète, rejouée à chaque modification.
+
 ## Qualité
 
 **QUA 01** — L'interface n'appelle que des routes qui existent : `test_interface_calls_only_existing_routes`. Chaque route de modification exige une session, le jeton CSRF et le rôle administrateur. Ses tests de contrat sont dans les fichiers de tests de chaque livraison.

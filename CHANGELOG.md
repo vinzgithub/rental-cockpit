@@ -16,6 +16,17 @@ Version 1.0 (delivery L6): reader accounts, checked backup and restore, an acces
 - Docker: the CI smoke test also runs a command-line backup in the read-only, unprivileged container, then the documented restore with the application stopped, and starts the ARM64 image under emulation.
 - Documentation: backup and restore guide, acceptance matrix T01–T12 with performance measurements, guide chapters on readers and backups, screenshots with the full menu.
 
+Corrections from the first acceptance report (delivery L7, same version):
+
+- Airbnb import (ANO-001): every "Payout" line is checked to the cent against the lines it pays, and gives the date sent and the latest date it reaches the account. "Versement de résolution" (AirCover damage refunds included) becomes an income "Compensation (damage, resolution)" with no night; "Crédit divers" an income "Platform bonus or credit"; a negative resolution adjustment an expense "Refund to a guest" withheld from the payout. A type the reader does not know is shown with its amount and recorded only when chosen. A payouts check sums the file's payouts by kind and month and says which sums would not be recorded. Importing again adds nothing; undoing the import removes these operations.
+- Bookings cancelled but compensated (ANO-002): a third choice, "Cancelled, amount received kept", records the stay as cancelled with its amounts and payout: the money counts once, the nights do not. Both lines of an overlap offer it.
+- Overview in three views (ERGO-001, ERGO-002): "My money" by default (money in, money out, balance, left to pay and to receive; platform payouts counted on the day they are sent, the bank date shown when known), "Rental performance" (revenue from nights, commissions, rental result, nights, occupancy, other income and expenses, the twelve months of the year) and "Accounting analysis" (the three readings, renamed per night occupied, by stay or invoice date, by payment date). The calculation engine is unchanged.
+- Period picker (ERGO-003): "◀ October 2026 ▶", a grid of the twelve months with the year's arrows, this month, the whole year and a free period; keyboard and touch. The Expenses screen uses it too, with "All dates", and filters by year or month.
+- "How is this amount calculated?" on phones (ERGO-004): the whole screen, the calculation as a short list, lines as cards up to 720 pixels, one scroll only, a compact head when held sideways; the "?" of each amount stays on phones.
+- Copy on plain HTTP (ERGO-005): a note next to each secret says the browser may refuse the automatic copy, one tap selects the secret whole, HTTPS is advised; a failed copy is said in the window. The temporary password of a reader uses the same copy.
+- Links and alerts (ERGO-006): a test checks that no button leads to a missing screen and that each alert opens its list.
+- New built-in categories: Compensation (damage, resolution), Platform bonus or credit, Refund to a guest. Payments keep the date a platform payout reaches the bank when the export gives it.
+
 ## 0.6.0 — not released yet
 
 PDF documents (delivery L5): invoices are kept as private PDFs, checked without being run, recognised when they come back, and attached to the expenses they justify — or used to create them.

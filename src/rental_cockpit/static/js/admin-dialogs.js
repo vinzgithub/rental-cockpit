@@ -6,6 +6,7 @@
 import { openConfirm, openDialog } from "./dialogs.js";
 import { html, markup, raw } from "./dom.js";
 import { icon } from "./icons.js";
+import { copyText, manualCopyNote } from "./settings-dialogs.js";
 
 function errorBox(message) {
   return markup(html`<div class="error-box" role="alert">${raw(icon("alert"))}<span>${message}</span></div>`);
@@ -52,20 +53,14 @@ function passwordField(t, id, value) {
       <div class="inline-field"><input id="${id}" name="password" autocomplete="off" spellcheck="false" class="mono" value="${value}" minlength="10" required aria-describedby="${id}-h">
         <button type="button" class="btn ghost small" data-generate>${raw(icon("repeat"))}${t("usr.generate")}</button>
         <button type="button" class="btn ghost small" data-copy>${raw(icon("copy"))}${t("usr.copy")}</button></div>
-      <span class="help" id="${id}-h">${t("usr.tempHelp")}</span></div>`;
+      <span class="help" id="${id}-h">${t("usr.tempHelp")}</span>${manualCopyNote(t)}</div>`;
 }
 
 function wirePassword(app, dialog) {
   const input = dialog.querySelector("[name=password]");
   dialog.querySelector("[data-generate]").addEventListener("click", () => { input.value = temporaryPassword(); input.focus(); });
-  dialog.querySelector("[data-copy]").addEventListener("click", async () => {
-    try {
-      await navigator.clipboard.writeText(input.value);
-      app.toast(app.i18n.t("usr.copied"));
-    } catch (_) {
-      input.select();  // without a secure context, the person copies it themselves
-    }
-  });
+  // The same copy as the other secrets: older command on http://, then the field selected and said so.
+  dialog.querySelector("[data-copy]").addEventListener("click", (event) => copyText(app, input.value, { from: event.currentTarget, select: input }));
 }
 
 // ------------------------------------------------------------------ reader accounts

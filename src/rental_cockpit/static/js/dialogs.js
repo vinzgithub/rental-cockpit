@@ -10,10 +10,11 @@ import { openInvoiceImport } from "./document-dialogs.js";
 import { openStayForm } from "./stay-dialogs.js";
 import { checkItem, periodName } from "./views/synthese.js";
 
-export function openDialog(app, { title, subtitle = "", body, footer, labelledby = "rc-dialog-title", wide = false }) {
+export function openDialog(app, { title, subtitle = "", body, footer, labelledby = "rc-dialog-title", wide = false, sheet = false }) {
   const dialog = document.createElement("dialog");
   dialog.className = "rc";
   if (wide) dialog.classList.add("dialog-wide");
+  if (sheet) dialog.classList.add("sheet");  // takes the whole screen on a phone
   dialog.setAttribute("aria-labelledby", labelledby);
   dialog.innerHTML = markup(html`
     <div class="dhead">
@@ -33,7 +34,47 @@ export function openDialog(app, { title, subtitle = "", body, footer, labelledby
 
 // ------------------------------------------------------------------ explain
 
-export async function openExplain(app, indicatorId) {
+/**
+ * « Comprendre ce résultat »: the terms of a result. Shown as boxes side by side on a wide
+ * window, and as a short vertical list (sign, label, amount) on a narrow one (ERGO-004).
+ */
+function equationBlock(i18n, terms, { wide = false } = {}) {
+  const { t } = i18n;
+  const boxes = terms.map((item, index) => html`
+    ${index ? html`<div class="op" aria-hidden="true">${item.op}</div>` : ""}
+    <div class="term"><span>${item.label}</span><div class="box ${item.result ? "result" : ""} num">${i18n.money(item.value, { compact: true })}</div>${item.note ? html`<small>${item.note}</small>` : ""}</div>`);
+  const rows = terms.map((item, index) => html`
+    <li class="${item.result ? "result" : ""}"><span class="op" aria-hidden="true">${index ? item.op : ""}</span><span class="lbl">${item.label}${item.note ? html`<small>${item.note}</small>` : ""}</span><b class="num">${i18n.money(item.value)}</b></li>`);
+  return html`
+    <section class="card compact">
+      <div class="card-head tight"><span class="bubble teal square">${raw(icon("chart"))}</span><h2>${t("explain.understand")}</h2></div>
+      <div class="equation ${wide ? "wide" : ""}" aria-hidden="true">${boxes}</div>
+      <ol class="eq-list ${wide ? "wide" : ""}" aria-label="${t("explain.understand")}">${rows}</ol>
+    </section>`;
+}
+
+function equationOf(app, indicatorId, ind, label) {
+  const { i18n } = app;
+  const { t } = i18n;
+  const ov = app.state.overview;
+  const val = (key) => ov.indicators[key]?.value;
+  const total = { label, value: ind.value, result: true, op: "=" };
+  if (indicatorId === "cash_balance") {
+    return equationBlock(i18n, [{ label: t("money.in"), value: val("cash_in") }, { label: t("money.out"), value: val("cash_out"), op: "−" }, total]);
+  }
+  if (indicatorId === "operating_balance" && app.state.view === "performance") {
+    return equationBlock(i18n, [{ label: t("perf.nightsRevenue"), value: val("stay_revenue") }, { label: t("perf.otherIncome"), value: val("other_income"), op: "+" },
+      { label: t("perf.commissions"), value: val("commissions"), op: "−" }, { label: t("perf.otherExpenses"), value: val("other_expenses"), op: "−" },
+      { ...total, note: t("explain.before") }], { wide: true });
+  }
+  if (indicatorId === "operating_balance") {
+    return equationBlock(i18n, [{ label: ov.mode === "cash" ? t("kpi.revenue.cash") : t("kpi.revenue"), value: val("revenue") },
+      { label: t("kpi.expenses"), value: val("operating_expenses"), op: "−" }, { ...total, note: t("explain.before") }]);
+  }
+  return "";
+}
+
+export async function openExplain(app, indicatorId, labelOverride = "") {
   const { i18n } = app;
   const { t } = i18n;
   const v = app.viewModel();
@@ -43,7 +84,9 @@ export async function openExplain(app, indicatorId) {
     body: html`<div class="loading small"><div class="spinner"></div><span>${t("common.loading")}</span></div>`,
     footer: html`<button type="button" class="btn ghost" data-close>${t("explain.close")}</button>`,
     wide: true,
+    sheet: true,
   });
+  dialog.classList.add("explain");
   let detail;
   try {
     detail = await app.api.get("/api/indicator", { ...app.periodParams(), indicator: indicatorId });
@@ -53,23 +96,15 @@ export async function openExplain(app, indicatorId) {
   }
   const ind = detail.indicator;
   const ov = app.state.overview;
+  const label = labelOverride || ind.label;
   const scope = ov.properties.filter((p) => ov.property_ids.includes(p.id)).map((p) => p.name).join(", ") || "—";
   const lines = ind.lines || [];
-  const equation = indicatorId === "operating_balance" ? html`
-    <section class="card compact">
-      <div class="card-head tight"><span class="bubble teal square">${raw(icon("chart"))}</span><h2>${t("explain.understand")}</h2></div>
-      <div class="equation">
-        <div class="term"><span>${ov.mode === "cash" ? t("kpi.revenue.cash") : t("kpi.revenue")}</span><div class="box num">${i18n.money(ov.indicators.revenue.value, { compact: true })}</div></div>
-        <div class="op" aria-hidden="true">−</div>
-        <div class="term"><span>${t("kpi.expenses")}</span><div class="box num">${i18n.money(ov.indicators.operating_expenses.value, { compact: true })}</div></div>
-        <div class="op" aria-hidden="true">=</div>
-        <div class="term"><span>${ind.label}</span><div class="box result num">${i18n.money(ind.value, { compact: true })}</div><small>${t("explain.before")}</small></div>
-      </div>
-    </section>` : "";
+  const equation = equationOf(app, indicatorId, ind, label);
+  const unit = ind.unit === "money" ? i18n.money(ind.value) : ind.unit === "ratio" ? i18n.ratio(ind.value) : String(ind.value ?? "—");
   const periodLabel = `${periodName(v, detail.period)} · ${i18n.dateShort(detail.period.start)} → ${i18n.dateShort(prevDay(detail.period.end))}`;
   const total = lines.reduce((sum, l) => sum + l.sign * l.share, 0);
   dialog.querySelector(".dhead h2").textContent = t("explain.title");
-  dialog.querySelector(".dhead div").insertAdjacentHTML("beforeend", `<p>${esc(ind.label)} · <b class="num">${esc(i18n.money(ind.value))}</b></p>`);
+  dialog.querySelector(".dhead div").insertAdjacentHTML("beforeend", `<p>${esc(label)} · <b class="num">${esc(unit)}</b></p>`);
   dialog.querySelector(".dbody").innerHTML = markup(html`
     ${equation}
     <dl class="facts-list">
@@ -88,7 +123,7 @@ export async function openExplain(app, indicatorId) {
             <thead><tr><th>${t("explain.date")}</th><th>${t("explain.item")}</th><th>${t("explain.rule")}</th><th class="amt">${t("explain.total")}</th><th class="amt">${t("explain.share")}</th></tr></thead>
             <tbody>${lines.map((l) => html`<tr>
               <td class="num c-date">${i18n.dateShort(l.date)}</td>
-              <td class="c-item">${l.label}<small>${l.property} · ${l.category}</small>${l.stay_id && app.viewModel().ready.has("sejours") ? html`<button type="button" class="linkbtn small" data-action="stay-open" data-value="${l.stay_id}">${t("explain.openStay")}</button>` : ""}${l.entry_id && app.viewModel().ready.has("depenses") ? html`<button type="button" class="linkbtn small" data-action="entry-open" data-value="${l.entry_id}">${t("explain.openEntry")}</button>` : ""}</td>
+              <td class="c-item">${l.label}<small>${l.property} · ${l.category}</small>${l.expected_on ? html`<small class="bank">${t("explain.bankBy", { date: i18n.dateShort(l.expected_on) })}</small>` : ""}${l.stay_id && app.viewModel().ready.has("sejours") ? html`<button type="button" class="linkbtn small" data-action="stay-open" data-value="${l.stay_id}">${t("explain.openStay")}</button>` : ""}${l.entry_id && app.viewModel().ready.has("depenses") ? html`<button type="button" class="linkbtn small" data-action="entry-open" data-value="${l.entry_id}">${t("explain.openEntry")}</button>` : ""}</td>
               <td class="c-rule">${l.rule}</td>
               <td class="amt num c-total" data-label="${t("explain.total")}${i18n.lang === "fr" ? " : " : ": "}">${i18n.money(l.total)}</td>
               <td class="amt num c-share">${l.sign < 0 ? "− " : ""}${i18n.money(l.share)}</td>
@@ -98,6 +133,7 @@ export async function openExplain(app, indicatorId) {
         </div>` : html`<div class="empty">${raw(icon("info"))}<span>${t("explain.none")}</span></div>`}
     </section>
     ${ov.mode === "activity" ? html`<div class="tip">${raw(icon("bulb"))}<div><b>${t("explain.tip")}</b><p>${t("explain.tipText")}</p></div></div>` : ""}
+    ${ov.mode === "cash" && lines.some((l) => l.expected_on) ? html`<div class="tip">${raw(icon("bulb"))}<div><b>${t("explain.tip")}</b><p>${t("explain.cashTip")}</p></div></div>` : ""}
   `);
 }
 

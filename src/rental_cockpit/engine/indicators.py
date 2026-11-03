@@ -194,7 +194,8 @@ class _Collector:
                         continue
                     self.add(bucket="revenue", ref_type="payment", ref_id=payment["id"], property_id=payment["property_id"],
                              label=self.label_of_stay(stay), date=payment["date"], total=payment["amount"], share=link["amount"],
-                             category_id="accommodation", rule="payment_date", extra={"stay_id": stay["id"], "direction": "in"})
+                             category_id="accommodation", rule="payment_date",
+                             extra={"stay_id": stay["id"], "direction": "in", "expected_on": payment.get("expected_on", "")})
                     continue
                 entry = entries.get(link["id"])
                 if not entry or entry.get("archived"):
@@ -205,7 +206,8 @@ class _Collector:
                 self.add(bucket=bucket, ref_type="payment", ref_id=payment["id"], property_id=payment["property_id"],
                          label=entry["label"], date=payment["date"], total=entry["amount"], share=link["amount"],
                          category_id=entry["category_id"], rule="payment_date",
-                         extra={"entry_id": entry["id"], "direction": payment["direction"], "loan_split": entry.get("loan_split"), "lines": entry.get("lines") or []})
+                         extra={"entry_id": entry["id"], "direction": payment["direction"], "loan_split": entry.get("loan_split"),
+                                "lines": entry.get("lines") or [], "expected_on": payment.get("expected_on", "")})
 
 
 # --------------------------------------------------------------------------- explanations
@@ -255,6 +257,31 @@ TEXT = {
                                "Unavailable periods and days before the activity start are not available.")},
     "average_night": {"label": ("Revenu moyen par nuit", "Average revenue per night"), "formula": ("Recettes des séjours ÷ nuitées", "Stay revenue ÷ nights"),
                       "excludes": ("Ajustements et autres recettes.", "Adjustments and other income.")},
+    # « Mon argent » (payment dates): what came in, what went out, what is left.
+    "cash_in": {"label": ("Encaissé", "Money in"),
+                "formula": ("Versements envoyés par les plateformes + paiements reçus pendant la période, à leur date",
+                            "Payouts sent by the platforms + payments received during the period, on their date"),
+                "excludes": ("Les séjours pas encore versés (voir « À recevoir ») et les commissions, déjà retenues par la plateforme sur ses versements.",
+                             "Stays not paid yet (see \"To receive\") and commissions, already withheld by the platform from its payouts.")},
+    "cash_out": {"label": ("Payé", "Money out"),
+                 "formula": ("Dépenses, mensualités d'emprunt, impôts et équipements payés pendant la période, à la date du paiement",
+                             "Expenses, loan instalments, taxes and equipment paid during the period, on the payment date"),
+                 "excludes": ("Les commissions prélevées par la plateforme (déjà déduites des versements) et les dépenses pas encore payées (voir « Reste à payer »).",
+                              "Commissions withheld by the platform (already taken from the payouts) and expenses not paid yet (see \"Left to pay\").")},
+    "cash_balance": {"label": ("Solde", "Balance"), "formula": ("Encaissé − Payé", "Money in − Money out"),
+                     "excludes": ("C'est le mouvement d'argent de la période, pas un bénéfice fiscal.", "This is the money movement of the period, not a taxable profit.")},
+    # « Performance locative » (per night): what the rental produced.
+    "stay_revenue": {"label": ("Recettes des nuitées", "Revenue from nights"),
+                     "formula": ("Montant brut des séjours, réparti nuit par nuit, + ajustements des séjours ; un séjour annulé compte son montant conservé, une fois, au mois d'arrivée",
+                                 "Gross amount of stays, spread night by night, + stay adjustments; a cancelled stay counts its retained amount once, in the month of arrival"),
+                     "excludes": ("Commissions (montrées à part), taxes de séjour, recettes hors séjours (indemnisations, primes…).",
+                                  "Commissions (shown apart), tourist taxes, income outside stays (compensations, bonuses…).")},
+    "commissions": {"label": ("Commissions", "Commissions"), "formula": ("Commissions et frais de service des plateformes, répartis comme les séjours", "Platform commissions and service fees, spread like the stays"),
+                    "excludes": ("Les autres frais (ménage, linge…) : voir « Autres dépenses ».", "Other costs (cleaning, linen…): see \"Other expenses\".")},
+    "other_income": {"label": ("Autres recettes", "Other income"), "formula": ("Recettes hors séjours : indemnisations, primes des plateformes, remboursements…", "Income outside stays: compensations, platform bonuses, refunds…"),
+                     "excludes": ("Les recettes des séjours.", "Stay revenue.")},
+    "other_expenses": {"label": ("Autres dépenses", "Other expenses"), "formula": ("Dépenses d'exploitation hors commissions : ménage, linge, entretien, énergie, assurance…", "Operating expenses other than commissions: cleaning, linen, upkeep, energy, insurance…"),
+                       "excludes": ("Mensualités d'emprunt, impôts et équipements : montrés à part.", "Loan instalments, taxes and equipment: shown apart.")},
     "to_pay": {"label": ("À payer", "To pay"), "formula": ("Montant des dépenses − paiements déjà enregistrés", "Expense amounts − payments already recorded"),
                "excludes": ("Une échéance, la mention « paiement comptant » ou la présence d'un PDF ne valent pas paiement.",
                             "A due date, a \"paid in cash\" mention or an attached PDF are not a payment.")},
@@ -272,12 +299,12 @@ RULES = {
 }
 
 MODE_RULES = {
-    "activity": ("Lecture « Activité » : ce que la location a produit pendant la période. Les recettes et commissions d'un séjour sont réparties par nuit ; une dépense compte à sa date ou sur sa période couverte.",
-                 "\"Activity\" reading: what the rental produced during the period. Stay revenue and commissions are spread per night; an expense counts on its date or over its covered period."),
-    "invoice": ("Lecture « Factures » : chaque document à sa propre date (facture à sa date, séjour à sa date d'arrivée).",
-                "\"Invoices\" reading: each document on its own date (invoice on its date, stay on its arrival date)."),
-    "cash": ("Lecture « Trésorerie » : uniquement l'argent réellement reçu ou payé, à la date du paiement.",
-             "\"Cash\" reading: only money actually received or paid, on the payment date."),
+    "activity": ("Par nuit occupée : ce que la location a produit pendant la période. Les recettes et commissions d'un séjour sont réparties nuit par nuit ; une dépense compte à sa date ou sur sa période couverte.",
+                 "Per night occupied: what the rental produced during the period. Stay revenue and commissions are spread night by night; an expense counts on its date or over its covered period."),
+    "invoice": ("Par date de séjour ou de facture : un séjour compte en entier à sa date d'arrivée, une facture à sa date.",
+                "By stay or invoice date: a stay counts in full on its arrival date, an invoice on its date."),
+    "cash": ("Par date de paiement : l'argent versé par les plateformes ou reçu, et l'argent payé, à la date du paiement. Un versement de plateforme compte le jour où elle l'envoie.",
+             "By payment date: money sent by the platforms or received, and money paid, on the payment date. A platform payout counts on the day it is sent."),
 }
 
 
@@ -355,6 +382,20 @@ def compute(data: dict[str, Any], *, property_ids: Iterable[str], start: date, e
     if mode == "activity":
         indicators["average_night"] = ind("average_night", (stay_revenue // nights_total) if nights_total else None,
                                           complete=bool(nights_total) and complete_revenue)
+    if mode == "cash":
+        outgoing = by_bucket("operating_expense", "investment", "tax", "financing")
+        indicators["cash_in"] = ind("cash_in", revenue, lines=by_bucket("revenue"))
+        indicators["cash_out"] = ind("cash_out", sum(m.share for m in outgoing), lines=outgoing)
+        indicators["cash_balance"] = ind("cash_balance", after, lines=by_bucket(*BUCKETS))
+    else:
+        stay_lines = [m for m in movements if m.bucket == "revenue" and m.ref_type in ("stay", "adjustment")]
+        other_in = [m for m in movements if m.bucket == "revenue" and m.ref_type not in ("stay", "adjustment")]
+        fees = [m for m in movements if m.ref_type == "stay_commission"]
+        other_out = [m for m in movements if m.bucket == "operating_expense" and m.ref_type != "stay_commission"]
+        indicators["stay_revenue"] = ind("stay_revenue", sum(m.share for m in stay_lines), complete=complete_revenue, lines=stay_lines, missing=collector.missing)
+        indicators["commissions"] = ind("commissions", sum(m.share for m in fees), lines=fees)
+        indicators["other_income"] = ind("other_income", sum(m.share for m in other_in), lines=other_in)
+        indicators["other_expenses"] = ind("other_expenses", sum(m.share for m in other_out), lines=other_out)
 
     pending = _pending(data, pids, end, lang)
     indicators["to_pay"] = ind("to_pay", pending["to_pay"], count=pending["to_pay_count"])
@@ -372,6 +413,8 @@ def compute(data: dict[str, Any], *, property_ids: Iterable[str], start: date, e
                 "revenue": values["revenue"],
                 "expenses": values["operating_expense"],
                 "balance": values["revenue"] - values["operating_expense"],
+                # Everything paid out (cash reading): expenses, loan, taxes and equipment.
+                "out": values["operating_expense"] + values["investment"] + values["tax"] + values["financing"],
             }
             for pid, values in per_property.items()
         },
@@ -384,9 +427,43 @@ def compute(data: dict[str, Any], *, property_ids: Iterable[str], start: date, e
         previous = compute(data, property_ids=pids, start=prev_start, end=prev_end, mode=mode, lang=lang, today=today, compare=False)
         result["previous"] = {
             "period": previous["period"],
-            "values": {key: previous["indicators"][key]["value"] for key in ("revenue", "operating_expenses", "operating_balance", "balance_after_financing", "nights")},
+            "values": {key: item["value"] for key, item in previous["indicators"].items()
+                       if key in COMPARED},
         }
     return result
+
+
+COMPARED = ("revenue", "operating_expenses", "operating_balance", "balance_after_financing", "nights", "occupancy",
+            "cash_in", "cash_out", "cash_balance", "stay_revenue", "commissions", "other_income", "other_expenses")
+
+
+def monthly_series(data: dict[str, Any], *, property_ids: Iterable[str], year: int, lang: str = "fr") -> list[dict[str, Any]]:
+    """« Évolution mensuelle » of « Performance locative »: the twelve months of a year, per night occupied.
+
+    The same rules as the indicators: each month is computed by the same
+    collector, on the stays and entries that touch the year only.
+    """
+    pids = {pid for pid in property_ids if pid in data.get("properties", {})}
+    first, last = date(year, 1, 1), date(year + 1, 1, 1)
+    subset = dict(data)
+    subset["stays"] = {k: s for k, s in data.get("stays", {}).items()
+                       if s["property_id"] in pids and parse_date(s["start"]) < last and first < parse_date(s["end"]) + timedelta(days=1)}
+    subset["entries"] = {k: e for k, e in data.get("entries", {}).items() if e["property_id"] in pids and (
+        first <= parse_date(e["date"]) < last or (e.get("period_start") and parse_date(e["period_start"]) < last and first < parse_date(e["period_end"])))}
+    rows = []
+    for month in range(1, 13):
+        start, end = month_period(year, month)
+        collector = _Collector(subset, pids, start, end, "activity", lang)
+        collector.collect_accrual()
+        stays = sum(m.share for m in collector.movements if m.bucket == "revenue" and m.ref_type in ("stay", "adjustment"))
+        other_in = sum(m.share for m in collector.movements if m.bucket == "revenue" and m.ref_type not in ("stay", "adjustment"))
+        fees = sum(m.share for m in collector.movements if m.ref_type == "stay_commission")
+        other_out = sum(m.share for m in collector.movements if m.bucket == "operating_expense" and m.ref_type != "stay_commission")
+        nights_total, available, _ = _nights(subset, pids, start, end)
+        rows.append({"month": start.isoformat()[:7], "stay_revenue": stays, "commissions": fees, "other_income": other_in,
+                     "other_expenses": other_out, "result": stays + other_in - fees - other_out, "nights": nights_total,
+                     "occupancy": round(nights_total / available, 4) if available else None, "complete": not collector.missing})
+    return rows
 
 
 def indicator_detail(data: dict[str, Any], indicator_id: str, **kwargs: Any) -> dict[str, Any]:
@@ -406,7 +483,8 @@ def _line(m: Movement, data: dict[str, Any], lang: str) -> dict[str, Any]:
     return {
         "ref_type": m.ref_type, "ref_id": m.ref_id, "property": prop.get("name", "—"), "label": m.label,
         "date": m.date, "total": m.total, "share": m.share, "bucket": m.bucket,
-        "category": category_label(category, lang), "rule": _t(RULES.get(m.rule, (m.rule, m.rule)), lang),
+        "category": category_label(category, lang), "category_id": m.category_id,
+        "rule": _t(RULES.get(m.rule, (m.rule, m.rule)), lang), "expected_on": m.extra.get("expected_on", ""),
         "sign": -1 if m.bucket != "revenue" else 1,
         # What the line comes from, so « Comment est calculé ce montant ? » can open it.
         "stay_id": m.extra.get("stay_id") or (m.ref_id if m.ref_type in ("stay", "stay_commission") else ""),

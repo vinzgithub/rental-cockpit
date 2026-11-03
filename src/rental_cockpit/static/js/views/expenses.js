@@ -4,6 +4,7 @@
 // from /api/entries, computed from the real payments by the server.
 
 import { html, raw } from "../dom.js";
+import { periodControl } from "../period.js";
 import { icon, propertyIcon } from "../icons.js";
 
 export const ENTRY_VIEWS = ["all", "to_pay", "to_confirm", "to_receive", "archived"];
@@ -64,7 +65,6 @@ function viewTabs(v) {
 function toolbar(v) {
   const { i18n, properties, state } = v;
   const { t } = i18n;
-  const years = v.entries.data?.years || [];
   return html`
     <div class="entries-tools">
       <label class="select has-lead">
@@ -84,15 +84,7 @@ function toolbar(v) {
         </select>
         ${raw(icon("chevronDown", "chev"))}
       </label>
-      <label class="select has-lead">
-        <span class="sr-only">${t("ex.yearLabel")}</span>
-        ${raw(icon("calendar", "lead"))}
-        <select data-change="entries-year">
-          <option value="" ${raw(!v.entries.year ? "selected" : "")}>${t("ex.allYears")}</option>
-          ${[...new Set([...years, v.entries.year].filter(Boolean))].map((y) => html`<option value="${y}" ${raw(v.entries.year === y ? "selected" : "")}>${y}</option>`)}
-        </select>
-        ${raw(icon("chevronDown", "chev"))}
-      </label>
+      ${periodControl(i18n, { ...v.period("entries"), allowAll: true })}
       <label class="search">
         <span class="sr-only">${t("ex.search")}</span>
         ${raw(icon("search", "lead"))}

@@ -661,7 +661,8 @@ class Ledger:
         if payload.get("allocations"):
             self._apply_allocations(entry, payload["allocations"])
         self.data["settings"]["onboarding"]["first_record"] = True
-        self.audit("entry.create", entry["id"])
+        if not self.bulk:  # an import is audited once, as a whole
+            self.audit("entry.create", entry["id"])
         result: dict[str, Any] = {"entry": deepcopy(entry)}
         if payload.get("paid"):
             # "Payé" typed by the user is turned into a real payment with a date,
@@ -1025,6 +1026,10 @@ class Ledger:
             "note": clean_text(payload.get("note", ""), "note", 300),
             "origin": payload.get("origin") or {"type": "manual"},
         })
+        # A platform payout is sent on ``date`` and reaches the bank later: the latest day, when the platform says it.
+        expected_on = read_optional_date(payload.get("expected_on"), "expected_on")
+        if expected_on is not None:
+            payment["expected_on"] = iso(expected_on)
         self.data["payments"][payment["id"]] = payment
         if self.bulk:
             received = self._bulk_received()

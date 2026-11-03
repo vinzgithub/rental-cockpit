@@ -4,7 +4,7 @@
 
 ### Votre location saisonnière, chaque chiffre expliqué
 
-**Synthèse · Séjours · Import Airbnb et CSV · Dépenses et règlements · Trois lectures · Indicateurs expliqués · À vérifier · Double authentification · Home Assistant**
+**Mon argent · Performance locative · Séjours · Import Airbnb et CSV · Dépenses et règlements · Indicateurs expliqués · À vérifier · Double authentification · Home Assistant**
 
 **Français** · [**English**](README.md)
 
@@ -13,7 +13,7 @@
 <br>
 
 <img src="docs/images/fr/hero.png"
-     alt="Rental Cockpit sur ordinateur et sur téléphone : synthèse du mois, trois lectures, biens et données à vérifier"
+     alt="Rental Cockpit sur ordinateur et sur téléphone : la Synthèse « Mon argent », encaissé, payé, reste à régler et données à vérifier"
      width="100%">
 
 <sub>Les captures montrent la démonstration intégrée : deux biens fictifs, des prestataires « Démo » et des montants inventés.</sub>
@@ -31,7 +31,7 @@
 <table>
 <tr>
 <td width="33%" valign="top"><b>🧾 Chaque chiffre s'explique</b><br>Sous chaque montant, « Comment est calculé ce montant ? » : formule, période, exclusions et toutes les lignes utilisées.</td>
-<td width="33%" valign="top"><b>🔀 Trois lectures, jamais mélangées</b><br>Activité, Factures, Trésorerie : trois questions différentes, trois règles de calcul annoncées.</td>
+<td width="33%" valign="top"><b>💶 Mon argent, d'abord</b><br>Ce qui est encaissé, ce qui est payé, ce qui reste à recevoir ou à payer. La performance locative et l'analyse comptable sont à un clic.</td>
 <td width="33%" valign="top"><b>✅ Ce qui reste à vérifier</b><br>Paiements inconnus, séjours sans montant, versements non reçus : un résultat incomplet est signalé, jamais déguisé en zéro.</td>
 </tr>
 <tr>
@@ -42,7 +42,7 @@
 </table>
 
 > [!NOTE]
-> **Version 1.0.0, en recette.** Tout ce que prévoit la première version est prêt : la Synthèse et ses trois lectures, les **séjours** (saisie, **import Airbnb et CSV**, annulation, versements reçus), les **dépenses et règlements**, les **prestataires** (factures détaillées réparties entre les séjours, rapprochement), les **justificatifs PDF**, les **comptes lecteurs**, la **sauvegarde et la restauration vérifiées**, la démonstration, la double authentification et le lien avec Home Assistant. Elle devient la version stable une fois la recette validée ([critères et résultats](docs/fr/recette.md)).
+> **Version 1.0.0, en recette.** Tout ce que prévoit la première version est prêt : la Synthèse (*Mon argent*, *Performance locative*, *Analyse comptable*), les **séjours** (saisie, **import Airbnb et CSV**, annulation, versements reçus), les **dépenses et règlements**, les **prestataires** (factures détaillées réparties entre les séjours, rapprochement), les **justificatifs PDF**, les **comptes lecteurs**, la **sauvegarde et la restauration vérifiées**, la démonstration, la double authentification et le lien avec Home Assistant. Elle devient la version stable une fois la recette validée ([critères et résultats](docs/fr/recette.md)).
 
 ---
 
@@ -65,8 +65,8 @@ Il est né d'un outil personnel de suivi d'une location saisonnière, dont il re
 
 Un clic sous n'importe quel indicateur ouvre son explication :
 
-- l'**équation** : Recettes − Dépenses = Solde ;
-- la **formule**, la **période**, la **lecture** et les **biens inclus** ;
+- le **calcul** : Encaissé − Payé = Solde, ou Recettes − Dépenses = Résultat ;
+- la **formule**, la **période**, la **méthode** et les **biens inclus** ;
 - ce qui est **exclu**, et pourquoi ;
 - **toutes les lignes utilisées**, avec la règle appliquée à chacune — « Réparti nuit par nuit sur le séjour », « Compté à sa date »… — et le total.
 
@@ -90,7 +90,7 @@ Pas de boîte noire : vous pouvez refaire chaque calcul à la main.
 - **Saisie guidée** : bien, dates (les nuits par mois s'affichent tout de suite), canal de réservation, montant brut et commission ; le versement net attendu se calcule seul.
 - **Taxe de séjour et caution** notées à part : jamais comptées comme recettes.
 - **Fiche séjour** : ce qui est reçu, ce qui reste à recevoir, et **ce que le séjour compte dans la Synthèse**, mois par mois.
-- **Versement reçu** en un clic : la lecture Trésorerie se met à jour.
+- **Versement reçu** en un clic : *Mon argent* se met à jour.
 - **Annulation** avec le montant conservé, compté à la date d'arrivée ; **Rétablir** remet tout.
 - Statuts explicites : *À venir*, *En cours*, *Terminé*, *Provisoire*, *Annulé* ; *Versement attendu*, *à confirmer*, *reçu*.
 
@@ -114,7 +114,10 @@ Pas de boîte noire : vous pouvez refaire chaque calcul à la main.
 - **Doublons détectés** : même référence, ou mêmes dates qu'un séjour saisi à la main ; vous choisissez de le compléter, d'en créer un autre ou d'ignorer la ligne.
 - **Commissions** lues dans le fichier, ou calculées d'après le taux de la plateforme, au centime.
 - **Contrôles** : dates illisibles, nuits qui ne correspondent pas, chevauchements, dates indisponibles, montants négatifs, versement supérieur à l'attendu.
-- **Versements** datés enregistrés une seule fois ; les virements Airbnb ne sont jamais comptés deux fois.
+- **Chaque versement Airbnb rapproché au centime** des lignes qu'il paie, avec sa date d'arrivée sur le compte ; jamais compté deux fois.
+- **Indemnisations AirCover, crédits et retenues** lus et classés ; un type inconnu est montré avec son montant, jamais ignoré en silence.
+- **Réservation annulée mais payée** : l'argent compte, les nuits non.
+- **Bilan des versements** avant import : par nature et par mois, avec ce qui ne serait pas enregistré.
 - **Colonnes et biens mémorisés** pour le fichier suivant ; **annulation** du dernier import en un clic.
 
 </td>
@@ -134,9 +137,9 @@ Pas de boîte noire : vous pouvez refaire chaque calcul à la main.
 
 - **Dépenses et recettes hors séjours** : ménage, réparations, assurance, abonnements, remboursements… chacune dans une catégorie dont le **traitement** est annoncé (exploitation, investissement, financement, impôts).
 - **Règlement explicite** : *Payée*, *Partiellement payée*, *À payer* ou *Paiement à confirmer* — rien n'est supposé payé.
-- **Paiements partiels**, jamais au-delà du reste dû ; la Trésorerie compte chaque paiement à sa date.
+- **Paiements partiels**, jamais au-delà du reste dû ; *Mon argent* compte chaque paiement à sa date.
 - **Mensualités d'emprunt** : capital, intérêts et assurance vérifiés au centime, hors solde d'exploitation ; **répétition mensuelle** jusqu'à 36 mois, les échéances futures restant *À venir*.
-- **Période couverte** : une assurance annuelle est répartie jour par jour dans la lecture Activité.
+- **Période couverte** : une assurance annuelle est répartie jour par jour dans la *Performance locative*.
 - **Catégories** personnalisables dans Réglages ; **export CSV** prêt pour un tableur ou un comptable.
 
 </td>
@@ -193,19 +196,19 @@ Pas de boîte noire : vous pouvez refaire chaque calcul à la main.
 
 ---
 
-## 🔀 Même mois, plusieurs questions
+## 🔀 Même mois, trois vues
 
-<img src="docs/images/fr/readings.png" alt="Le même mois en lecture Activité puis en lecture Trésorerie" width="100%">
+<img src="docs/images/fr/readings.png" alt="Le même mois dans la vue Mon argent puis dans la vue Performance locative" width="100%">
 
-<sub>En haut, la lecture Activité ; en bas, la Trésorerie du même mois : 970 € réellement reçus, la commission de 30 € étant déjà déduite du versement.</sub>
+<sub>En haut, *Mon argent* : 970 € encaissés, la commission de 30 € étant déjà retenue par la plateforme. En bas, la *Performance locative* du même mois : 1 000 € de recettes des nuitées, 800 € de résultat locatif.</sub>
 
-| Lecture | La question | La règle |
+| Vue | La question | La règle |
 |---|---|---|
-| **Activité** | Qu'a produit la location pendant la période ? | Un séjour est réparti nuit par nuit ; une dépense compte à sa date ou sur la période qu'elle couvre |
-| **Factures** | Quels documents sont datés de la période ? | Chaque facture à sa date, chaque séjour à sa date d'arrivée |
-| **Trésorerie** | Quel argent est réellement entré ou sorti ? | Uniquement les paiements, à leur date |
+| **Mon argent** (par défaut) | Quel argent est entré ou sorti, que reste-t-il à recevoir ou à payer ? | Les paiements, à leur date ; un versement de plateforme le jour où elle l'envoie |
+| **Performance locative** | Qu'a produit la location ? | Un séjour est réparti nuit par nuit ; une dépense compte à sa date ou sur la période qu'elle couvre ; nuitées, occupation, douze mois de l'année |
+| **Analyse comptable** | Comment rattacher chaque montant à une période ? | Au choix : par nuit occupée, par date de séjour ou de facture, par date de paiement |
 
-Les pourcentages comparent toujours la période à la précédente, **calculée avec les mêmes règles**.
+Les pourcentages comparent toujours la période à la précédente, **calculée avec les mêmes règles**. La période se choisit d'un geste : `◀ Octobre 2026 ▶`, les douze mois d'une année, l'année entière ou une période libre.
 
 ### Un exemple que vous pouvez vérifier
 
@@ -222,7 +225,7 @@ Il est reproduit à l'identique dans le mois d'exemple de la démonstration :
      800 €   solde avant financement
  −   200 €   mensualité du crédit
  ──────────
-     600 €   trésorerie après financement
+     600 €   solde de la période dans « Mon argent » : 970 € encaissés − 370 € payés
 ```
 
 ### Les règles qui ne bougent pas
@@ -392,7 +395,7 @@ Tout tient dans **un seul dossier**, `/data` : une base SQLite, vos justificatif
 | [Installation](docs/fr/installation.md) | Image Docker, Python, variables, mise à jour, dépannage du compte |
 | [Sauvegarde et restauration](docs/fr/sauvegarde.md) | Contenu d'une sauvegarde, restauration vérifiée, ligne de commande, après une mise à jour ratée |
 | [Guide](docs/fr/guide.md) | De la démonstration à l'usage quotidien : séjours, dépenses, prestataires, justificatifs, lecteurs, sauvegarde |
-| [Règles de calcul](docs/fr/calculs.md) | Les trois lectures, chaque indicateur, glossaire |
+| [Règles de calcul](docs/fr/calculs.md) | Les trois vues de la Synthèse, les opérations Airbnb, chaque indicateur, glossaire |
 | [Home Assistant](docs/fr/home-assistant.md) | Lien facultatif : capteurs, automatisations, carte, référence de l'API |
 | [Sécurité](docs/fr/securite.md) | Comptes, double authentification, droits, clés d'API, données, exposition réseau |
 | [Architecture et adaptations](docs/fr/architecture-et-adaptations.md) | Ce qui est repris du projet d'origine, ce qui change avec une application autonome |

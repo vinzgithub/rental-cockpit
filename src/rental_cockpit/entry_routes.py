@@ -10,6 +10,7 @@ them; they cannot change anything.
 """
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from fastapi import FastAPI, Request
@@ -106,7 +107,10 @@ def register_entry_routes(app: FastAPI, services: Services) -> None:
         kind = params.get("kind") if params.get("kind") in ("expense", "income") else ""
         category = str(params.get("category_id") or "")
         supplier = str(params.get("supplier_id") or "")
-        year = str(params.get("year") or "")[:4]
+        # A year (« 2026 ») or a month (« 2026-10 »), as chosen with the period picker.
+        year = str(params.get("year") or "")[:7]
+        if not re.fullmatch(r"\d{4}(-\d{2})?", year):
+            year = ""
         query = str(params.get("q") or "")[:80]
         data = registry.snapshot()
         paid = entry_views.paid_by_entry(data)

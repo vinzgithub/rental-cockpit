@@ -16,7 +16,8 @@ const MAX_BYTES = 5 * 1024 * 1024;
 const MAX_SHOWN = 200;
 const STATUS_TONE = { new: "teal", update: "blue", same: "grey", duplicate: "amber", unmapped: "amber", error: "rose" };
 const STATUS_ICON = { new: "plus", update: "repeat", same: "check", duplicate: "copy", unmapped: "home", error: "alert" };
-const FILTERS = ["all", "notes", "new", "update", "duplicate", "same", "unmapped", "error"];
+const FILTERS = ["all", "notes", "operations", "new", "update", "duplicate", "same", "unmapped", "error"];
+const FAMILY_ICON = { compensation: "shield", credit: "coins", adjustment: "repeat", unknown: "alert" };
 const CSV_FIELDS = ["start", "end", "nights", "gross", "commission", "payout", "taxes_collected", "external_ref", "guest_label", "guests", "property", "paid_on"];
 const CHANNELS = ["airbnb", "abritel", "booking", "direct", "other"];
 const AMOUNT_FIELDS = new Set(["gross", "commission", "payout", "taxes_collected"]);
@@ -41,7 +42,7 @@ function readFile(file) {
 }
 
 function countsText(t, counts) {
-  const parts = ["created", "updated", "completed", "payouts"].filter((k) => counts?.[k]).map((k) => t(`imp.cnt.${k}`, { n: counts[k] }));
+  const parts = ["created", "updated", "completed", "payouts", "entries"].filter((k) => counts?.[k]).map((k) => t(`imp.cnt.${k}`, { n: counts[k] }));
   return parts.join(" · ") || "—";
 }
 
@@ -117,7 +118,7 @@ export function openImport(app) {
     render();
     try {
       const result = await app.api.post("/api/imports/apply", {
-        ...payload(), remember: s.remember, expect: { to_write: counts.to_write, payouts: counts.payouts }, op_id: s.op,
+        ...payload(), remember: s.remember, expect: { to_write: counts.to_write, payouts: counts.payouts, entries: counts.entries || 0 }, op_id: s.op,
       });
       s.result = result.import;
       s.step = 3;
@@ -287,7 +288,32 @@ export function openImport(app) {
     return parts.length ? parts.join(" · ") : t("imp.noAmount");
   };
 
+  const decisionSelect = (r, prefix) => r.choices.length ? html`
+    <label class="decision"><span>${t("imp.decision")}</span>
+      <select data-decision="${r.key}" data-k="dec-${r.key}">${r.choices.map((c) => html`<option value="${c}" ${raw(c === r.decision ? "selected" : "")}>${t(`imp.dec.${prefix}.${c}`)}</option>`)}</select>
+    </label>` : "";
+
+  const operationCard = (r) => html`
+    <article class="imp-row op ${r.status}">
+      <header>
+        <span class="pill ${r.status === "new" ? (r.family === "unknown" ? "amber" : "teal") : STATUS_TONE[r.status] || "grey"}">${raw(icon(r.status === "new" ? FAMILY_ICON[r.family] || "info" : STATUS_ICON[r.status] || "info"))}${r.status === "new" ? t(`imp.family.${r.family}`) : r.status_label}</span>
+        <b>${r.type_label}</b>
+        <small class="num">${t("imp.lineN", { n: r.lines[0] })}</small>
+      </header>
+      ${r.amount !== null && r.amount !== undefined ? html`<p class="num">${raw(icon("coins"))}<span><b>${r.direction === "out" ? "− " : "+ "}${i18n.money(r.amount)}</b> · ${r.date ? i18n.dateShort(r.date) : "—"}${r.category ? html` · ${r.category}` : ""}</span></p>` : ""}
+      ${r.label ? html`<p>${raw(icon("receipt"))}<span>${t(r.direction === "out" ? "imp.opExpense" : "imp.opIncome", { label: r.label })}</span></p>` : ""}
+      ${r.property ? html`<p>${raw(icon("home"))}<span>${r.property}</span></p>` : ""}
+      ${(r.facts || []).map((f, i, all) => {
+        const paid = r.payout && r.decision !== "skip" && i === all.length - 1;  // the payout comes last
+        return html`<p class="${paid ? "ok" : ""}">${raw(icon(paid ? "check" : "info"))}<span>${f}</span></p>`;
+      })}
+      ${r.errors.map((e) => html`<p class="msg err">${raw(icon("alert"))}<span>${e}</span></p>`)}
+      ${r.warnings.map((w) => html`<p class="msg warn">${raw(icon("info"))}<span>${w}</span></p>`)}
+      ${decisionSelect(r, r.status === "same" ? "same" : "op")}
+    </article>`;
+
   const rowCard = (r) => {
+    if (r.kind === "operation") return operationCard(r);
     const title = r.external_ref || r.guest_label || t("imp.lineN", { n: r.lines[0] });
     const lines = r.lines.length > 1 ? t("imp.linesN", { list: r.lines.join(", ") }) : t("imp.lineN", { n: r.lines[0] });
     const facts = r.start ? [i18n.range(r.start, r.end), i18n.plural(r.nights, "stays.night", "stays.nights")] : [];
@@ -303,7 +329,8 @@ export function openImport(app) {
         ${r.property ? html`<p>${raw(icon("home"))}<span>${r.property}${r.listing ? html` <small>· ${t("imp.listing", { listing: r.listing })}</small>` : ""}</span></p>`
           : r.listing ? html`<p>${raw(icon("home"))}<span>${t("imp.listing", { listing: r.listing })}</span></p>` : ""}
         ${r.amounts ? html`<p class="num">${raw(icon("coins"))}<span>${amountsText(r.amounts)}</span></p>` : ""}
-        ${r.payout && r.decision !== "skip" ? html`<p class="ok">${raw(icon("check"))}<span>${t("imp.payoutLine", { amount: i18n.money(r.payout.amount), date: i18n.dateShort(r.payout.date) })}</span></p>` : ""}
+        ${r.payout && r.decision !== "skip" ? html`<p class="ok">${raw(icon("check"))}<span>${t(r.payout.bank_by ? "imp.payoutLineBank" : "imp.payoutLine", { amount: i18n.money(r.payout.amount), date: i18n.dateShort(r.payout.date), bank: r.payout.bank_by ? i18n.dateShort(r.payout.bank_by) : "" })}</span></p>` : ""}
+        ${r.decision === "cancelled" ? html`<p class="ok">${raw(icon("ban"))}<span>${t("imp.cancelledLine")}</span></p>` : ""}
         ${r.status === "duplicate" && r.stay_id ? html`<p>${raw(icon("copy"))}<span>${t("imp.twin", { label: r.twin_label })}</span></p>` : ""}
         ${r.changes.length && r.decision !== "skip" && (r.status === "update" || r.decision === "complete") ? html`
           <div class="changes"><b>${t(r.status === "update" ? "imp.changes" : "imp.fills")}</b>
@@ -311,16 +338,46 @@ export function openImport(app) {
           </div>` : ""}
         ${r.errors.map((e) => html`<p class="msg err">${raw(icon("alert"))}<span>${e}</span></p>`)}
         ${r.warnings.map((w) => html`<p class="msg warn">${raw(icon("info"))}<span>${w}</span></p>`)}
-        ${r.choices.length ? html`
-          <label class="decision"><span>${t("imp.decision")}</span>
-            <select data-decision="${r.key}" data-k="dec-${r.key}">${r.choices.map((c) => html`<option value="${c}" ${raw(c === r.decision ? "selected" : "")}>${t(`imp.dec.${r.status}.${c}`)}</option>`)}</select>
-          </label>` : ""}
+        ${decisionSelect(r, r.status)}
       </article>`;
   };
 
+  // « Bilan des versements » : every payout of the file and what would stay unrecorded (ANO-001).
+  const reconciliation = (p) => {
+    const rec = p.reconciliation;
+    if (!rec) return "";
+    const k = rec.kinds;
+    const parts = [["stay", "imp.rec.stays"], ["compensation", "imp.rec.compensation"], ["credit", "imp.rec.credit"], ["adjustment", "imp.rec.adjustment"], ["unknown", "imp.rec.unknown"]]
+      .filter(([key]) => k[key]);
+    const left = rec.states.left;
+    return html`
+      <section class="imp-section imp-rec" aria-labelledby="rc-imp-rec">
+        <h3 class="section-title" id="rc-imp-rec">${t("imp.rec.title")}</h3>
+        <dl class="facts-list money-facts">
+          <div><dt><b>${t("imp.rec.total", { n: rec.count })}</b></dt><dd class="num"><b>${i18n.money(rec.total)}</b></dd></div>
+          ${parts.map(([key, label]) => html`<div><dt>${t(label)}</dt><dd class="num">${i18n.money(k[key])}</dd></div>`)}
+        </dl>
+        ${left ? html`<div class="tip warn" role="status">${raw(icon("alert"))}<div><b>${t("imp.rec.leftTitle", { amount: i18n.money(left) })}</b>
+            <p>${t("imp.rec.leftText")}</p>
+            <ul>${rec.left.map((l) => html`<li><span class="num">${i18n.money(l.amount)}</span> · ${l.ref || t("imp.lineN", { n: l.line })} · ${t(`imp.rec.kind.${l.kind}`)} · ${i18n.dateShort(l.date)}</li>`)}</ul></div></div>`
+          : html`<p class="reading ok">${raw(icon("checkCircle"))}<span>${t(rec.states.new ? "imp.rec.allNew" : "imp.rec.allKnown")}</span></p>`}
+        ${rec.mismatched.length ? html`<div class="tip warn">${raw(icon("alert"))}<div><b>${t("imp.rec.mismatch")}</b>
+            <ul>${rec.mismatched.map((m) => html`<li>${t("imp.lineN", { n: m.line })} · ${i18n.money(m.amount)} ≠ ${i18n.money(m.explained)}</li>`)}</ul></div></div>` : ""}
+        <details class="imp-months">
+          <summary>${t("imp.rec.byMonth")}</summary>
+          <table class="table compact-table">
+            <thead><tr><th scope="col">${t("imp.rec.month")}</th><th scope="col" class="amt">${t("imp.rec.sent")}</th><th scope="col" class="amt">${t("imp.rec.ofStays")}</th><th scope="col" class="amt">${t("imp.rec.ofOther")}</th><th scope="col" class="amt">${t("imp.rec.notRecorded")}</th></tr></thead>
+            <tbody>${rec.months.map((m) => html`<tr><td>${i18n.month(m.month + "-01")}</td><td class="amt num">${i18n.money(m.total)}</td><td class="amt num">${i18n.money(m.stay)}</td><td class="amt num">${i18n.money(m.other)}</td><td class="amt num ${m.left ? "warn-text" : ""}">${m.left ? i18n.money(m.left) : "—"}</td></tr>`)}</tbody>
+          </table>
+        </details>
+      </section>`;
+  };
+
   const results = (p) => {
-    const counts = { ...p.counts, all: p.rows.length, notes: p.rows.filter((r) => r.warnings.length || r.errors.length).length };
-    const shown = p.rows.filter((r) => s.filter === "all" || (s.filter === "notes" ? r.warnings.length || r.errors.length : r.status === s.filter));
+    const notable = (r) => r.errors.length || r.warnings.length;
+    const counts = { ...p.counts, all: p.rows.length, notes: p.rows.filter(notable).length };
+    const shown = p.rows.filter((r) => s.filter === "all" || (s.filter === "notes" ? notable(r)
+      : s.filter === "operations" ? r.kind === "operation" : r.kind !== "operation" && r.status === s.filter));
     return html`
       <section class="imp-section">
         <h3 class="section-title">${t("imp.result")}</h3>
@@ -347,7 +404,7 @@ export function openImport(app) {
           ${s.kind === "airbnb" ? html`<button type="button" class="btn ghost small" data-k="to-csv">${raw(icon("file"))}${t("imp.toCsv")}</button>` : ""}</div></div>` : ""}
       ${p.notices.length ? html`<div class="tip">${raw(icon("info"))}<div><b>${t("imp.notices")}</b><ul>${p.notices.map((n) => html`<li>${n}</li>`)}</ul></div></div>` : ""}
       ${p.kind === "csv" && p.headers.length ? columns(p) : ""}
-      ${blocked && !p.rows.length ? "" : html`${properties(p)}${optionsBlock()}${results(p)}`}`;
+      ${blocked && !p.rows.length ? "" : html`${properties(p)}${optionsBlock()}${reconciliation(p)}${results(p)}`}`;
   };
 
   const doneStep = () => {
@@ -356,7 +413,7 @@ export function openImport(app) {
       ${stepper(t, 3)}
       <div class="imp-done"><span class="bubble teal big">${raw(icon("checkCircle"))}</span><div><h3>${t("imp.doneTitle")}</h3><p>${t("imp.doneSub", { file: r.file_name || s.fileName })}</p></div></div>
       <dl class="facts-list money-facts">
-        ${["created", "updated", "completed", "payouts"].map((k) => html`<div><dt>${t(k === "payouts" ? "imp.payoutsDone" : `imp.${k}`)}</dt><dd class="num">${r.counts[k]}</dd></div>`)}
+        ${["created", "updated", "completed", "payouts", "entries"].filter((k) => k !== "entries" || r.counts.entries).map((k) => html`<div><dt>${t(k === "payouts" ? "imp.payoutsDone" : `imp.${k}`)}</dt><dd class="num">${r.counts[k]}</dd></div>`)}
       </dl>
       ${s.error ? errorBox(s.error) : ""}
       <p class="reading">${raw(icon("info"))}<span>${t("imp.undoHelp")}</span></p>`;
@@ -371,7 +428,9 @@ export function openImport(app) {
     }
     if (s.step === 2) {
       const c = s.preview.counts;
-      const what = [c.to_write ? i18n.plural(c.to_write, "imp.nStay", "imp.nStays") : "", c.payouts ? i18n.plural(c.payouts, "imp.nPayout", "imp.nPayouts") : ""].filter(Boolean).join(t("imp.and"));
+      const what = [c.to_write ? i18n.plural(c.to_write, "imp.nStay", "imp.nStays") : "", c.entries ? i18n.plural(c.entries, "imp.nEntry", "imp.nEntries") : "",
+        c.payouts ? i18n.plural(c.payouts, "imp.nPayout", "imp.nPayouts") : ""].filter(Boolean)
+        .reduce((text, part, index, all) => !index ? part : text + (index === all.length - 1 ? t("imp.and") : ", ") + part, "");
       const label = s.applying ? t("imp.applying") : s.busy ? t("imp.checking") : s.preview.can_apply ? t("imp.apply", { what }) : t("imp.nothing");
       return html`
         <button type="button" class="btn ghost back" data-k="back">${t("common.back")}</button>

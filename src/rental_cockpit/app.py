@@ -280,6 +280,26 @@ def create_app(config: Config | None = None) -> FastAPI:
                 "properties": sorted(visible, key=lambda p: (p["archived"], p["name"].casefold())),
                 "settings": {k: data["settings"].get(k) for k in ("currency", "first_choice", "onboarding", "demo_focus", "demo")}}
 
+    @app.get("/api/series")
+    async def series(request: Request) -> dict[str, Any]:
+        """« Évolution mensuelle » of « Performance locative »: the twelve months of one year."""
+        params = request.query_params
+        dataset = dataset_of(params.get("dataset"))
+        acc = access(services, current_user(services, request), dataset)
+        registry = services.registries[dataset]
+        if not registry.exists:
+            raise RCError("not_found")
+        try:
+            year = int(str(params.get("year")))
+        except ValueError as exc:
+            raise RCError("date_format") from exc
+        if not 2000 <= year <= 2100:
+            raise RCError("date_range")
+        selected = scope(acc, params.get("property_id"))
+        data = registry.snapshot()
+        months = await run_in_threadpool(lambda: indicators.monthly_series(data, property_ids=selected, year=year, lang=lang_of(request)))
+        return {"year": year, "property_ids": sorted(selected), "months": months}
+
     @app.get("/api/indicator")
     async def indicator(request: Request) -> dict[str, Any]:
         """« Comment est calculé ce montant ? » with the exact lines behind it (UX 05)."""

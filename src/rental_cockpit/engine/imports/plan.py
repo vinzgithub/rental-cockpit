@@ -1,5 +1,5 @@
 # Copyright © 2026 Vincent Fournet
-"""From a read file to stays: preview, apply, undo.
+"""From a read file to stays and the platform's other operations: preview, apply, undo.
 
 The preview compares every line with the registry and says what would
 happen — new stay, update of a stay already imported, nothing to change,
@@ -24,7 +24,15 @@ from ..ledger import Ledger, new_id
 from ..money import format_cents
 
 STATUSES = ("new", "update", "same", "duplicate", "unmapped", "error")
-DECISIONS = ("import", "complete", "skip")
+DECISIONS = ("import", "complete", "cancelled", "skip")
+# What a line of the platform that is not a booking becomes (see airbnb.OPERATION_TYPES).
+OPERATION_CATEGORIES = {"compensation": "platform_compensation", "credit": "platform_credit"}
+OPERATION_LABELS = {
+    "compensation": ("Indemnisation Airbnb", "Airbnb compensation"),
+    "credit": ("Crédit Airbnb", "Airbnb credit"),
+    "adjustment": ("Remboursement à un voyageur (retenu par Airbnb)", "Refund to a guest (withheld by Airbnb)"),
+    "unknown": ("Opération Airbnb", "Airbnb operation"),
+}
 
 MESSAGES: dict[str, tuple[str, str]] = {
     "imp_empty": ("Le fichier est vide.", "The file is empty."),
@@ -61,12 +69,22 @@ MESSAGES: dict[str, tuple[str, str]] = {
     "imp_payout_too_high": ("versement non enregistré : il dépasserait le montant attendu", "payout not recorded: it would exceed the expected amount"),
     "imp_file_known": ("Ce fichier a déjà été importé le {date}.", "This file was already imported on {date}."),
     "imp_ignored_transfers": ("{n} ligne(s) « Payout » ignorée(s) : ce sont des virements de montants déjà comptés.", "{n} \"Payout\" line(s) ignored: they are transfers of amounts already counted."),
-    "imp_ignored_other": ("{n} ligne(s) d'un autre type ignorée(s) ({types}) : elles ne sont pas des réservations.", "{n} line(s) of another type ignored ({types}): they are not bookings."),
+    "imp_ignored_other": ("{n} ligne(s) sans montant ignorée(s) ({types}).", "{n} line(s) without an amount ignored ({types})."),
+    "imp_payouts_checked": ("{n} versement(s) Airbnb, {total} au total : chacun correspond au centime aux lignes qu'il paie.", "{n} Airbnb payout(s), {total} in all: each matches the lines it pays to the cent."),
+    "imp_payout_mismatch": ("Le versement de la ligne {line} ({amount}) ne correspond pas aux lignes qui le suivent ({explained}) : vérifiez-le dans l'export.", "The payout on line {line} ({amount}) does not match the lines after it ({explained}): check it in the export."),
+    "imp_op_no_date": ("date de l'opération illisible", "unreadable date of the operation"),
+    "imp_op_unknown": ("type d'opération « {type} » inconnu de Rental Cockpit : vérifiez sa nature avant de l'enregistrer", "operation type \"{type}\" unknown to Rental Cockpit: check what it is before recording it"),
+    "imp_op_no_property": ("cette opération ne nomme pas de logement : choisissez le bien du fichier ci-dessus", "this operation names no listing: choose the property of the file above"),
+    "imp_op_known": ("déjà enregistrée par un import précédent", "already recorded by an earlier import"),
+    "imp_op_payout": ("versée par Airbnb le {date} (arrivée sur le compte au plus tard le {bank})", "sent by Airbnb on {date} (on the account by {bank} at the latest)"),
+    "imp_op_withheld": ("retenue par Airbnb sur le versement du {date}", "withheld by Airbnb from the payout of {date}"),
+    "imp_op_stay": ("concerne la réservation {ref}", "concerns booking {ref}"),
+    "imp_overlap_cancelled": ("si l'une de ces réservations a été annulée et qu'Airbnb a versé un dédommagement, choisissez « Annulé, montant encaissé conservé » pour celle-là : le montant compte, ses nuits non", "if one of these bookings was cancelled and Airbnb paid a compensation, choose \"Cancelled, amount received kept\" for that one: the amount counts, its nights do not"),
 }
 
 AMOUNT_FIELDS = ("gross", "commission", "payout", "taxes_collected")
-AMOUNT_PARAMS = ("received", "expected")  # amounts in cents, written in the reader's language
-DATE_PARAMS = ("date", "start", "end")  # ISO days, written « 5 oct. 2026 » or « 5 Oct 2026 »
+AMOUNT_PARAMS = ("received", "expected", "total", "amount", "explained")  # amounts in cents, written in the reader's language
+DATE_PARAMS = ("date", "start", "end", "bank")  # ISO days, written « 5 oct. 2026 » or « 5 Oct 2026 »
 MONTHS = {"fr": ("janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."),
           "en": ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")}
 
@@ -130,10 +148,19 @@ class _Index:
                 reach.append(latest)
             self.sorted[pid] = ([s["start"] for s in stays], stays, reach)
         self.payouts: dict[str, list[tuple[str, int]]] = {}
+        self.entry_paid: dict[str, int] = {}
         for payment in data.get("payments", {}).values():
             for link in payment["links"]:
                 if link["type"] == "stay":
                     self.payouts.setdefault(link["id"], []).append((payment["date"], link["amount"]))
+                else:
+                    self.entry_paid[link["id"]] = self.entry_paid.get(link["id"], 0) + link["amount"]
+        # Platform operations already recorded by an import, by the key the reader gives them.
+        self.operations: dict[str, dict[str, Any]] = {}
+        for entry in data.get("entries", {}).values():
+            key = (entry.get("origin") or {}).get("key")
+            if key:
+                self.operations[key] = entry
 
     def overlapping(self, pid: str, start: str, end: str) -> list[dict[str, Any]]:
         starts, stays, reach = self.sorted.get(pid, ([], [], []))
@@ -255,6 +282,13 @@ def _allowed(item: dict[str, Any]) -> tuple[str, ...]:
     """Decisions the person can take on a line of the preview."""
     if item.get("locked") or item["status"] in ("error", "unmapped"):
         return ()
+    if item.get("kind") == "operation":
+        if item["status"] == "same":
+            return ("import", "skip") if item.get("payout") else ()
+        return ("import", "skip")
+    if item["status"] == "new":
+        # A booking cancelled late can still be paid: the amount counts, the nights do not (ANO-002).
+        return ("import", "cancelled", "skip")
     if item["status"] == "duplicate":
         # Completing is only offered when it brings something: a missing amount, the reference, a payout.
         useful = item.get("stay_id") and (item["changes"] or item.get("payout"))
@@ -269,7 +303,7 @@ def _payout(index: _Index, item: dict[str, Any], target: dict[str, Any] | None, 
     if not (item.get("paid_on") and item.get("paid_amount")) or item["paid_on"] > today.isoformat():
         return
     if target is None:
-        item["payout"] = {"date": item["paid_on"], "amount": item["paid_amount"]}
+        item["payout"] = {"date": item["paid_on"], "amount": item["paid_amount"], "bank_by": item.get("bank_by", "")}
         return
     if (item["paid_on"], item["paid_amount"]) in index.payouts.get(target["id"], []):
         item["warnings"].append({"code": "imp_payout_exists", "params": {}})
@@ -282,7 +316,7 @@ def _payout(index: _Index, item: dict[str, Any], target: dict[str, Any] | None, 
     if expected is not None and index.received(target["id"]) + item["paid_amount"] > expected:
         item["warnings"].append({"code": "imp_payout_too_high", "params": {}})
         return
-    item["payout"] = {"date": item["paid_on"], "amount": item["paid_amount"]}
+    item["payout"] = {"date": item["paid_on"], "amount": item["paid_amount"], "bank_by": item.get("bank_by", "")}
 
 
 def build(data: dict[str, Any], parsed: dict[str, Any], options: dict[str, Any], today: date, content_hash: str) -> dict[str, Any]:
@@ -303,7 +337,7 @@ def build(data: dict[str, Any], parsed: dict[str, Any], options: dict[str, Any],
             item.update(status="error", decision="skip")
             rows.append(item)
             continue
-        item.update({key: row.get(key) for key in ("start", "end", "nights", "guests", "amounts", "paid_on", "paid_amount")})
+        item.update({key: row.get(key) for key in ("start", "end", "nights", "guests", "amounts", "paid_on", "paid_amount", "bank_by", "payout_ref")})
         if any(v is not None and v < 0 for v in (item["amounts"] or {}).values()):
             item["errors"].append({"code": "imp_negative", "params": {}})
             item.update(status="error", decision="skip")
@@ -341,37 +375,174 @@ def build(data: dict[str, Any], parsed: dict[str, Any], options: dict[str, Any],
             item["decision"] = "import" if item["payout"] else "skip"
             if item["payout"] and choice in ("import", "skip"):
                 item["decision"] = choice
-        if item["decision"] != "skip" and item["status"] in ("new", "duplicate") and target is None:
+        if item["decision"] not in ("skip", "cancelled") and item["status"] in ("new", "duplicate") and target is None:
             planned.setdefault(pid, []).append(item)
+        if item["status"] == "new" and any(w["code"] == "imp_overlap" for w in item["warnings"]):
+            item["warnings"].append({"code": "imp_overlap_cancelled", "params": {}})
         rows.append(item)
 
-    # Two new stays of the same file on the same nights: shown before anything is written.
+    # Two new stays of the same file on the same nights: both lines say so before anything is written.
     for items in planned.values():
-        longest = None
+        active: list[dict[str, Any]] = []
         for item in sorted(items, key=lambda i: (i["start"], i["lines"][0])):
-            if longest is not None and item["start"] < longest["end"]:
-                item["warnings"].append({"code": "imp_overlap_file", "params": {
-                    "line": longest["lines"][0], "start": longest["start"], "end": longest["end"]}})
-            if longest is None or item["end"] > longest["end"]:
-                longest = item
+            active = [other for other in active if other["end"] > item["start"]]
+            for other in active[:3]:
+                for here, there in ((item, other), (other, item)):
+                    here["warnings"].append({"code": "imp_overlap_file", "params": {
+                        "line": there["lines"][0], "start": there["start"], "end": there["end"]}})
+                    if not any(w["code"] == "imp_overlap_cancelled" for w in here["warnings"]):
+                        here["warnings"].append({"code": "imp_overlap_cancelled", "params": {}})
+            active.append(item)
 
+    rows += _operations(parsed, options, data, index, decisions, today, with_payouts, rows)
     for item in rows:
         item["choices"] = list(_allowed(item))
     known = [i for i in data.get("imports", {}).values() if i.get("sha256") == content_hash and not i.get("undone_at")]
     notices = list(parsed.get("warnings", []))
-    if parsed["ignored"]["transfers"]:
+    payouts = parsed.get("payouts") or []
+    mismatched = [p for p in payouts if p["explained"] != p["amount"]]
+    if payouts and not mismatched:
+        notices.append({"code": "imp_payouts_checked", "params": {"n": len(payouts), "total": sum(p["amount"] for p in payouts)}})
+    for payout in mismatched[:5]:
+        notices.append({"code": "imp_payout_mismatch", "params": {"line": payout["line"], "amount": payout["amount"], "explained": payout["explained"]}})
+    if not payouts and parsed["ignored"]["transfers"]:
         notices.append({"code": "imp_ignored_transfers", "params": {"n": parsed["ignored"]["transfers"]}})
     if parsed["ignored"]["other"]:
         notices.append({"code": "imp_ignored_other", "params": {"n": sum(parsed["ignored"]["other"].values()),
                                                                "types": ", ".join(sorted(parsed["ignored"]["other"]))}})
     if known:
         notices.append({"code": "imp_file_known", "params": {"date": known[-1]["at"][:10]}})
-    counts = {status: sum(1 for r in rows if r["status"] == status) for status in STATUSES}
-    counts["to_write"] = sum(1 for r in rows if r["decision"] != "skip" and (
+    stays_rows = [r for r in rows if r.get("kind") != "operation"]
+    counts = {status: sum(1 for r in stays_rows if r["status"] == status) for status in STATUSES}
+    counts["to_write"] = sum(1 for r in stays_rows if r["decision"] != "skip" and (
         r["status"] in ("new", "update") or (r["status"] == "duplicate" and (r["decision"] == "import" or r["changes"]))))
     counts["payouts"] = sum(1 for r in rows if r["payout"] and r["decision"] != "skip")
+    counts["operations"] = sum(1 for r in rows if r.get("kind") == "operation")
+    counts["entries"] = sum(1 for r in rows if r.get("kind") == "operation" and r["status"] == "new" and r["decision"] == "import")
+    counts["cancelled"] = sum(1 for r in stays_rows if r["decision"] == "cancelled")
     return {"rows": rows, "counts": counts, "errors": parsed["errors"], "notices": notices,
-            "can_apply": not parsed["errors"] and counts["to_write"] + counts["payouts"] > 0}
+            "reconciliation": _reconcile(parsed, rows, index),
+            "can_apply": not parsed["errors"] and counts["to_write"] + counts["payouts"] + counts["entries"] > 0}
+
+
+def _single_property(options: dict[str, Any], properties: dict[str, Any]) -> str | None:
+    """The property of a line that names no listing: the one chosen for the file, or the only one used."""
+    pid = options.get("property_id")
+    if pid in properties and not properties[pid].get("archived"):
+        return pid
+    used = {v for v in (options.get("property_map") or {}).values() if v in properties and not properties[v].get("archived")}
+    return next(iter(used)) if len(used) == 1 else None
+
+
+def _operations(parsed: dict[str, Any], options: dict[str, Any], data: dict[str, Any], index: _Index,
+                decisions: dict[str, Any], today: date, with_payouts: bool, stay_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Lines of the platform that are not bookings: what each becomes, as income or expense of a property."""
+    properties, categories = data.get("properties", {}), data.get("categories", {})
+    planned_refs = {(r.get("property_id"), r["external_ref"]) for r in stay_rows
+                    if r.get("external_ref") and r["decision"] != "skip" and r["status"] in ("new", "duplicate")}
+    items = []
+    for op in parsed.get("operations") or []:
+        amount = op["amount"]
+        family = op["family"]
+        item: dict[str, Any] = {
+            "key": op["key"], "kind": "operation", "lines": op["lines"], "family": family, "type_label": op["type_label"],
+            "external_ref": op["external_ref"], "listing": op["listing"], "details": op["details"], "op_key": op["op_key"],
+            "date": op["date"], "start": op["start"], "end": op["end"], "errors": list(op["errors"]), "warnings": [], "facts": [],
+            "changes": [], "payout": None, "amounts": None, "nights": None, "paid_on": op["paid_on"], "bank_by": op["bank_by"],
+            "payout_ref": op["payout_ref"], "amount": abs(amount) if amount is not None else None,
+            "direction": "out" if (amount or 0) < 0 else "in",
+        }
+        items.append(item)
+        if item["errors"]:
+            item.update(status="error", decision="skip")
+            continue
+        income = item["direction"] == "in"
+        category_id = OPERATION_CATEGORIES.get(family) if income else ("guest_refund" if family == "adjustment" else None)
+        if family == "adjustment" and income:
+            category_id = "platform_compensation"
+        fallback = "other_income" if income else "other_expense"
+        usable = categories.get(category_id or "") or {}
+        item["category_id"] = category_id if usable and not usable.get("archived") else fallback
+        name = OPERATION_LABELS[family]
+        item["label_pair"] = name if family != "unknown" else (op["type_label"], op["type_label"])
+        item["warnings"] += [{"code": "imp_op_unknown", "params": {"type": op["type_label"]}}] if family == "unknown" else []
+        if op["external_ref"]:
+            item["facts"].append({"code": "imp_op_stay", "params": {"ref": op["external_ref"]}})
+        pid = _property_for(op, options, properties) if op["listing"] else _single_property(options, properties)
+        item["property_id"] = pid
+        if not pid:
+            if not op["listing"]:
+                item["warnings"].append({"code": "imp_op_no_property", "params": {}})
+            item.update(status="unmapped", decision="skip")
+            continue
+        stay = next((s for s in index.by_ref.get(op["external_ref"], []) if s["property_id"] == pid), None) if op["external_ref"] else None
+        item["stay_id"] = stay["id"] if stay else ""
+        item["stay_ref"] = op["external_ref"] if not stay and (pid, op["external_ref"]) in planned_refs else ""
+        paid = bool(with_payouts and op["paid_on"] and op["paid_on"] <= today.isoformat())
+        existing = index.operations.get(op["op_key"])
+        if existing is not None:
+            item.update(status="same", decision="skip", entry_id=existing["id"], known=True)
+            remaining = existing["amount"] - index.entry_paid.get(existing["id"], 0)
+            if paid and remaining > 0:
+                item["payout"] = {"date": op["paid_on"], "amount": remaining, "bank_by": op["bank_by"]}
+                item["decision"] = "import"
+            else:
+                item["facts"].append({"code": "imp_op_known", "params": {}})
+        else:
+            item.update(status="new", decision="import" if family != "unknown" else "skip")
+            if paid:
+                item["payout"] = {"date": op["paid_on"], "amount": item["amount"], "bank_by": op["bank_by"]}
+        if item["payout"]:
+            item["facts"].append({"code": "imp_op_payout" if income else "imp_op_withheld",
+                                     "params": {"date": op["paid_on"], "bank": op["bank_by"] or op["paid_on"]}})
+        choice = decisions.get(item["key"])
+        if choice in _allowed(item):
+            item["decision"] = choice
+    return items
+
+
+def _money_state(item: dict[str, Any] | None, index: _Index) -> str:
+    """For one line paid by a payout: ``new`` (recorded now), ``known`` (already recorded) or ``left``."""
+    if item is None:
+        return "left"
+    if item["decision"] != "skip" and item.get("payout"):
+        return "new"
+    if item.get("kind") == "operation":
+        return "known" if item.get("known") and not item.get("payout") else "left"
+    stay_id = item.get("stay_id")
+    if stay_id and any(amount == item.get("paid_amount") for _, amount in index.payouts.get(stay_id, [])):
+        return "known"
+    return "left"
+
+
+def _reconcile(parsed: dict[str, Any], rows: list[dict[str, Any]], index: _Index) -> dict[str, Any] | None:
+    """« Bilan des versements » : every payout of the file, what it pays, and what would stay unrecorded."""
+    payouts = parsed.get("payouts") or []
+    if not payouts:
+        return None
+    by_key = {r["key"]: r for r in rows if r.get("kind") == "operation"}
+    stays = {r["external_ref"]: r for r in rows if r.get("kind") != "operation" and r.get("external_ref")}
+    kinds = {"stay": 0, "compensation": 0, "credit": 0, "adjustment": 0, "unknown": 0}
+    states = {"new": 0, "known": 0, "left": 0}
+    months: dict[str, dict[str, int]] = {}
+    left: list[dict[str, Any]] = []
+    for payout in payouts:
+        month = months.setdefault(payout["date"][:7], {"total": 0, "stay": 0, "other": 0, "left": 0})
+        month["total"] += payout["amount"]
+        for part in payout["parts"]:
+            item = stays.get(part["ref"]) if part["kind"] == "stay" else by_key.get(part.get("key", ""))
+            state = _money_state(item, index)
+            kinds[part["kind"]] += part["amount"]
+            states[state] += part["amount"]
+            month["stay" if part["kind"] == "stay" else "other"] += part["amount"]
+            if state == "left":
+                month["left"] += part["amount"]
+                left.append({"line": part["line"], "ref": part["ref"], "amount": part["amount"], "date": payout["date"],
+                             "kind": part["kind"], "key": item["key"] if item else ""})
+    return {"count": len(payouts), "total": sum(p["amount"] for p in payouts), "kinds": kinds, "states": states,
+            "left": left[:50], "left_count": len(left),
+            "mismatched": [{"line": p["line"], "amount": p["amount"], "explained": p["explained"]} for p in payouts if p["explained"] != p["amount"]],
+            "months": [{"month": m, **v} for m, v in sorted(months.items(), reverse=True)]}
 
 
 def apply(ledger: Ledger, plan: dict[str, Any], meta: dict[str, Any]) -> dict[str, Any]:
@@ -382,7 +553,7 @@ def apply(ledger: Ledger, plan: dict[str, Any], meta: dict[str, Any]) -> dict[st
     source = "airbnb" if meta["kind"] == "airbnb" else "csv"
     record = {"id": import_id, "seq": len(ledger.data.get("imports", {})) + 1, "at": ledger.clock(), "by": ledger.actor, "kind": meta["kind"], "reader": meta["reader"],
               "file_name": meta.get("file_name", "")[:120], "sha256": meta["sha256"], "created": [], "updated": [],
-              "payments": [], "counts": {}, "undone_at": None}
+              "payments": [], "entries": [], "counts": {}, "undone_at": None}
     ledger.bulk = True
     try:
         counts = _write(ledger, plan, record, import_id, source, meta)
@@ -391,26 +562,32 @@ def apply(ledger: Ledger, plan: dict[str, Any], meta: dict[str, Any]) -> dict[st
     # Recording a payment changes nothing to a stay's revision: the undo check below still holds.
     record["counts"] = counts
     ledger.data.setdefault("imports", {})[import_id] = record
-    ledger.audit("import.apply", import_id, detail="{}:{created}+{updated}+{completed}+{payouts}".format(meta["kind"], **counts))
+    ledger.audit("import.apply", import_id, detail="{}:{created}+{updated}+{completed}+{payouts}+{entries}".format(meta["kind"], **counts))
     return {"import": summary(record)}
 
 
 def _write(ledger: Ledger, plan: dict[str, Any], record: dict[str, Any], import_id: str, source: str,
            meta: dict[str, Any]) -> dict[str, int]:
-    created = updated = completed = payouts = 0
+    created = updated = completed = payouts = entries = 0
+    created_refs: dict[tuple[str, str], str] = {}
     for row in plan["rows"]:
         if row["decision"] == "skip" or row["status"] in ("error", "unmapped"):
             continue
+        if row.get("kind") == "operation":
+            continue  # after the stays: an operation can concern a stay created by this import
         stay_id = row.get("stay_id")
         if row["status"] == "new" or (row["status"] == "duplicate" and row["decision"] == "import"):
             payload = {"property_id": row["property_id"], "start": row["start"], "end": row["end"], "guests": row.get("guests"),
                        "guest_label": row.get("guest_label", ""), "external_ref": row.get("external_ref", ""),
                        "channel": "airbnb" if source == "airbnb" else meta.get("channel") or "other",
+                       "status": "cancelled" if row["decision"] == "cancelled" else "confirmed",
                        "amounts": {f"{k}_cents": v for k, v in (row.get("amounts") or {}).items() if v is not None}}
             stay = ledger.create_stay(payload, source=source, origin_import=import_id)["stay"]
             stay_id = stay["id"]
             record["created"].append({"id": stay_id, "revision": stay["revision"]})
             created += 1
+            if stay["external_ref"]:
+                created_refs[(stay["property_id"], stay["external_ref"])] = stay_id
         elif row["status"] in ("update", "duplicate"):
             stay = ledger.data["stays"][stay_id]
             before = deepcopy({k: stay.get(k) for k in ("start", "end", "guests", "amounts", "external_ref", "guest_label")})
@@ -435,13 +612,54 @@ def _write(ledger: Ledger, plan: dict[str, Any], record: dict[str, Any], import_
         if row.get("payout") and stay_id:
             payment = ledger.create_payment({
                 "property_id": row["property_id"], "direction": "in", "date": row["payout"]["date"],
+                "expected_on": row["payout"].get("bank_by") or "",
                 "amount_cents": row["payout"]["amount"],
                 "links": [{"type": "stay", "id": stay_id, "amount_cents": row["payout"]["amount"]}],
-                "method": "Import Airbnb" if source == "airbnb" else "Import CSV", "origin": {"type": "import", "id": import_id},
+                "method": "Import Airbnb" if source == "airbnb" else "Import CSV",
+                "origin": {"type": "import", "id": import_id, "payout_ref": row.get("payout_ref") or ""},
             })["payment"]
             record["payments"].append(payment["id"])
             payouts += 1
-    return {"created": created, "updated": updated, "completed": completed, "payouts": payouts}
+    for row in plan["rows"]:
+        if row.get("kind") != "operation" or row["decision"] == "skip" or row["status"] in ("error", "unmapped"):
+            continue
+        entry_id = row.get("entry_id") or ""
+        if row["status"] == "new":
+            entry_id = _create_operation(ledger, row, import_id, created_refs, meta.get("lang", "fr"))
+            record["entries"].append(entry_id)
+            entries += 1
+        if row.get("payout") and entry_id:
+            payment = ledger.create_payment({
+                "property_id": row["property_id"], "direction": row["direction"], "date": row["payout"]["date"],
+                "expected_on": row["payout"].get("bank_by") or "", "amount_cents": row["payout"]["amount"],
+                "links": [{"type": "entry", "id": entry_id, "amount_cents": row["payout"]["amount"]}],
+                "method": ("Import Airbnb" if row["direction"] == "in" else "Retenue Airbnb"),
+                "origin": {"type": "import", "id": import_id, "payout_ref": row.get("payout_ref") or ""},
+            })["payment"]
+            record["payments"].append(payment["id"])
+            payouts += 1
+    return {"created": created, "updated": updated, "completed": completed, "payouts": payouts, "entries": entries}
+
+
+def _create_operation(ledger: Ledger, row: dict[str, Any], import_id: str, created_refs: dict[tuple[str, str], str], lang: str) -> str:
+    """An income or expense of the property for a platform operation, traced back to its line and import."""
+    fr = lang == "fr"
+    name = row["label_pair"][0 if fr else 1]
+    label = f"{name} — {row['details']}" if row.get("details") else name
+    stay_id = row.get("stay_id") or created_refs.get((row["property_id"], row.get("stay_ref") or ""), "")
+    note_bits = []
+    if row.get("external_ref"):
+        note_bits.append(("Réservation " if fr else "Booking ") + row["external_ref"])
+    if row.get("start") and row.get("end"):
+        note_bits.append(f"{row['start']} → {row['end']}")
+    note_bits.append(("Ligne {n} de l'export Airbnb" if fr else "Line {n} of the Airbnb export").format(n=row["lines"][0]))
+    result = ledger.create_entry({
+        "property_id": row["property_id"], "kind": "income" if row["direction"] == "in" else "expense",
+        "category_id": row["category_id"], "label": label[:140], "amount_cents": row["amount"], "date": row["date"],
+        "stay_id": stay_id, "payment_declared": "unpaid" if row["direction"] == "out" else "unknown",
+        "note": " · ".join(note_bits)[:600],
+    }, origin={"type": "import", "id": import_id, "key": row["op_key"], "source": "airbnb", "line": row["lines"][0]})
+    return result["entry"]["id"]
 
 
 def summary(record: dict[str, Any]) -> dict[str, Any]:
@@ -458,6 +676,16 @@ def undo_blockers(data: dict[str, Any], record: dict[str, Any]) -> list[str]:
     """Stays of the import changed since: undoing would erase someone's work, so it is refused."""
     blockers = []
     own = set(record["payments"])
+    own_entries = set(record.get("entries", []))
+    for entry_id in own_entries:
+        entry = data.get("entries", {}).get(entry_id)
+        if entry is None:
+            continue
+        foreign = [p for p in data.get("payments", {}).values() if p["id"] not in own
+                   and any(link["type"] == "entry" and link["id"] == entry_id for link in p["links"])]
+        documents = [d for d in data.get("documents", {}).values() if entry_id in (d.get("entry_ids") or [])]
+        if int(entry.get("revision") or 0) != 1 or foreign or documents or entry.get("archived"):
+            blockers.append(entry["label"][:60])
     for item in record["created"] + record["updated"]:
         stay = data["stays"].get(item["id"])
         if stay is None:
@@ -467,8 +695,8 @@ def undo_blockers(data: dict[str, Any], record: dict[str, Any]) -> list[str]:
             continue
         foreign = [p for p in data.get("payments", {}).values() if p["id"] not in own
                    and any(link["type"] == "stay" and link["id"] == stay["id"] for link in p["links"])]
-        linked = [e for e in data.get("entries", {}).values()
-                  if e.get("stay_id") == stay["id"] or any(a.get("stay_id") == stay["id"] for a in e.get("allocations", []))]
+        linked = [e for e in data.get("entries", {}).values() if e["id"] not in own_entries and (
+                  e.get("stay_id") == stay["id"] or any(a.get("stay_id") == stay["id"] for a in e.get("allocations", [])))]
         if (foreign or linked) and item in record["created"]:
             blockers.append(stay.get("guest_label") or stay.get("external_ref") or stay["start"])
     return blockers
@@ -487,6 +715,8 @@ def undo(ledger: Ledger, import_id: str) -> dict[str, Any]:
         raise RCError("import_changed_since", stays=", ".join(blockers[:5]))
     for payment_id in record["payments"]:
         data["payments"].pop(payment_id, None)
+    for entry_id in record.get("entries", []):
+        data["entries"].pop(entry_id, None)
     for item in record["created"]:
         data["stays"].pop(item["id"], None)
     restored = {}
@@ -505,6 +735,6 @@ def undo(ledger: Ledger, import_id: str) -> dict[str, Any]:
     for entry in (previous["created"] + previous["updated"]) if previous else []:
         if entry["id"] in restored and entry["revision"] == restored[entry["id"]][0]:
             entry["revision"] = restored[entry["id"]][1]
-    ledger.audit("import.undo", import_id, detail=f"{len(record['created'])}+{len(record['updated'])}+{len(record['payments'])}")
+    ledger.audit("import.undo", import_id, detail=f"{len(record['created'])}+{len(record['updated'])}+{len(record['payments'])}+{len(record.get('entries', []))}")
     return {"import": summary(record)}
 

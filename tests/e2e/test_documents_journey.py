@@ -13,6 +13,8 @@ from pypdf import PdfWriter
 
 from rental_cockpit.engine import documents
 
+from .helpers import pick_period
+
 INVOICE = documents.sample_pdf(["Ménage Essai — document fictif", "Facture n° F-018", "Date de facture : 20/10/2026",
                                 "Ménage 100,00 €", "Linge 40,00 €", "Déplacement 10,00 €", "Total TTC 150,00 €"])
 
@@ -103,7 +105,7 @@ def test_invoice_to_expense_duplicate_attach_and_detach(desktop, base_url, tmp_p
 
     # « À vérifier » leads to the documents to complete.
     page.locator('.sidebar [data-value="synthese"]').click()
-    page.locator('[data-change="period"]').select_option("m:2026-10")
+    pick_period(page, "m:2026-10")
     page.locator('[data-action="go"][data-value="justificatifs"]').first.click()
     page.locator('[data-action="documents-view"][data-value="incomplete"][aria-selected="true"]').wait_for()
     page.locator(".doc-card", has_text="scan.pdf").wait_for()

@@ -36,7 +36,12 @@ def codes(items):
 
 
 def by_ref(built):
-    return {r["external_ref"]: r for r in built["rows"]}
+    """Stay lines by booking code (the platform's other operations are apart: ``operations``)."""
+    return {r["external_ref"]: r for r in built["rows"] if r.get("kind") != "operation"}
+
+
+def operations(built):
+    return [r for r in built["rows"] if r.get("kind") == "operation"]
 
 
 def revenue(data, pid, year, month, mode):
@@ -84,10 +89,14 @@ def edited(old: str, new: str) -> bytes:
 # --------------------------------------------------------------------------- Airbnb reader
 
 
-def test_airbnb_reader_takes_reservations_and_ignores_transfers():
+def test_airbnb_reader_takes_reservations_and_checks_transfers():
     parsed = airbnb.parse(AIRBNB)
     assert parsed["errors"] == [] and parsed["date_order"] == "MDY"
-    assert parsed["ignored"] == {"transfers": 1, "other": {"Ajustement de la résolution": 1}}
+    assert parsed["ignored"] == {"transfers": 1, "other": {}}
+    # The payout is checked against the line it pays; the adjustment is read, never dropped.
+    assert [(p["amount"], p["explained"], p["bank_by"]) for p in parsed["payouts"]] == [(51000, 51000, "2026-10-04")]
+    assert [(o["family"], o["amount"], o["external_ref"], o["paid_on"]) for o in parsed["operations"]] == [
+        ("adjustment", -2000, "HMTEST0001", "")]
     assert parsed["listings"] == [GITE, STUDIO]
     rows = {r["external_ref"]: r for r in parsed["rows"]}
     first = rows["HMTEST0001"]
@@ -135,15 +144,19 @@ def test_preview_says_what_would_happen_without_writing(two):
     rows = by_ref(built)
     assert {ref: r["status"] for ref, r in rows.items()} == {
         "HMTEST0001": "new", "HMTEST0002": "new", "HMTEST0003": "new", "HMTEST0004": "error"}
-    assert rows["HMTEST0001"]["payout"] == {"date": "2026-10-05", "amount": 51000}
+    assert rows["HMTEST0001"]["payout"] == {"date": "2026-10-05", "amount": 51000, "bank_by": "2026-10-04"}
     assert rows["HMTEST0002"]["payout"] is None
     assert rows["HMTEST0003"]["property_id"] == studio
     assert rows["HMTEST0001"]["guest_label"] == ""  # guests' names are only kept when asked
-    assert rows["HMTEST0001"]["choices"] == ["import", "skip"] and rows["HMTEST0004"]["choices"] == []
+    assert rows["HMTEST0001"]["choices"] == ["import", "cancelled", "skip"] and rows["HMTEST0004"]["choices"] == []
     counts = built["counts"]
-    assert (counts["new"], counts["error"], counts["to_write"], counts["payouts"]) == (3, 1, 3, 2)
+    assert (counts["new"], counts["error"], counts["to_write"], counts["payouts"], counts["entries"]) == (3, 1, 3, 2, 1)
     assert built["can_apply"] is True
-    assert codes(built["notices"]) == ["imp_ignored_transfers", "imp_ignored_other"]
+    assert codes(built["notices"]) == ["imp_payouts_checked"]
+    # The resolution adjustment of HMTEST0001 (−20 €, not paid yet) becomes a refund to a guest, to pay.
+    [refund] = operations(built)
+    assert (refund["status"], refund["decision"], refund["category_id"], refund["direction"], refund["amount"], refund["payout"]) == (
+        "new", "import", "guest_refund", "out", 2000, None)
 
 
 def test_preview_keeps_names_only_when_asked(two):
@@ -185,11 +198,13 @@ def test_overlaps_with_the_registry_and_inside_the_file(two):
     ledger.create_stay({"property_id": gite, "start": "2026-10-01", "end": "2026-10-03", "guest_label": "Famille Test"})
     ledger.update_property(gite, {"unavailable": [{"start": "2026-09-27", "end": "2026-09-29", "label": "Travaux"}]})
     _, built = preview(data, AIRBNB, mapped(gite, studio))
-    assert codes(by_ref(built)["HMTEST0001"]["warnings"]) == ["imp_overlap", "imp_unavailable"]
+    assert codes(by_ref(built)["HMTEST0001"]["warnings"]) == ["imp_overlap", "imp_unavailable", "imp_overlap_cancelled"]
     content = "Arrivée;Départ;Montant brut\n01/11/2026;05/11/2026;400\n03/11/2026;06/11/2026;300\n".encode()
     _, inside = preview(data, content, {"property_id": gite}, kind="csv")
-    second = inside["rows"][1]
-    assert second["status"] == "new" and codes(second["warnings"]) == ["imp_overlap_file"]
+    first, second = inside["rows"]
+    # Both lines say so: either can be the booking that was cancelled.
+    assert second["status"] == "new" and codes(second["warnings"]) == ["imp_overlap_file", "imp_overlap_cancelled"]
+    assert codes(first["warnings"]) == ["imp_overlap_file", "imp_overlap_cancelled"]
 
 
 def test_dates_outside_the_accepted_years_are_errors(two):
@@ -232,7 +247,7 @@ def test_apply_creates_stays_and_payouts_that_feed_the_figures(two):
     # One line in the journal for the whole file, not one per stay or payout.
     assert [e["action"] for e in data["audit"][journal:]] == ["import.apply"]
     assert ledger.bulk is False
-    assert record["counts"] == {"created": 3, "updated": 0, "completed": 0, "payouts": 2}
+    assert record["counts"] == {"created": 3, "updated": 0, "completed": 0, "payouts": 2, "entries": 1}
     stays = {s["external_ref"]: s for s in data["stays"].values()}
     assert set(stays) == {"HMTEST0001", "HMTEST0002", "HMTEST0003"}
     first = stays["HMTEST0001"]
@@ -495,7 +510,7 @@ def test_api_preview_apply_remember_and_undo(client):
     assert first["property_map"] == {GITE: "", STUDIO: ""} and first["can_apply"] is False
     assert {r["status"] for r in first["rows"]} == {"unmapped", "error"}
     assert {p["id"] for p in first["properties"]} == {gite, studio}
-    assert first["notices"][0].startswith("1 ligne(s) « Payout » ignorée(s)")
+    assert first["notices"][0] == "1 versement(s) Airbnb, 510,00\u00a0€ au total : chacun correspond au centime aux lignes qu'il paie."
     options = {"property_map": {GITE: gite, STUDIO: studio}}
     ready = client.post("/api/imports/preview", json=body(AIRBNB, kind="airbnb", options=options), params={"lang": "fr"}).json()
     assert ready["can_apply"] is True and ready["counts"]["to_write"] == 3

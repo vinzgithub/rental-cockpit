@@ -24,7 +24,7 @@ Browser ──HTTPS (optional proxy)──► Rental Cockpit application (one pr
 
 | Layer | Role | Files |
 |---|---|---|
-| Business engine | Cents, dates, properties, stays, entries, payments, allocated services, three readings, explained indicators, demo | `src/rental_cockpit/engine/` |
+| Business engine | Cents, dates, properties, stays, entries, payments, allocated services, three ways of tying amounts to a period, explained indicators, demo | `src/rental_cockpit/engine/` |
 | Storage | SQLite, one transaction per change, revision number | `src/rental_cockpit/database.py` |
 | Rights | Administrator, reader per property, separate PDF access | `src/rental_cockpit/access.py` |
 | Security | scrypt passwords, CSRF token, sign-in throttling, TOTP codes, recovery codes, API keys | `src/rental_cockpit/security.py` |
@@ -51,7 +51,7 @@ Inventory required by the specification (REP 01): each item is **reused**, **ada
 | Original item | Status | In Rental Cockpit |
 |---|---|---|
 | Expense and income register, operating / cash / information distinction | Adapted | Configurable categories with an explicit *treatment* (operating, investment, financing, taxes, information) |
-| Profitability per activity year, net payouts never counted twice | Adapted | Three readings (Activity, Invoices, Cash); a stay's net payout is never added to revenue already recognised |
+| Profitability per activity year, net payouts never counted twice | Adapted | Three ways of tying amounts to a period (per night occupied, by stay or invoice date, by payment date), shown in three views: My money, Rental performance, Accounting analysis; a stay's net payout is never added to revenue already recognised |
 | Loan principal outside operations, interest and insurance apart | Adapted | Instalment split into principal, interest and insurance; never counted twice |
 | Stay spread per night, arrival → departure window | Adapted | Night-by-night spreading exact to the cent (largest remainder) |
 | PDF documents: structure check, active content refused, SHA-256, binary and business duplicates, undo of the last operation | To reuse | Documents screen |

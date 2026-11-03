@@ -2,6 +2,8 @@
 """Delivery L1 in a real browser: a fictional stay, from the form to the three readings."""
 from __future__ import annotations
 
+from .helpers import pick_period, show_view
+
 
 def kpis(page) -> list[str]:
     page.wait_for_timeout(400)
@@ -32,11 +34,12 @@ def test_stay_from_the_form_to_the_three_readings(desktop, base_url):
 
     # Balance / revenue / expenses, as in the pull request.
     page.locator('.sidebar [data-value="synthese"]').click()
-    page.locator('[data-change="period"]').select_option("m:2026-09")
+    show_view(page, "analysis", "activity")
+    pick_period(page, "m:2026-09")
     assert kpis(page) == ["255 €", "300 €", "45 €"]
     page.locator('[data-action="mode"][data-value="invoice"]').click()
     assert kpis(page) == ["510 €", "600 €", "90 €"]
-    page.locator('[data-change="period"]').select_option("m:2026-10")
+    pick_period(page, "m:2026-10")
     page.locator('[data-action="mode"][data-value="cash"]').click()
     assert kpis(page) == ["0 €", "0 €", "0 €"]
 

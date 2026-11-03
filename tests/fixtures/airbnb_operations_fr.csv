@@ -1,0 +1,24 @@
+﻿Date,Arrivée au plus tard le,Type,Code de confirmation,Date de réservation,Date de début,Date de fin,Nuits,Voyageur,Logement,Détails,Code de référence,Devise,Montant,Versé,Frais de service,Frais de Versement sur carte bancaire,Frais de ménage,Revenus bruts,Taxes reversées par Airbnb,Année des revenus
+10/31/2026,11/06/2026,Payout,,,,,,,,"Virement vers le compte ****0000",PFICT0006,EUR,,209.95,,,,,,
+10/31/2026,,Réservation,HMFICT0006,09/03/2026,10/30/2026,11/01/2026,2,Voyageur F,Gîte d'essai (annonce),,,EUR,209.95,,"47,05",,40.00,257.00,0.00,2026
+10/27/2026,11/03/2026,Payout,,,,,,,,"Virement vers le compte ****0000",PFICT0005,EUR,,181.75,,,,,,
+10/27/2026,,Réservation,HMFICT0005,09/14/2026,10/26/2026,10/28/2026,2,Voyageur E,Gîte d'essai (annonce),,,EUR,181.75,,"41,25",,40.00,223.00,0.00,2026
+10/25/2026,10/30/2026,Payout,,,,,,,,"Virement vers le compte ****0000",PFICT0004,EUR,,264.30,,,,,,
+10/25/2026,,Réservation,HMFICT0004,09/20/2026,10/23/2026,10/25/2026,2,Voyageur D,Gîte d'essai (annonce),,,EUR,264.30,,"58,70",,40.00,323.00,0.00,2026
+10/20/2026,10/28/2026,Payout,,,,,,,,"Virement vers le compte ****0000",PFICT0003,EUR,,95.00,,,,,,
+10/20/2026,,Versement de résolution,HMFICT0001,,10/16/2026,10/19/2026,3,Voyageur A,Gîte d'essai (annonce),"Remboursement des dommages AirCover pour la résolution du dossier CLSF-00000001",,EUR,95.00,,,,,95.00,,2026
+10/20/2026,10/27/2026,Payout,,,,,,,,"Virement vers le compte ****0000",PFICT0002,EUR,,288.60,,,,,,
+10/20/2026,,Réservation,HMFICT0002,09/25/2026,10/19/2026,10/22/2026,3,Voyageur B,Gîte d'essai (annonce),,,EUR,288.60,,"61,40",,60.00,350.00,0.00,2026
+10/18/2026,10/23/2026,Payout,,,,,,,,"Virement vers le compte ****0000",PFICT0001,EUR,,315.40,,,,,,
+10/18/2026,,Réservation,HMFICT0001,08/30/2026,10/16/2026,10/19/2026,3,Voyageur A,Gîte d'essai (annonce),,,EUR,315.40,,"12,60",,50.00,328.00,0.00,2026
+09/16/2026,09/24/2026,Payout,,,,,,,,"Virement vers le compte ****0000",PFICT0011,EUR,,15.00,,,,,,
+09/16/2026,,Crédit divers,,,,,,,,"Host Rewards Challenge Payment",,EUR,15.00,,,,,15.00,,2026
+09/10/2026,09/17/2026,Payout,,,,,,,,"Virement vers le compte ****0000",PFICT0010,EUR,,350.00,,,,,,
+09/10/2026,,Réservation,HMFICT0010,08/01/2026,09/07/2026,09/09/2026,2,Voyageur J,Gîte d'essai (annonce),,,EUR,400.00,,"14,00",,0.00,414.00,0.00,2026
+09/10/2026,,Régularisation de la résolution,HMFICT0009,,09/01/2026,09/04/2026,3,Voyageur I,Gîte d'essai (annonce),"Régularisation concernant la résolution 00000001",,EUR,-50.00,,,,,-50.00,,2026
+09/05/2026,09/12/2026,Payout,,,,,,,,"Virement vers le compte ****0000",PFICT0012,EUR,,7.50,,,,,,
+09/05/2026,,Remboursement de frais,,,,,,,Gîte d'essai (annonce),"Remboursement exceptionnel",,EUR,7.50,,,,,7.50,,2026
+05/23/2026,05/29/2026,Payout,,,,,,,,"Virement vers le compte ****0000",PFICT0102,EUR,,120.50,,,,,,
+05/23/2026,,Réservation,HMFICT0102,05/20/2026,05/22/2026,05/23/2026,1,Voyageur L,Gîte d'essai (annonce),,,EUR,120.50,,"4,50",,35.00,125.00,0.00,2026
+05/19/2026,05/27/2026,Payout,,,,,,,,"Virement vers le compte ****0000",PFICT0101,EUR,,211.80,,,,,,
+05/19/2026,,Réservation,HMFICT0101,04/02/2026,05/18/2026,05/23/2026,5,Voyageur K,Gîte d'essai (annonce),,,EUR,211.80,,"8,20",,0.00,220.00,0.00,2026

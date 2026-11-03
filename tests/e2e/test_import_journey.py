@@ -38,28 +38,28 @@ def test_airbnb_file_preview_import_and_undo(desktop, base_url, tmp_path):
     check(page, FIXTURES / "airbnb_fr.csv")
     # Two properties: nothing is attached to a listing until the person chooses.
     assert page.locator('dialog[open] [data-k="apply"]').is_disabled()
-    assert "Payout" in page.locator("dialog[open] .tip").first.text_content()
+    assert "1 versement(s) Airbnb" in page.locator("dialog[open] .tip").first.text_content()
     page.locator('dialog[open] [data-k="listing-0"]').select_option(label="Gîte d'essai")
     wait_preview(page)
     page.locator('dialog[open] [data-k="listing-1"]').select_option(label="Studio d'essai")
     wait_preview(page)
     error = page.locator("dialog[open] .imp-row.error")
     assert "2 nuits indiquées, 3 d'après les dates" in error.text_content()
-    first = page.locator("dialog[open] .imp-row", has_text="HMTEST0001")
-    assert "Versement de 510,00 € du 5 oct. 2026" in first.text_content().replace(" ", " ").replace("\xa0", " ")
+    first = page.locator("dialog[open] .imp-row:not(.op)", has_text="HMTEST0001")
+    assert "Versement de 510,00 € envoyé le 5 oct. 2026" in first.text_content().replace(" ", " ").replace("\xa0", " ")
     apply = page.locator('dialog[open] [data-k="apply"]')
-    assert apply.text_content().strip() == "Importer 3 séjours et 2 versements"
+    assert apply.text_content().strip() == "Importer 3 séjours, 1 recette ou dépense et 2 versements"
 
     # A line can be left out before confirming.
     second = page.locator("dialog[open] .imp-row", has_text="HMTEST0002")
     second.locator("select").select_option("skip")
     wait_preview(page)
-    assert apply.text_content().strip() == "Importer 2 séjours et 2 versements"
+    assert apply.text_content().strip() == "Importer 2 séjours, 1 recette ou dépense et 2 versements"
     page.locator("dialog[open] .imp-row", has_text="HMTEST0002").locator("select").select_option("import")
     wait_preview(page)
     apply.click()
     page.locator("dialog[open] .imp-done").wait_for()
-    assert [v.strip() for v in page.locator("dialog[open] .facts-list dd").all_text_contents()] == ["3", "0", "0", "2"]
+    assert [v.strip() for v in page.locator("dialog[open] .facts-list dd").all_text_contents()] == ["3", "0", "0", "2", "1"]
     page.locator('dialog[open] [data-k="see"]').click()
     page.locator(".stays-list tbody tr").nth(2).wait_for()
     assert page.locator(".stays-list tbody tr").count() == 3
@@ -124,3 +124,40 @@ def test_import_fits_a_phone(phone, base_url):
     assert widths[0] <= widths[1], widths
     footer = phone.locator("dialog[open] .dfoot").bounding_box()
     assert footer["y"] + footer["height"] <= 844
+
+
+def test_airbnb_operations_and_cancelled_booking(desktop, base_url):
+    """Acceptance ANO-001 and ANO-002: every payout explained, a late cancellation paid but without nights."""
+    page = desktop
+    page.goto(base_url + "/")
+    page.locator('.sidebar [data-action="dataset"][data-value="real"]').click()
+    page.locator('[data-action="add-property"]').first.click()
+    page.locator("#rc-p-name").fill("Gîte d'essai")
+    page.locator("dialog[open] [data-save]").click()
+    page.locator("dialog[open]").wait_for(state="detached")
+    page.locator('.sidebar [data-value="sejours"]').click()
+    open_import(page)
+    check(page, FIXTURES / "airbnb_operations_fr.csv")
+    rec = page.locator("dialog[open] .imp-rec")
+    text = rec.inner_text().replace(" ", " ").replace("\xa0", " ")
+    assert "11 versement(s) envoyé(s) par Airbnb" in text and "dont indemnisations (dommages, résolution)" in text
+    assert "7,50 € versés par Airbnb ne seront pas enregistrés" in text
+    aircover = page.locator("dialog[open] .imp-row.op", has_text="Versement de résolution")
+    assert "Indemnisation" in aircover.inner_text() and "+ 95,00 €" in aircover.inner_text().replace("\xa0", " ").replace(" ", " ")
+    # The cancelled booking is the one of five nights: the money is kept, the nights are not.
+    cancelled = page.locator("dialog[open] .imp-row:not(.op)", has_text="HMFICT0101")
+    assert "Annulé, montant encaissé conservé" in cancelled.locator("select").inner_text()
+    cancelled.locator("select").select_option("cancelled")
+    wait_preview(page)
+    assert "ses nuits ne comptent pas" in page.locator("dialog[open] .imp-row:not(.op)", has_text="HMFICT0101").inner_text()
+    unknown = page.locator("dialog[open] .imp-row.op", has_text="Remboursement de frais")
+    unknown.locator("select").select_option("import")
+    wait_preview(page)
+    assert "Chaque somme versée par Airbnb" in page.locator("dialog[open] .imp-rec").inner_text()
+    page.locator('dialog[open] [data-k="apply"]').click()
+    page.locator("dialog[open] .imp-done").wait_for()
+    page.locator('dialog[open] [data-k="see"]').click()
+    page.locator('.sidebar [data-value="depenses"]').click()
+    page.locator(".entries-list, .entry-card, .empty").first.wait_for()
+    body = page.locator("main").inner_text()
+    assert "Indemnisation Airbnb" in body and "Remboursement à un voyageur" in body

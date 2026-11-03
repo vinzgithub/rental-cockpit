@@ -4,7 +4,7 @@
 
 ### Your holiday let, every figure explained
 
-**Overview · Stays · Airbnb and CSV import · Expenses and payments · Three readings · Explained indicators · To check · Two-factor sign-in · Home Assistant**
+**My money · Rental performance · Stays · Airbnb and CSV import · Expenses and payments · Explained indicators · To check · Two-factor sign-in · Home Assistant**
 
 [**Français**](README.fr.md) · **English**
 
@@ -13,7 +13,7 @@
 <br>
 
 <img src="docs/images/en/hero.png"
-     alt="Rental Cockpit on a computer and a phone: month overview, three readings, properties and data to check"
+     alt="Rental Cockpit on a computer and a phone: the \"My money\" overview, money in, money out, left to settle and data to check"
      width="100%">
 
 <sub>The screenshots show the built-in demo: two fictional properties, "Démo" suppliers and invented amounts.</sub>
@@ -31,7 +31,7 @@
 <table>
 <tr>
 <td width="33%" valign="top"><b>🧾 Every figure explains itself</b><br>Under each amount, "How is this amount calculated?": formula, period, exclusions and every line used.</td>
-<td width="33%" valign="top"><b>🔀 Three readings, never mixed</b><br>Activity, Invoices, Cash: three different questions, three stated calculation rules.</td>
+<td width="33%" valign="top"><b>💶 My money, first</b><br>What came in, what went out, what is left to receive or pay. Rental performance and accounting analysis are one click away.</td>
 <td width="33%" valign="top"><b>✅ What is left to check</b><br>Unknown payments, stays without an amount, payouts not received: an incomplete result is flagged, never disguised as zero.</td>
 </tr>
 <tr>
@@ -42,7 +42,7 @@
 </table>
 
 > [!NOTE]
-> **Version 1.0.0, under review.** Everything planned for the first version is ready: the Overview and its three readings, **stays** (entry, **Airbnb and CSV import**, cancellation, payouts received), **expenses and payments**, **suppliers** (detailed invoices split between stays, reconciliation), **PDF documents**, **reader accounts**, **checked backup and restore**, the demo, two-factor sign-in and the Home Assistant link. It becomes the stable version once acceptance is passed ([criteria and results](docs/en/acceptance.md)).
+> **Version 1.0.0, under review.** Everything planned for the first version is ready: the Overview (*My money*, *Rental performance*, *Accounting analysis*), **stays** (entry, **Airbnb and CSV import**, cancellation, payouts received), **expenses and payments**, **suppliers** (detailed invoices split between stays, reconciliation), **PDF documents**, **reader accounts**, **checked backup and restore**, the demo, two-factor sign-in and the Home Assistant link. It becomes the stable version once acceptance is passed ([criteria and results](docs/en/acceptance.md)).
 
 ---
 
@@ -65,8 +65,8 @@ It grew out of a personal tool for tracking a holiday let and reuses its calcula
 
 One click under any indicator opens its explanation:
 
-- the **equation**: Revenue − Expenses = Balance;
-- the **formula**, **period**, **reading** and **properties included**;
+- the **calculation**: Money in − Money out = Balance, or Revenue − Expenses = Result;
+- the **formula**, **period**, **method** and **properties included**;
 - what is **excluded**, and why;
 - **every line used**, with the rule applied to each — "Spread night by night over the stay", "Counted on its date"… — and the total.
 
@@ -90,7 +90,7 @@ No black box: you can redo every calculation by hand.
 - **Guided entry**: property, dates (nights per month shown at once), booking channel, gross amount and commission; the expected net payout is computed.
 - **Tourist tax and security deposit** recorded apart: never counted as revenue.
 - **Stay page**: what was received, what is left to receive, and **what the stay counts in the Overview**, month by month.
-- **Payout received** in one click: the Cash reading updates.
+- **Payout received** in one click: *My money* updates.
 - **Cancellation** with the amount retained, counted on the arrival date; **Restore** brings everything back.
 - Explicit statuses: *Upcoming*, *In progress*, *Finished*, *Provisional*, *Cancelled*; *Payout expected*, *to confirm*, *received*.
 
@@ -114,7 +114,10 @@ No black box: you can redo every calculation by hand.
 - **Duplicates detected**: same reference, or same dates as a stay entered by hand; you choose to complete it, create another one or skip the line.
 - **Commissions** read from the file, or computed from the platform's rate, to the cent.
 - **Checks**: unreadable dates, nights that do not match, overlaps, unavailable dates, negative amounts, payout above what is expected.
-- **Payouts** dated in the file are recorded once; Airbnb transfers are never counted twice.
+- **Each Airbnb payout matched to the cent** with the lines it pays, with the date it reaches the account; never counted twice.
+- **AirCover compensations, credits and amounts withheld** read and classified; an unknown type is shown with its amount, never dropped in silence.
+- **Booking cancelled but paid**: the money counts, the nights do not.
+- **Payouts check** before importing: by kind and by month, with what would not be recorded.
 - **Columns and properties remembered** for the next file; the last import can be **undone** in one click.
 
 </td>
@@ -134,9 +137,9 @@ No black box: you can redo every calculation by hand.
 
 - **Expenses and income outside stays**: cleaning, repairs, insurance, subscriptions, refunds… each in a category whose **treatment** is stated (operations, investment, financing, taxes).
 - **Explicit payment status**: *Paid*, *Partly paid*, *To pay* or *Payment to confirm* — nothing is assumed paid.
-- **Partial payments**, never above what is left; the Cash reading counts each payment on its date.
+- **Partial payments**, never above what is left; *My money* counts each payment on its date.
 - **Loan instalments**: principal, interest and insurance checked to the cent, outside the operating balance; **monthly repetition** up to 36 months, future instalments staying *Coming up*.
-- **Period covered**: an annual insurance is spread day by day in the Activity reading.
+- **Period covered**: an annual insurance is spread day by day in *Rental performance*.
 - **Categories** you can adapt in Settings; **CSV export** ready for a spreadsheet or an accountant.
 
 </td>
@@ -193,19 +196,19 @@ No black box: you can redo every calculation by hand.
 
 ---
 
-## 🔀 Same month, several questions
+## 🔀 Same month, three views
 
-<img src="docs/images/en/readings.png" alt="The same month in the Activity reading, then in the Cash reading" width="100%">
+<img src="docs/images/en/readings.png" alt="The same month in the My money view, then in the Rental performance view" width="100%">
 
-<sub>Top, the Activity reading; bottom, the Cash reading of the same month: €970 actually received, the €30 commission being already taken off the payout.</sub>
+<sub>Top, *My money*: €970 in, the €30 commission being already withheld by the platform. Bottom, *Rental performance* for the same month: €1,000 revenue from nights, €800 rental result.</sub>
 
-| Reading | The question | The rule |
+| View | The question | The rule |
 |---|---|---|
-| **Activity** | What did the rental produce during the period? | A stay is spread night by night; an expense counts on its date or over the period it covers |
-| **Invoices** | Which documents are dated in the period? | Each invoice on its date, each stay on its arrival date |
-| **Cash** | What money actually came in or went out? | Payments only, on their date |
+| **My money** (default) | What money came in or went out, what is left to receive or pay? | Payments, on their date; a platform payout on the day it is sent |
+| **Rental performance** | What did the rental produce? | A stay is spread night by night; an expense counts on its date or over the period it covers; nights, occupancy, the twelve months of the year |
+| **Accounting analysis** | How is each amount tied to a period? | As chosen: per night occupied, by stay or invoice date, by payment date |
 
-Percentages always compare the period with the previous one, **computed with the same rules**.
+Percentages always compare the period with the previous one, **computed with the same rules**. The period is chosen in one gesture: `◀ October 2026 ▶`, the twelve months of a year, the whole year or a free period.
 
 ### An example you can check
 
@@ -222,7 +225,7 @@ It is reproduced exactly in the demo's example month:
      €800   balance before financing
  −   €200   loan instalment
  ─────────
-     €600   cash after financing
+     €600   balance of the period in "My money": €970 in − €370 out
 ```
 
 ### Rules that never move
@@ -392,7 +395,7 @@ Everything lives in **one folder**, `/data`: an SQLite database, your private PD
 | [Installation](docs/en/installation.md) | Docker image, Python, variables, upgrading, account recovery |
 | [Backup and restore](docs/en/backup.md) | What a backup holds, checked restore, command line, after an update that went wrong |
 | [Guide](docs/en/guide.md) | From the demo to daily use: stays, expenses, suppliers, documents, readers, backup |
-| [Calculation rules](docs/en/calculations.md) | The three readings, each indicator, glossary |
+| [Calculation rules](docs/en/calculations.md) | The three views of the Overview, Airbnb operations, each indicator, glossary |
 | [Home Assistant](docs/en/home-assistant.md) | Optional link: sensors, automations, card, API reference |
 | [Security](docs/en/security.md) | Accounts, two-factor sign-in, rights, API keys, data, network exposure |
 | [Architecture and adaptations](docs/en/architecture.md) | What is reused from the original project, what changes with a standalone application |

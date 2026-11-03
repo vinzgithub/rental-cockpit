@@ -144,13 +144,13 @@ Without that variable, Rental Cockpit refuses to be shown in a frame.
 
 `GET /api/v1/summary` — header `Authorization: Bearer <key>`. Optional parameters: `property_id` (one property), `lang` (`fr` or `en`, for titles).
 
-Amounts in euros with two decimals; an unknown amount is `null`, never 0. Month and year figures follow the **Activity** reading.
+Amounts in euros with two decimals; an unknown amount is `null`, never 0. Month and year figures are computed **per night occupied** (the Overview's *Rental performance*).
 
 | Field | Content |
 |---|---|
 | `today`, `generated_at` | Today's date (server time zone) and generation time |
 | `month`, `year` | `revenue`, `expenses`, `balance_before_financing`, `balance_after_financing`, `nights`, `occupancy` (0 to 1), `complete`, `start`, `end` |
-| `cash_month` | `received` (money received), `balance_after_financing` — Cash reading of the month |
+| `cash_month` | `received` (money received), `balance_after_financing` — by payment date, like "My money" |
 | `to_pay`, `to_receive` | Unpaid expenses, expected payouts not received |
 | `to_check`, `to_check_items` | Number and list of data to check (`kind`, `count`, `title`) |
 | `occupied_tonight`, `arrivals_today`, `departures_today` | Number of properties concerned |

@@ -40,6 +40,26 @@ function wire(dialog, action) {
  * the older command, and if that fails too it is selected for Ctrl+C.
  * ``from`` is the button pressed; ``select`` the element to select as a last resort.
  */
+/**
+ * Where the browser may refuse to copy (a plain http:// address), say so before the person tries,
+ * next to the secret: one tap selects it, then « Copier » from the browser (acceptance ERGO-005).
+ */
+export function manualCopyNote(t) {
+  if (window.isSecureContext) return "";
+  return html`<p class="copy-manual" role="note">${raw(icon("info"))}<span>${t("copy.manualHint")}</span></p>`;
+}
+
+function selectFor(element) {
+  if (!element) return false;
+  if (element.matches?.("input, textarea")) {
+    element.focus();
+    element.select();
+    return true;
+  }
+  window.getSelection()?.selectAllChildren(element);
+  return true;
+}
+
 export async function copyText(app, text, { from = null, select = null } = {}) {
   const { t } = app.i18n;
   if (navigator.clipboard && window.isSecureContext) {
@@ -68,8 +88,13 @@ export async function copyText(app, text, { from = null, select = null } = {}) {
     return;
   }
   const target = select || from?.closest(".codebox")?.querySelector("code");
-  if (target) window.getSelection()?.selectAllChildren(target);
-  app.toast(t(target ? "mfa.copySelected" : "mfa.copyFallback"), true);
+  const selected = selectFor(target);
+  // Said in the window too, not only in a message that fades away.
+  const place = from?.closest(".field, .actions, .inline-field")?.parentElement;
+  if (place && !place.querySelector(".copy-manual.failed")) {
+    place.insertAdjacentHTML("beforeend", markup(html`<p class="copy-manual failed" role="status">${raw(icon("alert"))}<span>${t(selected ? "mfa.copySelected" : "mfa.copyFallback")}</span></p>`));
+  }
+  app.toast(t(selected ? "mfa.copySelected" : "mfa.copyFallback"), true);
 }
 
 function download(name, text) {
@@ -98,6 +123,7 @@ function codesBlock(app, codes) {
       <button type="button" class="btn ghost small" data-copy-codes>${raw(icon("copy"))}${t("mfa.copy")}</button>
       <button type="button" class="btn ghost small" data-download-codes>${raw(icon("download"))}${t("mfa.download")}</button>
     </div>
+    ${manualCopyNote(t)}
     <label class="check-line"><input type="checkbox" data-stored> <span>${t("mfa.stored")}</span></label>`;
 }
 
@@ -159,7 +185,7 @@ export function openMfaEnable(app) {
         <img class="qr" src="${setup.qr}" alt="${t("mfa.qrAlt")}" width="210" height="210">
         <div class="stack">
           <p class="reading">${t("mfa.scanHelp")}</p>
-          <div class="field"><span class="help">${t("mfa.manual")}</span><div class="codebox"><code>${setup.secret}</code><button type="button" class="iconbtn" data-copy-secret aria-label="${t("mfa.copy")}">${raw(icon("copy"))}</button></div></div>
+          <div class="field"><span class="help">${t("mfa.manual")}</span><div class="codebox"><code>${setup.secret}</code><button type="button" class="iconbtn" data-copy-secret aria-label="${t("mfa.copy")}">${raw(icon("copy"))}</button></div>${manualCopyNote(t)}</div>
           <form class="stack" novalidate>
             <div class="field"><label for="rc-mc">${t("mfa.firstCode")}</label><input id="rc-mc" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" required></div>
             <div data-error aria-live="assertive"></div>
@@ -228,7 +254,7 @@ export function openCreateKey(app) {
     const line = `rental_cockpit_authorization: "Bearer ${created.token}"`;
     dialog.querySelector(".dbody").innerHTML = markup(html`
       <div class="tip">${raw(icon("alert"))}<div>${t("key.once")}</div></div>
-      <div class="field"><span class="help">${t("key.secretLine")}</span><div class="codebox"><code>${line}</code><button type="button" class="iconbtn" data-copy-line aria-label="${t("mfa.copy")}">${raw(icon("copy"))}</button></div></div>`);
+      <div class="field"><span class="help">${t("key.secretLine")}</span><div class="codebox"><code>${line}</code><button type="button" class="iconbtn" data-copy-line aria-label="${t("mfa.copy")}">${raw(icon("copy"))}</button></div>${manualCopyNote(t)}</div>`);
     dialog.querySelector(".dfoot").innerHTML = markup(html`<button type="button" class="btn primary" data-close>${raw(icon("check"))}${t("common.done")}</button>`);
     dialog.querySelector("[data-copy-line]").addEventListener("click", (event) => copyText(app, line, { from: event.currentTarget }));
     dialog.addEventListener("close", () => app.loadAccount());
