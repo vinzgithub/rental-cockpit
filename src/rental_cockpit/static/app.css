@@ -481,6 +481,12 @@ dialog.rc .dfoot { display: flex; gap: 10px; justify-content: flex-end; flex-wra
   .lines tfoot tr { grid-template-areas: "item share"; border-bottom: 0; }
 }
 .copy-buffer { position: fixed; top: 0; left: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+/* A secret is selected whole by one tap, for a copy by hand where the browser refuses it (ERGO-005). */
+.codebox code, ul.codes code { -webkit-user-select: all; user-select: all; }
+.copy-manual { display: flex; gap: 8px; align-items: flex-start; margin-top: 8px; color: var(--rc-muted); font-size: 12.5px; }
+.copy-manual svg.i { width: 16px; height: 16px; flex: none; margin-top: 1px; color: var(--rc-blue, #7cb6e8); }
+.copy-manual.failed { color: #f1d5a8; }
+.copy-manual.failed svg.i { color: var(--rc-amber); }
 .card.compact { padding: 18px; }
 .card-head.tight { margin-bottom: 12px; }
 .bubble.square { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; }
